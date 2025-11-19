@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* TEMA CLARO - Paleta Elegante */
+    --background: 45 20% 85%; /* Beige Arena claro */
+    --foreground: 0 0% 5%; /* Negro Azabache */
+
+    --card: 0 0% 100%; /* Blanco puro */
+    --card-foreground: 0 0% 5%; /* Negro Azabache */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+
+    --primary: 31 28% 41%; /* Madera Natural */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 15 18% 54%; /* Terracota */
+    --secondary-foreground: 0 0% 5%;
+
+    --muted: 45 20% 85%; /* Beige Arena */
+    --muted-foreground: 0 5% 20%; /* Gris Pizarra */
+
+    --accent: 11 24% 52%; /* Terracota Suave */
+    --accent-foreground: 0 0% 5%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 5% 73%; /* Gris Nube */
+    --input: 0 5% 73%;
+    --ring: 31 28% 41%; /* Madera Natural */
+
+    --radius: 0.5rem;
+
+    --chart-1: 31 28% 41%; /* Madera Natural */
+    --chart-2: 11 24% 52%; /* Terracota */
+    --chart-3: 22 26% 29%; /* Marrón Tierra */
+    --chart-4: 45 20% 85%; /* Beige Arena */
+    --chart-5: 0 5% 73%; /* Gris Nube */
+  }
+
+  .dark {
+    /* TEMA OSCURO - Paleta Elegante */
+    --background: 0 0% 5%; /* Negro Azabache */
+    --foreground: 0 0% 98%; /* Casi blanco */
+
+    --card: 0 5% 12%; /* Gris Pizarra más claro */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 5% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 31 28% 41%; /* Madera Natural */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 22 26% 29%; /* Marrón Tierra */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 5% 18%; /* Gris Pizarra */
+    --muted-foreground: 0 5% 73%; /* Gris Nube */
+
+    --accent: 11 24% 52%; /* Terracota */
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 5% 18%;
+    --input: 0 5% 18%;
+    --ring: 31 28% 41%;
+
+    --chart-1: 31 28% 41%;
+    --chart-2: 11 24% 52%;
+    --chart-3: 22 26% 29%;
+    --chart-4: 45 20% 85%;
+    --chart-5: 0 5% 73%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}

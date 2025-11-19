@@ -1,0 +1,172 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
+import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
+
+// GET - Listar órdenes con filtros
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getSession();
+
+    if (!session) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const proyectoId = searchParams.get("proyectoId");
+    const estado = searchParams.get("estado");
+    const armadorId = searchParams.get("armadorId");
+
+    const where: any = {};
+
+    if (proyectoId) where.proyectoId = proyectoId;
+    if (estado) where.estado = estado;
+    if (armadorId) where.armadorId = armadorId;
+
+    // Si es armador, solo ver sus órdenes
+    if (session.rol === "ARMADOR") {
+      const armador = await prisma.armador.findUnique({
+        where: { usuarioId: session.userId },
+      });
+      if (armador) {
+        where.armadorId = armador.id;
+      }
+    }
+
+    const ordenes = await prisma.orden.findMany({
+      where,
+      include: {
+        mueble: true,
+        usuarioFinal: true,
+        armador: {
+          include: {
+            usuario: {
+              select: {
+                nombre: true,
+                telefono: true,
+              },
+            },
+          },
+        },
+        proyecto: {
+          select: {
+            nombreComercial: true,
+          },
+        },
+      },
+      orderBy: { fechaCreacion: "desc" },
+    });
+
+    return NextResponse.json({ ordenes });
+  } catch (error) {
+    console.error("Error obteniendo órdenes:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Crear nueva orden
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getSession();
+
+    if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const {
+      codigoReferenciaRetail,
+      muebleId,
+      usuarioFinalId,
+      proyectoId,
+      fechaSolicitadaCliente,
+      autoAsignar,
+      prioridad,
+    } = body;
+
+    if (!codigoReferenciaRetail || !muebleId || !usuarioFinalId || !proyectoId) {
+      return NextResponse.json(
+        { error: "Faltan campos requeridos" },
+        { status: 400 }
+      );
+    }
+
+    const prioridadValida =
+      prioridad && ["VIP", "URGENTE", "MEDIA", "NORMAL"].includes(prioridad)
+        ? prioridad
+        : "NORMAL";
+
+    // Crear la orden
+    const orden = await prisma.orden.create({
+      data: {
+        codigoReferenciaRetail,
+        muebleId,
+        usuarioFinalId,
+        proyectoId,
+        fechaSolicitadaCliente: fechaSolicitadaCliente
+          ? new Date(fechaSolicitadaCliente)
+          : null,
+        estado: "SIN_ASIGNAR",
+        prioridad: prioridadValida,
+      },
+      include: {
+        mueble: true,
+        usuarioFinal: true,
+        proyecto: true,
+      },
+    });
+
+    // Si se solicita auto-asignación, buscar armador disponible
+    if (autoAsignar) {
+      const armadorAsignado = await asignarArmadorAutomatico(orden);
+      
+      if (armadorAsignado) {
+        const ordenActualizada = await prisma.orden.update({
+          where: { id: orden.id },
+          data: {
+            armadorId: armadorAsignado.id,
+            estado: "ASIGNADO",
+            fechaAsignacion: new Date(),
+          },
+          include: {
+            mueble: true,
+            usuarioFinal: true,
+            armador: {
+              include: {
+                usuario: true,
+              },
+            },
+          },
+        });
+
+        const nombreArmadorAsignado =
+          ordenActualizada.armador?.usuario.nombre ?? "Armador asignado";
+
+        await prisma.registroEstado.create({
+          data: {
+            ordenId: orden.id,
+            estadoAnterior: "SIN_ASIGNAR",
+            estadoNuevo: "ASIGNADO",
+            estadoCambiadoA: "ASIGNADO",
+            usuarioId: session.userId,
+            comentario: `Auto-asignado a ${nombreArmadorAsignado}`,
+          },
+        });
+
+        return NextResponse.json({ orden: ordenActualizada }, { status: 201 });
+      }
+    }
+
+    return NextResponse.json({ orden }, { status: 201 });
+  } catch (error) {
+    console.error("Error creando orden:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}

@@ -1,0 +1,4 @@
+codigoReferenciaRetail,proyecto,clienteNombre,clienteTelefono,clienteEmail,clienteDireccion,clienteMunicipio,clienteDepartamento,muebleTamano,muebleNombre,muebleSKU,notasEntrega,fechaSolicitada,prioridad,clientePrioridad
+ORD-2025-001,Punto Cero,Laura Martínez,77778888,laura.martinez@example.com,"Col. Escalón, Calle Circunvalación #24",San Salvador,San Salvador,MEDIANO,Armario 3 puertas,SKU-ARM-003,"Entregar después de las 10 AM",2025-06-18,URGENTE,VIP
+ORD-2025-002,Punto Cero,Carlos López,75556666,,"Residencial Altavista, Casa 12",Ilopango,San Salvador,GRANDE,Centro de entretenimiento,SKU-CENT-002,,2025-06-20,NORMAL,NORMAL
+ORD-2025-003,Residencial Verona,Ana Gómez,78994567,ana.gomez@example.com,"Col. San Benito, Av. Las Magnolias #18",Santa Tecla,La Libertad,PEQUENO,Mesa auxiliar,,"Llamar al llegar",,MEDIA,MEDIA

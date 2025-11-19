@@ -1,0 +1,427 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum TamanoMueble {
+  GRANDE
+  MEDIANO
+  PEQUENO
+}
+
+enum PrioridadUsuario {
+  VIP
+  URGENTE
+  MEDIA
+  NORMAL
+}
+
+enum EstadoArmador {
+  ACTIVO
+  INACTIVO
+  VACACIONES
+}
+
+enum TipoCliente {
+  CREDITO_FISCAL    // Empresa con NIT y NRC
+  CONSUMIDOR_FINAL  // Persona natural con DUI
+}
+
+enum EstadoOrden {
+  SIN_ASIGNAR
+  ASIGNADO
+  EN_RUTA
+  ARMADO_INICIADO
+  ARMADO_FINALIZADO
+  ARMADO_COMPLETADO
+  CANCELADA
+}
+
+enum RolUsuario {
+  ADMIN
+  SUPERVISOR
+  ARMADOR
+}
+
+enum TipoArchivo {
+  FOTO
+  VIDEO
+}
+
+enum TipoPenalizacion {
+  CLIENTE_NO_CONTESTO
+  PEDIDO_CANCELADO_EN_RUTA
+}
+
+enum TipoReglaPrincipal {
+  COBRO_FIJO_UNITARIO
+  COBRO_POR_VOLUMEN
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model Usuario {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  password          String
+  nombre            String
+  telefono          String?
+  rol               RolUsuario
+  activo            Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  // Relaciones específicas por rol
+  armador           Armador?
+  supervisorProyectos SupervisorProyecto[]
+  registrosEstado   RegistroEstado[]
+  
+  @@index([email])
+  @@map("usuarios")
+}
+
+model Armador {
+  id                      String          @id @default(uuid())
+  usuarioId               String          @unique
+  usuario                 Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  estado                  EstadoArmador   @default(ACTIVO)
+  fechaContratacion       DateTime        @default(now())
+  preferenciasHorarias    Json?           // Franjas horarias preferidas
+  habilidades             String[]        // Array de habilidades
+  ubicacionActualLat      Float?
+  ubicacionActualLng      Float?
+  ultimaActualizacionGPS  DateTime?
+  
+  // Relaciones
+  ordenes                 Orden[]
+  
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  
+  @@index([estado])
+  @@map("armadores")
+}
+
+model Proyecto {
+  id                  String              @id @default(uuid())
+  nombreComercial     String
+  activo              Boolean             @default(true)
+  tipoCliente         TipoCliente
+  
+  // Datos de facturación según leyes de El Salvador
+  // Para CREDITO_FISCAL: { razonSocial, nit, nrc, giro, direccion, contacto: { nombre, email, telefono } }
+  // Para CONSUMIDOR_FINAL: { nombreCompleto, dui, direccion, contacto: { nombre, email, telefono } }
+  datosFacturacion    Json
+  
+  // Reglas de cobro
+  reglaCobro          ReglaCobro?
+  
+  // Relaciones
+  muebles             Mueble[]
+  usuariosFinales     UsuarioFinal[]
+  ordenes             Orden[]
+  supervisores        SupervisorProyecto[]
+  
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  @@index([activo])
+  @@map("proyectos")
+}
+
+model SupervisorProyecto {
+  id          String    @id @default(uuid())
+  usuarioId   String
+  proyectoId  String
+  
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  proyecto    Proyecto  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([usuarioId, proyectoId])
+  @@index([proyectoId])
+  @@map("supervisor_proyectos")
+}
+
+model ReglaCobro {
+  id                      String                @id @default(uuid())
+  proyectoId              String                @unique
+  proyecto                Proyecto              @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  // Regla Principal
+  tipoPrincipal           TipoReglaPrincipal
+  precioFijoUnitario      Float?                // Para COBRO_FIJO_UNITARIO
+  rangosVolumen           RangoVolumen[]        // Para COBRO_POR_VOLUMEN
+  
+  // Cobros adicionales por prioridad
+  precioVIP               Float                 @default(0)
+  precioUrgente           Float                 @default(0)
+  precioMedia             Float                 @default(0)
+  precioNormal            Float                 @default(0)
+  
+  // Cobros adicionales por tamaño
+  precioGrande            Float                 @default(0)
+  precioMediano           Float                 @default(0)
+  precioPequeno           Float                 @default(0)
+  
+  // Cobros por distancia (municipio)
+  cobrosDistancia         CobroDistancia[]
+  
+  // Penalizaciones
+  penalizaciones          Penalizacion[]
+  
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  
+  @@map("reglas_cobro")
+}
+
+model RangoVolumen {
+  id              String        @id @default(uuid())
+  reglaCobroId    String
+  reglaCobro      ReglaCobro    @relation(fields: [reglaCobroId], references: [id], onDelete: Cascade)
+  
+  desde           Int           // Cantidad desde (inclusive)
+  hasta           Int?          // Cantidad hasta (inclusive), null para "mayor a"
+  precio          Float         // Precio por unidad en este rango
+  
+  createdAt       DateTime      @default(now())
+  
+  @@index([reglaCobroId])
+  @@map("rangos_volumen")
+}
+
+model CobroDistancia {
+  id              String        @id @default(uuid())
+  reglaCobroId    String
+  reglaCobro      ReglaCobro    @relation(fields: [reglaCobroId], references: [id], onDelete: Cascade)
+  
+  municipio       String
+  precio          Float
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@unique([reglaCobroId, municipio])
+  @@index([reglaCobroId])
+  @@map("cobros_distancia")
+}
+
+model Penalizacion {
+  id              String              @id @default(uuid())
+  reglaCobroId    String
+  reglaCobro      ReglaCobro          @relation(fields: [reglaCobroId], references: [id], onDelete: Cascade)
+  
+  tipo            TipoPenalizacion
+  precio          Float
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@unique([reglaCobroId, tipo])
+  @@index([reglaCobroId])
+  @@map("penalizaciones")
+}
+
+model Mueble {
+  id                    String          @id @default(uuid())
+  nombre                String
+  tamano                TamanoMueble
+  descripcion           String?
+  proyectoId            String
+  proyecto              Proyecto        @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  // Relaciones
+  ordenes               Orden[]
+  
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  
+  @@index([proyectoId])
+  @@map("muebles")
+}
+
+model UsuarioFinal {
+  id                  String              @id @default(uuid())
+  nombre              String
+  telefono            String
+  email               String?
+  direccionCompleta   String
+  municipio           String
+  departamento        String
+  coordenadasLat      Float?
+  coordenadasLng      Float?
+  prioridad           PrioridadUsuario    @default(NORMAL)
+  proyectoId          String
+  proyecto            Proyecto            @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  // Relaciones
+  ordenes             Orden[]
+  
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  @@index([proyectoId])
+  @@index([municipio])
+  @@map("usuarios_finales")
+}
+
+model Orden {
+  id                          String              @id @default(uuid())
+  codigoReferenciaRetail      String
+  
+  // Foreign Keys
+  muebleId                    String
+  mueble                      Mueble              @relation(fields: [muebleId], references: [id])
+  
+  usuarioFinalId              String
+  usuarioFinal                UsuarioFinal        @relation(fields: [usuarioFinalId], references: [id])
+  
+  armadorId                   String?
+  armador                     Armador?            @relation(fields: [armadorId], references: [id])
+  
+  proyectoId                  String
+  proyecto                    Proyecto            @relation(fields: [proyectoId], references: [id])
+  
+  prioridad                    PrioridadUsuario    @default(NORMAL)
+
+  // Fechas y estados
+  fechaCreacion               DateTime            @default(now())
+  fechaSolicitadaCliente      DateTime?
+  fechaAsignacion             DateTime?
+  fechaRuta                   DateTime?
+  fechaInicioArmado           DateTime?
+  fechaFinArmado              DateTime?
+  fechaCompletado             DateTime?
+  
+  estado                      EstadoOrden         @default(SIN_ASIGNAR)
+  
+  // Tiempos acumulados por estado (JSON)
+  tiempoAcumuladoEstados      Json?
+  
+  // Cobro
+  cobroFinal                  Float?
+  desgloseCobro               Json?               // Desglose detallado del cobro
+
+  // Datos de recepción del servicio
+  nombreReceptor              String?
+  documentoReceptor           String?
+
+  // Encuesta de satisfacción (CSAT)
+  csatPuntaje                 Int?
+  csatComentario              String?
+  csatFecha                   DateTime?
+  
+  // Link mágico
+  linkMagicoToken             String              @unique @default(uuid())
+  
+  // Relaciones
+  registrosEstado             RegistroEstado[]
+  archivos                    ArchivoOrden[]
+  penalizacionesAplicadas     PenalizacionAplicada[]
+  
+  createdAt                   DateTime            @default(now())
+  updatedAt                   DateTime            @updatedAt
+  
+  @@index([estado])
+  @@index([proyectoId])
+  @@index([armadorId])
+  @@index([linkMagicoToken])
+  @@map("ordenes")
+}
+
+model RegistroEstado {
+  id                String        @id @default(uuid())
+  ordenId           String
+  orden             Orden         @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+
+  estadoAnterior    EstadoOrden?
+  estadoNuevo       EstadoOrden?
+  estadoCambiadoA   EstadoOrden
+  comentario        String?
+  usuarioId         String?
+  usuario           Usuario?      @relation(fields: [usuarioId], references: [id])
+  timestamp         DateTime      @default(now())
+  latitud           Float?
+  longitud          Float?
+  etaEstimado       DateTime?
+
+  @@index([ordenId])
+  @@index([timestamp])
+  @@map("registros_estado")
+}
+
+model ArchivoOrden {
+  id                        String        @id @default(uuid())
+  ordenId                   String
+  orden                     Orden         @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  
+  url                       String
+  tipo                      TipoArchivo
+  fechaSubida               DateTime      @default(now())
+  fechaEliminacionProgramada DateTime     // 30 días después
+  
+  @@index([ordenId])
+  @@index([fechaEliminacionProgramada])
+  @@map("archivos_ordenes")
+}
+
+model PenalizacionAplicada {
+  id                String              @id @default(uuid())
+  ordenId           String
+  orden             Orden               @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  
+  tipo              TipoPenalizacion
+  monto             Float
+  fechaIncidente    DateTime            @default(now())
+  descripcion       String?
+  
+  createdAt         DateTime            @default(now())
+  
+  @@index([ordenId])
+  @@map("penalizaciones_aplicadas")
+}
+
+// ============================================
+// TABLAS AUXILIARES
+// ============================================
+
+model ConfiguracionSistema {
+  id                        String    @id @default(uuid())
+  clave                     String    @unique
+  valor                     Json
+  descripcion               String?
+  
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  
+  @@map("configuracion_sistema")
+}
+
+model LogActividad {
+  id          String    @id @default(uuid())
+  usuarioId   String?
+  accion      String
+  entidad     String?
+  entidadId   String?
+  detalles    Json?
+  timestamp   DateTime  @default(now())
+  
+  @@index([usuarioId])
+  @@index([timestamp])
+  @@map("logs_actividad")
+}
