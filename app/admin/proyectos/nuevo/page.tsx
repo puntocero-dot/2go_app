@@ -136,24 +136,56 @@ export default function NuevoProyectoPage() {
 
               {/* Tipo de Cliente */}
               <div className="space-y-2">
-                <Label htmlFor="tipoCliente">
+                <Label>
                   Tipo de Cliente <span className="text-red-500">*</span>
                 </Label>
-                <select
-                  id="tipoCliente"
-                  value={tipoCliente}
-                  onChange={(e) => setTipoCliente(e.target.value as "CREDITO_FISCAL" | "CONSUMIDOR_FINAL")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-vibrant-cyan"
-                  required
-                >
-                  <option value="CREDITO_FISCAL">Crédito Fiscal (Empresa)</option>
-                  <option value="CONSUMIDOR_FINAL">Consumidor Final (Persona Natural)</option>
-                </select>
-                <p className="text-sm text-gray-500">
-                  {tipoCliente === "CREDITO_FISCAL"
-                    ? "Empresa con NIT y NRC para crédito fiscal"
-                    : "Persona natural con DUI"}
-                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label
+                    className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 ${
+                      tipoCliente === "CREDITO_FISCAL"
+                        ? "border-vibrant-cyan bg-vibrant-cyan/5"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="tipoCliente"
+                      value="CREDITO_FISCAL"
+                      checked={tipoCliente === "CREDITO_FISCAL"}
+                      onChange={() => setTipoCliente("CREDITO_FISCAL")}
+                      className="mt-1"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Crédito Fiscal (Empresa)</p>
+                      <p className="text-xs text-gray-500">
+                        Empresa con NIT y NRC para crédito fiscal.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 ${
+                      tipoCliente === "CONSUMIDOR_FINAL"
+                        ? "border-vibrant-cyan bg-vibrant-cyan/5"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="tipoCliente"
+                      value="CONSUMIDOR_FINAL"
+                      checked={tipoCliente === "CONSUMIDOR_FINAL"}
+                      onChange={() => setTipoCliente("CONSUMIDOR_FINAL")}
+                      className="mt-1"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Consumidor Final (Persona Natural)</p>
+                      <p className="text-xs text-gray-500">
+                        Persona natural con DUI.
+                      </p>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               {/* Datos de Facturación */}

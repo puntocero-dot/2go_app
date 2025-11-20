@@ -51,7 +51,15 @@ export function OrderStatusTimeline({ registros }: OrderStatusTimelineProps) {
                 ) : null}
                 {registro.latitud != null && registro.longitud != null ? (
                   <p className="mt-1 text-[11px] text-gray-400">
-                    GPS: {registro.latitud.toFixed(5)}, {registro.longitud.toFixed(5)}
+                    GPS: {registro.latitud.toFixed(5)}, {registro.longitud.toFixed(5)}{" "}
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${registro.latitud},${registro.longitud}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 text-vibrant-cyan hover:underline"
+                    >
+                      Ver en mapa
+                    </a>
                   </p>
                 ) : null}
                 {isLast ? (

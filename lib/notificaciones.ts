@@ -68,6 +68,61 @@ export async function enviarEmailCambioEstado(data: {
       ARMADO_COMPLETADO: "Armado Completado",
     };
 
+    const estadosOrdenados = [
+      "SIN_ASIGNAR",
+      "ASIGNADO",
+      "EN_RUTA",
+      "ARMADO_INICIADO",
+      "ARMADO_FINALIZADO",
+      "ARMADO_COMPLETADO",
+    ];
+
+    const currentIndex = estadosOrdenados.indexOf(data.estadoNuevo);
+
+    const stepsHtml = estadosOrdenados
+      .map((estado, index) => {
+        const isCompleted = currentIndex > index;
+        const isActive = currentIndex === index;
+
+        const circleColor = isActive
+          ? "#0891b2" // cian activo
+          : isCompleted
+          ? "#10b981" // verde completado
+          : "#e5e7eb"; // gris pendiente
+
+        const circleTextColor = isActive || isCompleted ? "#ffffff" : "#6b7280";
+        const labelColor = isActive ? "#111827" : "#6b7280";
+
+        const lineColor =
+          index < estadosOrdenados.length - 1
+            ? currentIndex >= index + 1
+              ? "#10b981"
+              : "#e5e7eb"
+            : "transparent";
+
+        const label =
+          estadosAmigables[estado] || estado.replace(/_/g, " ");
+
+        return `
+          <div style="flex: 1; min-width: 0; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center;">
+              <div style="width: 32px; height: 32px; border-radius: 9999px; background: ${circleColor}; color: ${circleTextColor}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;">
+                ${index + 1}
+              </div>
+              ${
+                index < estadosOrdenados.length - 1
+                  ? `<div style="flex: 1; height: 2px; margin-left: 8px; background: ${lineColor};"></div>`
+                  : ""
+              }
+            </div>
+            <div style="margin-top: 8px; font-size: 11px; color: ${labelColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${label}
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
     await resend.emails.send({
       from: process.env.EMAIL_FROM || "noreply@armados2go.com",
       to: data.clienteEmail,
@@ -80,9 +135,21 @@ export async function enviarEmailCambioEstado(data: {
           
           <p>Tu orden <strong>${data.ordenCodigo}</strong> ha sido actualizada:</p>
           
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Estado Anterior:</strong> ${estadosAmigables[data.estadoAnterior] || data.estadoAnterior}</p>
-            <p><strong>Estado Actual:</strong> <span style="color: #0891b2; font-weight: bold;">${estadosAmigables[data.estadoNuevo] || data.estadoNuevo}</span></p>
+          <div style="margin: 24px 0 12px; font-size: 14px; color: #374151;">
+            Estados de tu servicio:
+          </div>
+
+          <div style="display: flex; align-items: flex-start; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+            ${stepsHtml}
+          </div>
+
+          <div style="background: #f3f4f6; padding: 16px 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>Estado anterior:</strong> ${
+              estadosAmigables[data.estadoAnterior] || data.estadoAnterior
+            }</p>
+            <p><strong>Estado actual:</strong> <span style="color: #0891b2; font-weight: bold;">${
+              estadosAmigables[data.estadoNuevo] || data.estadoNuevo
+            }</span></p>
           </div>
           
           <p>

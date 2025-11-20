@@ -7,6 +7,8 @@ import { Clock, User, MapPin, ChevronRight, Inbox } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
+import { ArmadorGpsTracker } from "@/components/armador-gps-tracker";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -129,6 +131,7 @@ export default async function ArmadorDashboard() {
       <Navbar user={usuario} />
       
       <main className="container mx-auto px-4 py-8">
+        <ArmadorGpsTracker />
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-deep-navy">Mis Órdenes</h1>
           <p className="text-gray-600 mt-2">

@@ -33,9 +33,11 @@ export async function PATCH(
     const allowedOrigins = [
       process.env.NEXT_PUBLIC_APP_URL,
       process.env.NEXT_PUBLIC_PRODUCTION_URL,
-      'http://localhost:3000',
-      'http://localhost:3001',
-    ].filter((value): value is string => typeof value === 'string' && value.length > 0);
+      "https://www.armados2go.com",
+      "https://armados2go.com",
+      "http://localhost:3000",
+      "http://localhost:3001",
+    ].filter((value): value is string => typeof value === "string" && value.length > 0);
 
     // Si hay origin, validarlo
     if (origin) {

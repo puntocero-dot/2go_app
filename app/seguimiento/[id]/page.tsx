@@ -131,6 +131,17 @@ export default function SeguimientoPage() {
     ARMADO_COMPLETADO: "🎉",
   };
 
+  const estadosOrdenados: string[] = [
+    "SIN_ASIGNAR",
+    "ASIGNADO",
+    "EN_RUTA",
+    "ARMADO_INICIADO",
+    "ARMADO_FINALIZADO",
+    "ARMADO_COMPLETADO",
+  ];
+
+  const currentIndex = estadosOrdenados.indexOf(orden.estado);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -159,6 +170,52 @@ export default function SeguimientoPage() {
               <p className="text-gray-600 mt-4">
                 Orden: <strong>{orden.codigoReferenciaRetail}</strong>
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Progreso por estados */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Progreso de tu servicio</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+              {estadosOrdenados.map((estado, index) => {
+                const isCompleted = currentIndex > index;
+                const isCurrent = currentIndex === index;
+
+                return (
+                  <div
+                    key={estado}
+                    className="flex-1 min-w-[72px] text-center"
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-semibold ${
+                          isCurrent
+                            ? "border-cyan-600 bg-cyan-600 text-white"
+                            : isCompleted
+                            ? "border-emerald-500 bg-emerald-500 text-white"
+                            : "border-gray-300 bg-white text-gray-500"
+                        }`}
+                      >
+                        {estadoEmoji[estado]}
+                      </div>
+                      {index < estadosOrdenados.length - 1 && (
+                        <div
+                          className={`mx-1 h-0.5 flex-1 ${
+                            currentIndex > index ? "bg-emerald-500" : "bg-gray-200"
+                          }`}
+                        />
+                      )}
+                    </div>
+                    <div className="mt-2 text-[11px] font-medium text-gray-600 uppercase tracking-tight">
+                      {estadoTexto[estado]}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

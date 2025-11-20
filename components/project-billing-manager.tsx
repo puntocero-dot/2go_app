@@ -420,9 +420,18 @@ export function ProjectBillingManager({ projectId, initialRule }: ProjectBilling
         {/* Rangos por volumen */}
         {rule.tipoPrincipal === "COBRO_POR_VOLUMEN" && (
           <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Rangos por volumen</Label>
-              <Button variant="outline" size="sm" onClick={addRange}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <Label>Rangos por volumen</Label>
+                <p className="text-xs text-slate-600">
+                  Define tramos de cantidad y su precio. Empieza agregando al menos un rango.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="bg-vibrant-cyan text-white hover:bg-vibrant-cyan/90"
+                onClick={addRange}
+              >
                 Agregar rango
               </Button>
             </div>
@@ -557,10 +566,13 @@ export function ProjectBillingManager({ projectId, initialRule }: ProjectBilling
           {rule.cobrosDistancia.length > 0 ? (
             <div className="space-y-2">
               {rule.cobrosDistancia.map((cobro, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <span className="flex-1 text-sm font-medium">{cobro.municipio}</span>
+                <div
+                  key={index}
+                  className="grid grid-cols-[minmax(0,1.5fr),auto,auto] items-center gap-3"
+                >
+                  <span className="text-sm font-medium truncate">{cobro.municipio}</span>
                   <Input
-                    className="w-24"
+                    className="w-24 justify-self-start"
                     inputMode="decimal"
                     value={municipioInputs[index] || "0"}
                     onChange={(e) => {
@@ -583,7 +595,7 @@ export function ProjectBillingManager({ projectId, initialRule }: ProjectBilling
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-600"
+                    className="text-red-600 justify-self-start"
                     onClick={() => removeMunicipio(index)}
                   >
                     Eliminar

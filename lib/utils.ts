@@ -13,6 +13,7 @@ export function formatDate(date: Date | string): string {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "America/El_Salvador",
   }).format(d);
 }
 

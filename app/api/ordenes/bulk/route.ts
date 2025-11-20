@@ -100,8 +100,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const parseResult = parseCsv(rawBody);
-    validateHeaders(parseResult.headers);
+    let parseResult;
+    try {
+      parseResult = parseCsv(rawBody);
+      validateHeaders(parseResult.headers);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Formato de CSV inválido";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
 
     if (parseResult.rows.length === 0) {
       return NextResponse.json(
