@@ -13,7 +13,15 @@ export async function middleware(request: NextRequest) {
     return response;
   };
 
-  const publicRoutes = ["/", "/login", "/orden/seguimiento"];
+  const publicRoutes = [
+    "/",
+    "/login",
+    "/orden/seguimiento",
+    "/manifest.json",
+    "/sw.js",
+    "/icon-192.png",
+    "/icon-512.png",
+  ];
   const isPublicRoute =
     publicRoutes.includes(pathname) || pathname.startsWith("/seguimiento/");
 
