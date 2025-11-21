@@ -1,0 +1,39 @@
+{
+  "name": "Armados 2Go",
+  "short_name": "2Go",
+  "description": "Sistema de gestión de armado de muebles para armadores",
+  "start_url": "/armador",
+  "display": "standalone",
+  "background_color": "#0D0D0D",
+  "theme_color": "#8B6F47",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis Órdenes",
+      "short_name": "Órdenes",
+      "description": "Ver mis órdenes asignadas",
+      "url": "/armador",
+      "icons": [
+        { "src": "/icon-192.png", "sizes": "192x192" }
+      ]
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "es-SV",
+  "dir": "ltr"
+}

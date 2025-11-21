@@ -17,11 +17,11 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute =
     publicRoutes.includes(pathname) || pathname.startsWith("/seguimiento/");
 
+  // Para rutas públicas (inicio, login, seguimiento), no forzamos
+  // redirecciones automáticas al dashboard aunque exista sesión.
+  // Esto evita bucles del tipo /admin -> /login -> /admin en caso de
+  // discrepancias entre el middleware y las páginas protegidas.
   if (isPublicRoute) {
-    if (session && pathname === "/login") {
-      const dashboardUrl = getDashboardUrl(session.rol);
-      return NextResponse.redirect(new URL(dashboardUrl, request.url));
-    }
     return NextResponse.next();
   }
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { destroySession, getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, EstadoOrden } from "@prisma/client";
 import { Navbar } from "@/components/navbar";
@@ -36,9 +36,6 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
   const filters = await searchParams;
 
   if (!session || session.rol !== "ADMIN") {
-    if (session) {
-      await destroySession();
-    }
     redirect("/login");
   }
 
@@ -47,7 +44,6 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
   });
 
   if (!usuario) {
-    await destroySession();
     redirect("/login");
   }
 
