@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { Fragment, useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { ExternalLink } from "lucide-react";
@@ -25,6 +26,7 @@ interface Armador {
   ultimaActualizacion: string;
   ordenesActivas: number;
   ordenes: any[];
+  ruta?: { lat: number; lng: number; timestamp: string }[];
 }
 
 const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -124,68 +126,88 @@ export function MapaArmadores() {
           zoomOffset={hasMapbox ? -1 : 0}
         />
         
-        {armadores.map((armador) => (
-          <Marker
-            key={armador.id}
-            position={[armador.lat, armador.lng]}
-            icon={armadorIcon}
-          >
-            <Popup>
-              <div className="p-3 min-w-[220px]">
-                <h3 className="font-semibold text-deep-navy text-base mb-2">
-                  {armador.nombre}
-                </h3>
+        {armadores.map((armador) => {
+          const rutaCoords = (armador.ruta || []).map((p) => [p.lat, p.lng]) as [
+            number,
+            number
+          ][];
 
-                <div className="space-y-1 text-sm mb-3">
-                  <p className="text-gray-700">
-                    <span className="font-medium">Estado:</span>{" "}
-                    <Badge variant={armador.estado === "DISPONIBLE" ? "success" : "warning"}>
-                      {armador.estado}
-                    </Badge>
-                  </p>
-                  <p className="text-gray-700">
-                    <span className="font-medium">Teléfono:</span> {armador.telefono}
-                  </p>
-                  <p className="text-gray-700">
-                    <span className="font-medium">Órdenes activas:</span>{" "}
-                    {armador.ordenesActivas}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Última actualización: {" "}
-                    {new Date(armador.ultimaActualizacion).toLocaleTimeString()}
-                  </p>
-                </div>
+          return (
+            <Fragment key={armador.id}>
+              {rutaCoords.length > 1 && (
+                <Polyline
+                  positions={rutaCoords}
+                  pathOptions={{ color: "#8B6F47", weight: 3, opacity: 0.7 }}
+                />
+              )}
 
-                {armador.ordenes.length > 0 ? (
-                  <div className="border-t pt-2 mt-1">
-                    <p className="font-medium text-xs mb-1">Órdenes:</p>
-                    {armador.ordenes.map((orden) => (
-                      <div key={orden.id} className="text-xs mb-1 bg-gray-50 p-1.5 rounded">
-                        <p className="font-medium">{orden.codigo}</p>
-                        <p className="text-gray-600">{orden.cliente}</p>
-                        <p className="text-gray-500">{orden.municipio}</p>
+              <Marker
+                position={[armador.lat, armador.lng]}
+                icon={armadorIcon}
+              >
+                <Popup>
+                  <div className="p-3 min-w-[220px]">
+                    <h3 className="font-semibold text-deep-navy text-base mb-2">
+                      {armador.nombre}
+                    </h3>
+
+                    <div className="space-y-1 text-sm mb-3">
+                      <p className="text-gray-700">
+                        <span className="font-medium">Estado:</span>{" "}
+                        <Badge variant={armador.estado === "DISPONIBLE" ? "success" : "warning"}>
+                          {armador.estado}
+                        </Badge>
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Teléfono:</span> {armador.telefono}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Órdenes activas:</span>{" "}
+                        {armador.ordenesActivas}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Última actualización: {" "}
+                        {new Date(armador.ultimaActualizacion).toLocaleTimeString()}
+                      </p>
+                    </div>
+
+                    {armador.ordenes.length > 0 ? (
+                      <div className="border-t pt-2 mt-1">
+                        <p className="font-medium text-xs mb-1">Órdenes:</p>
+                        {armador.ordenes.map((orden) => (
+                          <div key={orden.id} className="text-xs mb-1 bg-gray-50 p-1.5 rounded">
+                            <p className="font-medium">{orden.codigo}</p>
+                            <p className="text-gray-600">{orden.cliente}</p>
+                            <p className="text-gray-500">{orden.municipio}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">Sin orden activa</p>
-                )}
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">Sin orden activa</p>
+                    )}
 
-                <div className="mt-3">
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${armador.lat},${armador.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-vibrant-cyan hover:underline font-medium"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Abrir en Google Maps
-                  </a>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+                    {armador.ruta && armador.ruta.length > 1 && (
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        Puntos de ruta en las últimas 24h: {armador.ruta.length}
+                      </p>
+                    )}
+                    <div className="mt-3">
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${armador.lat},${armador.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-vibrant-cyan hover:underline font-medium"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Abrir en Google Maps
+                      </a>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            </Fragment>
+          );
+        })}
       </MapContainer>
     </div>
   );

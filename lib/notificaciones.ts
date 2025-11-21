@@ -68,18 +68,23 @@ export async function enviarEmailCambioEstado(data: {
       ARMADO_COMPLETADO: "Armado Completado",
     };
 
-    const estadosOrdenados = [
-      "SIN_ASIGNAR",
+    // Para el correo usamos solo los 4 estados clave para el cliente final.
+    const estadosStepper = [
       "ASIGNADO",
       "EN_RUTA",
       "ARMADO_INICIADO",
-      "ARMADO_FINALIZADO",
       "ARMADO_COMPLETADO",
     ];
 
-    const currentIndex = estadosOrdenados.indexOf(data.estadoNuevo);
+    // Mapear estados internos a los pasos del stepper
+    let estadoParaStepper = data.estadoNuevo;
+    if (estadoParaStepper === "ARMADO_FINALIZADO") {
+      estadoParaStepper = "ARMADO_COMPLETADO";
+    }
 
-    const stepsHtml = estadosOrdenados
+    const currentIndex = estadosStepper.indexOf(estadoParaStepper);
+
+    const stepsHtml = estadosStepper
       .map((estado, index) => {
         const isCompleted = currentIndex > index;
         const isActive = currentIndex === index;
@@ -94,7 +99,7 @@ export async function enviarEmailCambioEstado(data: {
         const labelColor = isActive ? "#111827" : "#6b7280";
 
         const lineColor =
-          index < estadosOrdenados.length - 1
+          index < estadosStepper.length - 1
             ? currentIndex >= index + 1
               ? "#10b981"
               : "#e5e7eb"
@@ -110,7 +115,7 @@ export async function enviarEmailCambioEstado(data: {
                 ${index + 1}
               </div>
               ${
-                index < estadosOrdenados.length - 1
+                index < estadosStepper.length - 1
                   ? `<div style="flex: 1; height: 2px; margin-left: 8px; background: ${lineColor};"></div>`
                   : ""
               }
@@ -342,7 +347,8 @@ export async function notificarCambioEstadoOrden(ordenId: string) {
     }
 
     const ultimoRegistro = orden.registrosEstado[0];
-    const linkSeguimiento = `${process.env.NEXT_PUBLIC_APP_URL}/seguimiento/${orden.id}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.armados2go.com";
+    const linkSeguimiento = `${baseUrl}/seguimiento/${orden.id}`;
 
     // Notificar al cliente si tiene email o teléfono
     if (orden.usuarioFinal.email) {
