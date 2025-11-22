@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { EstadoOrden } from '@prisma/client';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import type { EstadoOrden } from "@prisma/client";
+import { getSession } from "@/lib/auth";
 
 type FiltrosReporte = {
   desde?: string;
@@ -12,9 +11,7 @@ type FiltrosReporte = {
   armadorId?: string;
 };
 
-type TiempoPorEstado = {
-  [key in EstadoOrden]?: number; // Tiempo en segundos
-};
+type TiempoPorEstado = Record<string, number>; // Tiempo en segundos por estado
 
 type ResultadoReporte = {
   ordenId: string;
@@ -30,12 +27,12 @@ type ResultadoReporte = {
 
 export async function GET(request: Request) {
   try {
-    // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    // Verificar autenticación (solo ADMIN puede ver este reporte)
+    const session = await getSession();
+    if (!session || session.rol !== "ADMIN") {
       return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
+        { error: "No autorizado" },
+        { status: 403 },
       );
     }
 
@@ -51,10 +48,13 @@ export async function GET(request: Request) {
     const desde = desdeParam ? new Date(desdeParam) : undefined;
     const hasta = hastaParam ? new Date(hastaParam) : undefined;
 
-    if ((desdeParam && isNaN(desde?.getTime())) || (hastaParam && isNaN(hasta?.getTime()))) {
+    const isInvalidDesde = !!desdeParam && (!desde || Number.isNaN(desde.getTime()));
+    const isInvalidHasta = !!hastaParam && (!hasta || Number.isNaN(hasta.getTime()));
+
+    if (isInvalidDesde || isInvalidHasta) {
       return NextResponse.json(
-        { error: 'Formato de fecha inválido. Use YYYY-MM-DD' },
-        { status: 400 }
+        { error: "Formato de fecha inválido. Use YYYY-MM-DD" },
+        { status: 400 },
       );
     }
 
@@ -89,22 +89,28 @@ export async function GET(request: Request) {
       where: whereClause,
       include: {
         registrosEstado: {
-          orderBy: { timestamp: 'asc' },
+          orderBy: { timestamp: "asc" },
         },
         proyecto: {
           select: { nombreComercial: true },
         },
         armador: {
-          select: { nombre: true, apellido: true },
+          include: {
+            usuario: {
+              select: {
+                nombre: true,
+              },
+            },
+          },
         },
       },
-      orderBy: { fechaCreacion: 'desc' },
+      orderBy: { fechaCreacion: "desc" },
     });
 
     // Procesar los datos para calcular los tiempos por estado
     const resultados: ResultadoReporte[] = [];
 
-    for (const orden of ordenes) {
+    for (const orden of ordenes as any[]) {
       // Ordenar los registros de estado por timestamp
       const registrosOrdenados = [...orden.registrosEstado].sort(
         (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
@@ -128,7 +134,7 @@ export async function GET(request: Request) {
           if (!tiemposPorEstado[registroActual.estadoCambiadoA]) {
             tiemposPorEstado[registroActual.estadoCambiadoA] = 0;
           }
-          tiemposPorEstado[registroActual.estadoCambiadoA]! += duracion;
+          tiemposPorEstado[registroActual.estadoCambiadoA] += duracion;
           tiempoTotal += duracion;
         }
       }
@@ -143,7 +149,7 @@ export async function GET(request: Request) {
           if (!tiemposPorEstado[ultimoRegistro.estadoCambiadoA]) {
             tiemposPorEstado[ultimoRegistro.estadoCambiadoA] = 0;
           }
-          tiemposPorEstado[ultimoRegistro.estadoCambiadoA]! += duracion;
+          tiemposPorEstado[ultimoRegistro.estadoCambiadoA] += duracion;
           tiempoTotal += duracion;
         }
       }
@@ -153,7 +159,7 @@ export async function GET(request: Request) {
         ordenId: orden.id,
         codigoReferenciaRetail: orden.codigoReferenciaRetail,
         proyecto: orden.proyecto.nombreComercial,
-        armador: orden.armador ? `${orden.armador.nombre} ${orden.armador.apellido}` : undefined,
+        armador: orden.armador?.usuario?.nombre ?? undefined,
         estadoActual: orden.estado,
         fechaCreacion: orden.fechaCreacion,
         fechaCompletado: orden.fechaCompletado || undefined,

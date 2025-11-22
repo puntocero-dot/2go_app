@@ -1,4 +1,4 @@
-import { prisma } from './prisma';
+import { prisma } from "./prisma";
 
 export async function getProyectosParaFiltros() {
   return prisma.proyecto.findMany({
@@ -7,7 +7,7 @@ export async function getProyectosParaFiltros() {
       nombreComercial: true,
     },
     orderBy: {
-      nombreComercial: 'asc',
+      nombreComercial: "asc",
     },
   });
 }
@@ -16,33 +16,17 @@ export async function getArmadoresParaFiltros() {
   return prisma.armador.findMany({
     select: {
       id: true,
-      nombre: true,
-      apellido: true,
+      usuario: {
+        select: {
+          nombre: true,
+        },
+      },
     },
-    orderBy: [
-      { nombre: 'asc' },
-      { apellido: 'asc' },
-    ],
+    orderBy: {
+      usuario: {
+        nombre: "asc",
+      },
+    },
   });
 }
 
-export type EstadoOrden = 
-  | 'SIN_ASIGNAR'
-  | 'ASIGNADO'
-  | 'EN_RUTA'
-  | 'ARMADO_INICIADO'
-  | 'ARMADO_FINALIZADO'
-  | 'ARMADO_COMPLETADO'
-  | 'CANCELADA';
-
-export interface ResultadoReporte {
-  ordenId: string;
-  codigoReferenciaRetail: string;
-  proyecto: string;
-  armador?: string;
-  estadoActual: EstadoOrden;
-  fechaCreacion: string;
-  fechaCompletado?: string;
-  tiemposPorEstado: Record<EstadoOrden, number>;
-  tiempoTotal: number;
-}
