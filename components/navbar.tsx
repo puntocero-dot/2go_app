@@ -101,6 +101,20 @@ export function Navbar({ user }: NavbarProps) {
                     )}
                   </Link>
                   <Link
+                    href="/admin/reportes/tiempos-pedido"
+                    className={cn(
+                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      isActive("/admin/reportes")
+                        ? "bg-white/10 text-white"
+                        : "text-white/80 hover:bg-white/5 hover:text-white",
+                    )}
+                  >
+                    Reportes
+                    {isActive("/admin/reportes") && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
+                    )}
+                  </Link>
+                  <Link
                     href="/admin/facturacion"
                     className={cn(
                       "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
@@ -276,6 +290,16 @@ export function Navbar({ user }: NavbarProps) {
               onClick={() => setMobileMenuOpen(false)}
             >
               Órdenes
+            </Link>
+            <Link
+              href="/admin/reportes/tiempos-pedido"
+              className={cn(
+                "block rounded-md px-3 py-2 text-sm font-medium",
+                isActive("/admin/reportes") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
+              )}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Reportes
             </Link>
             <Link
               href="/admin/mapa"
