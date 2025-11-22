@@ -165,7 +165,7 @@ export async function getBillingDataset(input: {
     );
   }
 
-  const reglaCobro = proyecto.reglaCobro
+  const reglaCobroBase = proyecto.reglaCobro
     ? {
         ...proyecto.reglaCobro,
         rangosVolumen: proyecto.reglaCobro.rangosVolumen,
@@ -186,12 +186,37 @@ export async function getBillingDataset(input: {
     );
   }
 
+  let reglaCobroParaCalculo = reglaCobroBase;
+
+  if (
+    reglaCobroBase &&
+    reglaCobroBase.tipoPrincipal === "COBRO_POR_VOLUMEN" &&
+    ordenesValidas.length > 0 &&
+    reglaCobroBase.rangosVolumen.length > 0
+  ) {
+    const cantidadPeriodo = ordenesValidas.length;
+
+    const rango = reglaCobroBase.rangosVolumen.find((r) => {
+      const withinDesde = cantidadPeriodo >= r.desde;
+      const withinHasta = r.hasta == null || cantidadPeriodo <= r.hasta;
+      return withinDesde && withinHasta;
+    });
+
+    if (rango) {
+      reglaCobroParaCalculo = {
+        ...reglaCobroBase,
+        tipoPrincipal: "COBRO_FIJO_UNITARIO",
+        precioFijoUnitario: rango.precio,
+      };
+    }
+  }
+
   const ordenes: BillingOrderRow[] = ordenesValidas.map((orden) => {
     const calculo = calcularCobroOrden({
       orden,
       usuarioFinal: orden.usuarioFinal,
       mueble: orden.mueble,
-      reglaCobro,
+      reglaCobro: reglaCobroParaCalculo,
       penalizacionesAplicadas: orden.penalizacionesAplicadas,
     });
 

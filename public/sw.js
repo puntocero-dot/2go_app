@@ -29,21 +29,28 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Intercepción de requests (estrategia Network First)
+// Intercepción de requests (estrategia Network First para GET únicamente)
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+
+  // Solo manejamos y cacheamos peticiones GET. Esto evita errores con HEAD/POST, etc.
+  if (request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
         // Clonar la respuesta
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+          cache.put(request, responseToCache);
         });
         return response;
       })
       .catch(() => {
         // Si falla la red, intentar cache
-        return caches.match(event.request);
+        return caches.match(request);
       })
   );
 });

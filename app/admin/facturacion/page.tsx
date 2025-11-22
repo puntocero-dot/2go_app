@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/table";
 import { BillingEmailButton } from "@/components/billing-email-button";
 import { formatCurrency } from "@/lib/utils";
-import { calcularCobroOrden } from "@/lib/facturacion-helpers";
 import type { BillingConcept } from "@/lib/facturacion-helpers";
+import { getBillingDataset } from "@/lib/facturacion-data";
 import {
   billingFiltersSchema,
   getDateRangeFromFilters,
@@ -144,79 +144,31 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
   let ordenes: OrdenPreview[] = [];
 
   if (proyectoIdFilter && range) {
-    const proyectoFacturacion = await prisma.proyecto.findFirst({
-      where: { id: proyectoIdFilter, activo: true },
-      include: {
-        reglaCobro: {
-          include: {
-            rangosVolumen: true,
-            cobrosDistancia: true,
-            penalizaciones: true,
-          },
-        },
-      },
+    const dataset = await getBillingDataset({
+      proyectoId: proyectoIdFilter,
+      desde: desdeFilter,
+      hasta: hastaFilter,
     });
 
-    const ordenesRaw = await prisma.orden.findMany({
-      where: {
-        proyectoId: proyectoIdFilter,
-        estado: "ARMADO_COMPLETADO",
-        fechaCompletado: {
-          gte: range.start,
-          lte: range.end,
-        },
-      },
-      orderBy: { fechaCompletado: "asc" },
-      include: {
-        usuarioFinal: true,
-        mueble: true,
-        penalizacionesAplicadas: true,
-        proyecto: {
-          select: {
-            nombreComercial: true,
+    if (dataset) {
+      ordenes = dataset.ordenes.map((orden): OrdenPreview => {
+        return {
+          id: orden.id,
+          codigoReferenciaRetail: orden.codigoReferenciaRetail,
+          fechaCompletado: orden.fechaCompletado,
+          estado: orden.estado,
+          montoCalculado: orden.total,
+          conceptos: orden.conceptos,
+          usuarioFinal: {
+            nombre: orden.clienteNombre,
+            municipio: orden.municipio,
           },
-        },
-      },
-    });
-
-    const ordenesValidas = ordenesRaw.filter(
-      (orden: (typeof ordenesRaw)[number]) => orden.usuarioFinal && orden.mueble,
-    );
-
-    const reglaCobro = proyectoFacturacion?.reglaCobro
-      ? {
-          ...proyectoFacturacion.reglaCobro,
-          rangosVolumen: proyectoFacturacion.reglaCobro.rangosVolumen,
-          cobrosDistancia: proyectoFacturacion.reglaCobro.cobrosDistancia,
-          penalizaciones: proyectoFacturacion.reglaCobro.penalizaciones,
-        }
-      : null;
-
-    ordenes = ordenesValidas.map((orden: (typeof ordenesValidas)[number]): OrdenPreview => {
-      const calculo = calcularCobroOrden({
-        orden,
-        usuarioFinal: orden.usuarioFinal,
-        mueble: orden.mueble,
-        reglaCobro,
-        penalizacionesAplicadas: orden.penalizacionesAplicadas,
+          proyecto: {
+            nombreComercial: dataset.proyecto.nombreComercial,
+          },
+        };
       });
-
-      return {
-        id: orden.id,
-        codigoReferenciaRetail: orden.codigoReferenciaRetail,
-        fechaCompletado: orden.fechaCompletado,
-        estado: orden.estado,
-        montoCalculado: calculo.total,
-        conceptos: calculo.conceptos,
-        usuarioFinal: {
-          nombre: orden.usuarioFinal.nombre,
-          municipio: orden.usuarioFinal.municipio,
-        },
-        proyecto: {
-          nombreComercial: orden.proyecto.nombreComercial,
-        },
-      };
-    });
+    }
   }
 
   const pageSize = 50;

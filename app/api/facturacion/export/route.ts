@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth";
-import { calcularCobroOrden } from "@/lib/facturacion-helpers";
-import { prisma } from "@/lib/prisma";
+import { getBillingDataset } from "@/lib/facturacion-data";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getBillingSecurityHeaders } from "@/lib/security-headers";
-import {
-  billingFiltersSchema,
-  getDateRangeFromFilters,
-} from "@/lib/schemas/facturacion.schema";
+import { billingFiltersSchema } from "@/lib/schemas/facturacion.schema";
 
 function escapeCsv(value: string): string {
   const str = value ?? "";
@@ -72,44 +68,17 @@ export async function GET(request: NextRequest) {
     desde = parsed.data.desde;
     hasta = parsed.data.hasta;
 
-    const range = getDateRangeFromFilters(parsed.data);
+    const dataset = await getBillingDataset({ proyectoId, desde, hasta });
 
-    const proyecto = await prisma.proyecto.findFirst({
-      where: { id: proyectoId, activo: true },
-      include: {
-        reglaCobro: {
-          include: {
-            rangosVolumen: true,
-            cobrosDistancia: true,
-            penalizaciones: true,
-          },
-        },
-      },
-    });
-
-    if (!proyecto) {
+    if (!dataset || dataset.ordenes.length === 0) {
       return NextResponse.json(
-        { error: "Proyecto no encontrado" },
+        {
+          error:
+            "No hay órdenes facturables para este proyecto en el periodo seleccionado",
+        },
         { status: 404 },
       );
     }
-
-    const ordenes = await prisma.orden.findMany({
-      where: {
-        proyectoId,
-        estado: "ARMADO_COMPLETADO",
-        fechaCompletado: {
-          gte: range.start,
-          lte: range.end,
-        },
-      },
-      orderBy: { fechaCompletado: "asc" },
-      include: {
-        usuarioFinal: true,
-        mueble: true,
-        penalizacionesAplicadas: true,
-      },
-    });
 
     const headers = [
       "proyecto",
@@ -128,34 +97,19 @@ export async function GET(request: NextRequest) {
 
     let totalFacturado = 0;
 
-    for (const orden of ordenes) {
-      const calculo = calcularCobroOrden({
-        orden,
-        usuarioFinal: orden.usuarioFinal,
-        mueble: orden.mueble,
-        reglaCobro: proyecto.reglaCobro
-          ? {
-              ...proyecto.reglaCobro,
-              rangosVolumen: proyecto.reglaCobro.rangosVolumen,
-              cobrosDistancia: proyecto.reglaCobro.cobrosDistancia,
-              penalizaciones: proyecto.reglaCobro.penalizaciones,
-            }
-          : null,
-        penalizacionesAplicadas: orden.penalizacionesAplicadas,
-      });
+    for (const orden of dataset.ordenes) {
+      totalFacturado += orden.total;
 
-      totalFacturado += calculo.total;
-
-      for (const concepto of calculo.conceptos) {
+      for (const concepto of orden.conceptos) {
         const fechaArmado = orden.fechaCompletado
           ? orden.fechaCompletado.toISOString().slice(0, 10)
           : "";
 
         const row = [
-          proyecto.nombreComercial,
+          dataset.proyecto.nombreComercial,
           orden.codigoReferenciaRetail,
-          orden.usuarioFinal.nombre,
-          orden.usuarioFinal.municipio,
+          orden.clienteNombre,
+          orden.municipio,
           fechaArmado,
           orden.estado,
           concepto.tipo,
@@ -169,7 +123,7 @@ export async function GET(request: NextRequest) {
 
     const csvContent = "\uFEFF" + lines.join("\n");
 
-    const projectSlug = proyecto.nombreComercial
+    const projectSlug = dataset.proyecto.nombreComercial
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -187,7 +141,7 @@ export async function GET(request: NextRequest) {
         proyectoId,
         desde,
         hasta,
-        totalOrdenes: ordenes.length,
+        totalOrdenes: dataset.ordenes.length,
         totalFacturado,
         durationMs: Date.now() - startedAt,
         ip:

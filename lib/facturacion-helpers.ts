@@ -100,6 +100,35 @@ function calcularBasePorVolumen(
   };
 }
 
+export function calcularMontoBloquePorVolumen(
+  regla: ReglaCobroWithChildren,
+  cantidad: number,
+): { monto: number; descripcion: string } {
+  if (!regla.rangosVolumen.length || cantidad <= 0) {
+    return { monto: 0, descripcion: "" };
+  }
+
+  const rango = regla.rangosVolumen.find((r) => {
+    const withinDesde = cantidad >= r.desde;
+    const withinHasta = r.hasta == null || cantidad <= r.hasta;
+    return withinDesde && withinHasta;
+  });
+
+  if (!rango) {
+    return {
+      monto: 0,
+      descripcion: "Sin rango de volumen aplicable",
+    };
+  }
+
+  const monto = rango.precio;
+  return {
+    monto,
+    descripcion: `Bloque volumen ${cantidad}u (rango ${rango.desde}-$
+      {rango.hasta == null ? "∞" : rango.hasta}) x ${rango.precio.toFixed(2)}`,
+  };
+}
+
 export function calcularCobroOrden(input: BillingInput): BillingCalculationResult {
   const { orden, usuarioFinal, mueble, reglaCobro, penalizacionesAplicadas } =
     input;

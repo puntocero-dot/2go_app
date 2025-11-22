@@ -120,7 +120,7 @@ export async function enviarEmailCambioEstado(data: {
                   : ""
               }
             </div>
-            <div style="margin-top: 8px; font-size: 11px; color: ${labelColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div style="margin-top: 8px; font-size: 11px; color: ${labelColor}; line-height: 1.4;">
               ${label}
             </div>
           </div>
@@ -144,7 +144,7 @@ export async function enviarEmailCambioEstado(data: {
             Estados de tu servicio:
           </div>
 
-          <div style="display: flex; align-items: flex-start; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+          <div style="display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; padding-bottom: 4px;">
             ${stepsHtml}
           </div>
 
