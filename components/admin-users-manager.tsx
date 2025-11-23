@@ -105,6 +105,7 @@ function getPasswordChecks(value: string) {
 }
 
 export function AdminUsersManager({ initialUsers, proyectos }: Props) {
+  console.log('AdminUsersManager - Proyectos recibidos:', proyectos);
   const [usuarios, setUsuarios] = useState<UsuarioItem[]>(initialUsers);
   const [filterRol, setFilterRol] = useState<"ALL" | RolPermitido>("ALL");
   const [listLoading, setListLoading] = useState(false);
