@@ -289,14 +289,14 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
                 size="sm"
                 onClick={() => setSelectedIds([])}
               >
-                Deseleccionar todo
+                Limpiar selección
               </EnhancedButton>
               <EnhancedButton
                 variant="default"
                 size="sm"
                 disabled={processing}
               >
-                {processing ? "Procesando..." : "Acción en lote"}
+                {processing ? "Procesando..." : "Asignación Automática"}
               </EnhancedButton>
             </div>
           </div>
