@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   description:
     "Sistema de gestión de armado de muebles para empresas retail",
   manifest: "/manifest.json",
-  themeColor: "#8B6F47",
   applicationName: "Armados 2Go",
   appleWebApp: {
     capable: true,
