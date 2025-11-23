@@ -117,9 +117,38 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
+  // Si es supervisor, obtener sus proyectos asignados
+  let proyectoIdsPermitidos: string[] | undefined;
+  if (session.rol === "SUPERVISOR") {
+    const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+      where: { usuarioId: session.userId },
+      select: { proyectoId: true },
+    });
+    proyectoIdsPermitidos = supervisorProyectos.map(sp => sp.proyectoId);
+    
+    // Si no tiene proyectos asignados, no puede ver nada
+    if (proyectoIdsPermitidos.length === 0) {
+      proyectoIdsPermitidos = ["__NINGUNO__"]; // ID que no existe para que no muestre nada
+    }
+  }
+
   const ordenWhere: Prisma.OrdenWhereInput = {};
+  
+  // Filtrar por proyectos del supervisor
+  if (proyectoIdsPermitidos) {
+    ordenWhere.proyectoId = { in: proyectoIdsPermitidos };
+  }
+  
+  // Filtrar por proyecto específico si se seleccionó uno
   if (proyectoIdFilter !== "ALL") {
-    ordenWhere.proyectoId = proyectoIdFilter;
+    if (proyectoIdsPermitidos) {
+      // Verificar que el proyecto seleccionado esté en los permitidos
+      if (proyectoIdsPermitidos.includes(proyectoIdFilter)) {
+        ordenWhere.proyectoId = proyectoIdFilter;
+      }
+    } else {
+      ordenWhere.proyectoId = proyectoIdFilter;
+    }
   }
 
   const estadoValue: EstadoOrden | null =
@@ -149,6 +178,7 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     totalFacturado,
   ] = await Promise.all([
     prisma.proyecto.findMany({
+      where: proyectoIdsPermitidos ? { id: { in: proyectoIdsPermitidos } } : undefined,
       orderBy: { nombreComercial: "asc" },
       select: { id: true, nombreComercial: true },
     }),

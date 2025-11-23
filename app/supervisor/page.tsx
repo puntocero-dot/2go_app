@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+export const dynamic = 'force-dynamic';
+
 export default async function SupervisorDashboard() {
   const session = await getSession();
 
@@ -28,13 +30,41 @@ export default async function SupervisorDashboard() {
     redirect("/login");
   }
 
-  // Obtener órdenes del día
+  // Obtener proyectos asignados al supervisor
+  const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+    where: { usuarioId: session.userId },
+    select: { proyectoId: true },
+  });
+
+  const proyectoIds = supervisorProyectos.map(sp => sp.proyectoId);
+
+  // Si no tiene proyectos asignados, mostrar mensaje
+  if (proyectoIds.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar user={usuario} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              No tienes proyectos asignados
+            </h1>
+            <p className="text-gray-600">
+              Contacta al administrador para que te asigne proyectos.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Obtener órdenes del día (solo de proyectos asignados)
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
   const [ordenesHoy, ordenesActivas, ordenes] = await Promise.all([
     prisma.orden.count({
       where: {
+        proyectoId: { in: proyectoIds },
         createdAt: {
           gte: hoy,
         },
@@ -42,12 +72,16 @@ export default async function SupervisorDashboard() {
     }),
     prisma.orden.count({
       where: {
+        proyectoId: { in: proyectoIds },
         estado: {
           in: ["SIN_ASIGNAR", "ASIGNADO", "EN_RUTA", "ARMADO_INICIADO"],
         },
       },
     }),
     prisma.orden.findMany({
+      where: {
+        proyectoId: { in: proyectoIds },
+      },
       take: 20,
       orderBy: { createdAt: "desc" },
       include: {
