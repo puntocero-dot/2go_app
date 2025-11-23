@@ -17,6 +17,10 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
     nombreComercial: proyecto.nombreComercial || "",
     activo: proyecto.activo ?? true,
     tipoCliente: proyecto.tipoCliente || "CONSUMIDOR_FINAL",
+    contactoEmail: proyecto.contactoEmail || "",
+    contactoTelefono: proyecto.contactoTelefono || "",
+    direccion: proyecto.direccion || "",
+    descripcion: proyecto.descripcion || "",
     datosFacturacion: typeof proyecto.datosFacturacion === 'object' ? proyecto.datosFacturacion : {},
   });
 
@@ -87,22 +91,85 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
           </select>
         </div>
 
-        <div className="md:col-span-2">
-          <Label htmlFor="tipoCliente">Tipo de Facturación (El Salvador) *</Label>
-          <select
-            id="tipoCliente"
-            name="tipoCliente"
-            value={formData.tipoCliente}
+        <div>
+          <Label htmlFor="contactoEmail">Email de Contacto</Label>
+          <input
+            type="email"
+            id="contactoEmail"
+            name="contactoEmail"
+            value={formData.contactoEmail}
             onChange={handleChange}
-            required
             className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          >
-            <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
-            <option value="CREDITO_FISCAL">Crédito Fiscal</option>
-          </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Selecciona el tipo de facturación según las leyes de El Salvador
-          </p>
+            placeholder="contacto@empresa.com"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="contactoTelefono">Teléfono de Contacto</Label>
+          <input
+            type="tel"
+            id="contactoTelefono"
+            name="contactoTelefono"
+            value={formData.contactoTelefono}
+            onChange={handleChange}
+            className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="+503 1234 5678"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="direccion">Dirección</Label>
+        <input
+          type="text"
+          id="direccion"
+          name="direccion"
+          value={formData.direccion}
+          onChange={handleChange}
+          className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          placeholder="Calle Principal #123, Ciudad, País"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="descripcion">Descripción</Label>
+        <textarea
+          id="descripcion"
+          name="descripcion"
+          value={formData.descripcion}
+          onChange={handleChange}
+          rows={4}
+          className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+          placeholder="Describe el proyecto, sus características y objetivos..."
+        />
+      </div>
+
+      <div className="border-t border-gray-200 pt-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Configuración de Facturación</h3>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="tipoCliente">Tipo de Facturación (El Salvador) *</Label>
+            <select
+              id="tipoCliente"
+              name="tipoCliente"
+              value={formData.tipoCliente}
+              onChange={handleChange}
+              required
+              className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            >
+              <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
+              <option value="CREDITO_FISCAL">Crédito Fiscal</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Selecciona el tipo de facturación según las leyes de El Salvador
+            </p>
+          </div>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Nota:</strong> Las reglas de facturación (cobro por volumen, prioridad, distancia, etc.) se configuran en la sección de "Reglas de Cobro" del proyecto.
+            </p>
+          </div>
         </div>
       </div>
 
