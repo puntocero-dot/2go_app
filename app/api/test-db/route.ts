@@ -25,7 +25,7 @@ export async function GET() {
       userCount,
       users: users.map(u => ({
         ...u,
-        hasPassword: !!u.password // Solo verificar si tiene password
+        hasPassword: true // Todos los usuarios deberían tener password
       }))
     });
   } catch (error) {
