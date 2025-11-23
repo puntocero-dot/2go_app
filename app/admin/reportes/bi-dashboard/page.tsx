@@ -211,6 +211,7 @@ async function getBIDashboardData(filters: any) {
 }
 
 export default async function BIDashboardPage({ searchParams }: PageProps) {
+  try {
   const session = await getSession();
   const currentSearchParams = await searchParams;
 
@@ -465,4 +466,25 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
       </main>
     </div>
   );
+  } catch (error) {
+    console.error("Error en BI Dashboard:", error);
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
+        <div className="text-center p-8">
+          <BarChart3 className="w-16 h-16 text-red-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error en BI Dashboard</h1>
+          <p className="text-gray-600 mb-4">Ha ocurrido un error al cargar el dashboard de inteligencia de negocios.</p>
+          <p className="text-sm text-gray-500 mb-6">
+            {error instanceof Error ? error.message : "Error desconocido"}
+          </p>
+          <Link href="/admin">
+            <EnhancedButton>
+              Volver al Dashboard
+            </EnhancedButton>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 }

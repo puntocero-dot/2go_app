@@ -5,7 +5,9 @@ import { Navbar } from "@/components/navbar";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import MapaDashboard from "@/components/mapa-dashboard";
-import { Filter, MapPin } from "lucide-react";
+import { Filter, MapPin, AlertTriangle } from "lucide-react";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import Link from "next/link";
 
 type Usuario = {
   nombre: string;
@@ -80,6 +82,7 @@ async function getMapData() {
 }
 
 export default async function MapaPage() {
+  try {
   const session = await getSession();
 
   if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
@@ -200,4 +203,25 @@ export default async function MapaPage() {
       </main>
     </div>
   );
+  } catch (error) {
+    console.error("Error en Mapa:", error);
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
+        <div className="text-center p-8">
+          <AlertTriangle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error en Mapa</h1>
+          <p className="text-gray-600 mb-4">Ha ocurrido un error al cargar el mapa de operaciones.</p>
+          <p className="text-sm text-gray-500 mb-6">
+            {error instanceof Error ? error.message : "Error desconocido"}
+          </p>
+          <Link href="/admin">
+            <EnhancedButton>
+              Volver al Dashboard
+            </EnhancedButton>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 }

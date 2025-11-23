@@ -139,42 +139,43 @@ function BillingCard({
 }
 
 export default async function FacturacionPage({ searchParams }: PageProps) {
-  const session = await getSession();
-  const currentSearchParams = await searchParams;
+  try {
+    const session = await getSession();
+    const currentSearchParams = await searchParams;
 
-  if (!session || session.rol !== "ADMIN") {
-    redirect("/login");
-  }
+    if (!session || session.rol !== "ADMIN") {
+      redirect("/login");
+    }
 
-  const usuario = await prisma.usuario.findUnique({
-    where: { id: session.userId },
-  });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: session.userId },
+    });
 
-  if (!usuario) {
-    redirect("/login");
-  }
+    if (!usuario) {
+      redirect("/login");
+    }
 
-  // Parse filters
-  const filters = billingFiltersSchema.parse(currentSearchParams);
-  const { start: startDate, end: endDate } = getDateRangeFromFilters(filters);
+    // Parse filters
+    const filters = billingFiltersSchema.parse(currentSearchParams);
+    const { start: startDate, end: endDate } = getDateRangeFromFilters(filters);
 
-  // Get billing data
-  const billingData = await getBillingDataset({
-    proyectoId: filters.proyectoId === "ALL" ? "ALL" : filters.proyectoId!,
-    desde: filters.desde || startDate.toISOString().split('T')[0],
-    hasta: filters.hasta || endDate.toISOString().split('T')[0],
-  });
+    // Get billing data
+    const billingData = await getBillingDataset({
+      proyectoId: filters.proyectoId === "ALL" ? "ALL" : filters.proyectoId!,
+      desde: filters.desde || startDate.toISOString().split('T')[0],
+      hasta: filters.hasta || endDate.toISOString().split('T')[0],
+    });
 
-  const hasData = billingData && billingData.ordenes.length > 0;
-  const summary = billingData ? billingData.totalsByConcept : {
-    armado: 0,
-    tamano: 0,
-    distancia: 0,
-    penalizacion: 0,
-    prioridad: 0,
-    totalFacturado: 0
-  };
-  const totalAmount = billingData ? billingData.totalsByConcept.totalFacturado : 0;
+    const hasData = billingData && billingData.ordenes.length > 0;
+    const summary = billingData ? billingData.totalsByConcept : {
+      armado: 0,
+      tamano: 0,
+      distancia: 0,
+      penalizacion: 0,
+      prioridad: 0,
+      totalFacturado: 0
+    };
+    const totalAmount = billingData ? billingData.totalsByConcept.totalFacturado : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -426,4 +427,25 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
       </main>
     </div>
   );
+  } catch (error) {
+    console.error("Error en Facturación:", error);
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
+        <div className="text-center p-8">
+          <AlertTriangle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error en Facturación</h1>
+          <p className="text-gray-600 mb-4">Ha ocurrido un error al cargar los datos de facturación.</p>
+          <p className="text-sm text-gray-500 mb-6">
+            {error instanceof Error ? error.message : "Error desconocido"}
+          </p>
+          <Link href="/admin">
+            <EnhancedButton>
+              Volver al Dashboard
+            </EnhancedButton>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 }
