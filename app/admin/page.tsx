@@ -99,20 +99,21 @@ function KPICard({
 }
 
 export default async function AdminDashboard({ searchParams }: PageProps) {
-  const session = await getSession();
-  const filters = await searchParams;
+  try {
+    const session = await getSession();
+    const filters = await searchParams;
 
-  if (!session || session.rol !== "ADMIN") {
-    redirect("/login");
-  }
+    if (!session || session.rol !== "ADMIN") {
+      redirect("/login");
+    }
 
-  const usuario = await prisma.usuario.findUnique({
-    where: { id: session.userId },
-  });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: session.userId },
+    });
 
-  if (!usuario) {
-    redirect("/login");
-  }
+    if (!usuario) {
+      redirect("/login");
+    }
 
   const proyectoIdFilter =
     typeof filters?.proyectoId === "string" && filters.proyectoId !== ""
@@ -463,4 +464,20 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
       </main>
     </div>
   );
+  } catch (error) {
+    console.error("Error en AdminDashboard:", error);
+    
+    // Página de error simple para producción
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error en el Dashboard</h1>
+          <p className="text-gray-600 mb-4">Ha ocurrido un error al cargar el dashboard.</p>
+          <a href="/login" className="text-blue-600 hover:underline">
+            Volver al login
+          </a>
+        </div>
+      </div>
+    );
+  }
 }
