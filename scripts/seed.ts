@@ -7,7 +7,7 @@ async function main() {
   console.log("🌱 Iniciando seed de la base de datos...");
 
   // Crear usuario admin
-  const adminPassword = await hashPassword("admin123");
+  const adminPassword = await hashPassword("123456");
   
   const admin = await prisma.usuario.upsert({
     where: { email: "admin@armados2go.com" },
@@ -24,10 +24,10 @@ async function main() {
 
   console.log("✅ Usuario admin creado:", admin.email);
   console.log("📧 Email: admin@armados2go.com");
-  console.log("🔑 Contraseña: admin123");
+  console.log("🔑 Contraseña: 123456");
 
   // Crear usuario supervisor de ejemplo
-  const supervisorPassword = await hashPassword("supervisor123");
+  const supervisorPassword = await hashPassword("123456");
   
   const supervisor = await prisma.usuario.upsert({
     where: { email: "supervisor@armados2go.com" },
@@ -44,10 +44,10 @@ async function main() {
 
   console.log("✅ Usuario supervisor creado:", supervisor.email);
   console.log("📧 Email: supervisor@armados2go.com");
-  console.log("🔑 Contraseña: supervisor123");
+  console.log("🔑 Contraseña: 123456");
 
   // Crear usuario armador de ejemplo
-  const armadorPassword = await hashPassword("armador123");
+  const armadorPassword = await hashPassword("123456");
   
   const usuarioArmador = await prisma.usuario.upsert({
     where: { email: "armador@armados2go.com" },
@@ -74,7 +74,7 @@ async function main() {
 
   console.log("✅ Usuario armador creado:", usuarioArmador.email);
   console.log("📧 Email: armador@armados2go.com");
-  console.log("🔑 Contraseña: armador123");
+  console.log("🔑 Contraseña: 123456");
 
   console.log("\n🎉 Seed completado exitosamente!");
 }

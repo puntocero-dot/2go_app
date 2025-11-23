@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 interface Orden {
   id: string;
@@ -32,6 +32,7 @@ export default function EditarOrdenPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const { toast } = useToast();
 
   const [orden, setOrden] = useState<Orden | null>(null);
   const [motos, setMotos] = useState<Moto[]>([]);
@@ -54,7 +55,11 @@ export default function EditarOrdenPage() {
       setOrden(data);
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Error al cargar la orden");
+      toast({
+        title: "Error",
+        description: "Error al cargar la orden",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -88,11 +93,18 @@ export default function EditarOrdenPage() {
 
       if (!response.ok) throw new Error("Error al actualizar orden");
       
-      toast.success("Orden actualizada correctamente");
+      toast({
+        title: "Éxito",
+        description: "Orden actualizada correctamente",
+      });
       router.push("/admin/ordenes");
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Error al actualizar la orden");
+      toast({
+        title: "Error",
+        description: "Error al actualizar la orden",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
