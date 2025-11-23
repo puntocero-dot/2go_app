@@ -33,7 +33,7 @@
     --input: 0 5% 73%;
     --ring: 31 28% 41%; /* Madera Natural */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --chart-1: 31 28% 41%; /* Madera Natural */
     --chart-2: 11 24% 52%; /* Terracota */
@@ -56,27 +56,27 @@
     --primary: 31 28% 41%; /* Madera Natural */
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 22 26% 29%; /* Marrón Tierra */
+    --secondary: 15 18% 54%; /* Terracota */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 5% 18%; /* Gris Pizarra */
-    --muted-foreground: 0 5% 73%; /* Gris Nube */
+    --muted: 0 5% 20%; /* Gris Pizarra */
+    --muted-foreground: 0 0% 63%;
 
-    --accent: 11 24% 52%; /* Terracota */
+    --accent: 11 24% 52%; /* Terracota Suave */
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62% 50%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 5% 18%;
-    --input: 0 5% 18%;
-    --ring: 31 28% 41%;
+    --border: 0 5% 20%; /* Gris Pizarra */
+    --input: 0 5% 20%;
+    --ring: 31 28% 41%; /* Madera Natural */
 
-    --chart-1: 31 28% 41%;
-    --chart-2: 11 24% 52%;
-    --chart-3: 22 26% 29%;
-    --chart-4: 45 20% 85%;
-    --chart-5: 0 5% 73%;
+    --chart-1: 31 28% 41%; /* Madera Natural */
+    --chart-2: 11 24% 52%; /* Terracota */
+    --chart-3: 22 26% 29%; /* Marrón Tierra */
+    --chart-4: 45 20% 85%; /* Beige Arena */
+    --chart-5: 0 5% 73%; /* Gris Nube */
   }
 }
 
@@ -86,25 +86,189 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* Custom scrollbar */
+/* Enhanced animations and transitions */
 @layer utilities {
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-muted;
+  .transition-quick {
+    @apply transition-all duration-200 ease-out;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
+  /* Hover effects */
+  .hover-lift {
+    @apply transition-quick hover:-translate-y-1 hover:shadow-lg;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+  .hover-scale {
+    @apply transition-quick hover:scale-105;
+  }
+  
+  .hover-glow {
+    @apply transition-quick hover:shadow-xl hover:shadow-primary/20;
+  }
+  
+  /* Glass morphism effects */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-black/10 backdrop-blur-md border border-black/20;
+  }
+  
+  /* Loading shimmer */
+  .shimmer {
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.1) 50%, 
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  /* Fade animations */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.4s ease-out;
+  }
+  
+  .fade-in-down {
+    animation: fadeInDown 0.4s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes fadeInUp {
+    from { 
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInDown {
+    from { 
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Enhanced focus states */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-smooth hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .card-hover-glow {
+    @apply transition-smooth hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1;
+  }
+  
+  /* Button interactions */
+  .button-press {
+    @apply active:scale-95 transition-quick;
+  }
+  
+  /* Smooth scroll */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  /* Enhanced shadows */
+  .shadow-elevation-1 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  
+  .shadow-elevation-2 {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .shadow-elevation-3 {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .shadow-elevation-4 {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+/* Component-specific enhancements */
+@layer components {
+  /* Enhanced table styles */
+  .table-enhanced {
+    @apply w-full border-collapse;
+  }
+  
+  .table-enhanced th {
+    @apply bg-muted/50 text-muted-foreground font-medium;
+  }
+  
+  .table-enhanced td {
+    @apply border-t;
+  }
+  
+  .table-enhanced tr:hover {
+    @apply bg-muted/30;
+  }
+  
+  /* Enhanced form styles */
+  .form-field {
+    @apply space-y-2;
+  }
+  
+  .form-label {
+    @apply text-sm font-medium text-foreground;
+  }
+  
+  .form-input {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  /* Enhanced badge styles */
+  .badge-enhanced {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  /* Enhanced navigation */
+  .nav-link {
+    @apply transition-colors hover:text-primary duration-200;
+  }
+  
+  .nav-link-active {
+    @apply text-primary font-medium;
   }
 }

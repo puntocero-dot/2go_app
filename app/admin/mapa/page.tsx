@@ -1,16 +1,11 @@
-'use client';
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Importar el mapa dinámicamente para evitar SSR
-const MapaArmadores = dynamic(
-  () => import("@/components/mapa-armadores").then((mod) => mod.MapaArmadores),
-  { ssr: false }
-);
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { Label } from "@/components/ui/label";
+import MapaDashboard from "@/components/mapa-dashboard";
+import { Filter, MapPin } from "lucide-react";
 
 type Usuario = {
   nombre: string;
@@ -18,81 +13,190 @@ type Usuario = {
   rol: "ADMIN" | "SUPERVISOR" | "ARMADOR";
 };
 
-export default function MapaPage() {
-  const router = useRouter();
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const obtenerUsuario = async () => {
-      try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
-
-        if (!response.ok) {
-          router.push("/login");
-          return;
+async function getMapData() {
+  // Armadores con ubicación activa
+  const armadores = await prisma.armador.findMany({
+    where: {
+      ubicacionActualLat: { not: null },
+      ubicacionActualLng: { not: null },
+      estado: 'ACTIVO'
+    },
+    include: {
+      usuario: {
+        select: {
+          nombre: true,
+          email: true
         }
-
-        const data = await response.json();
-        const user = data.user as Usuario;
-
-        if (!user || !["ADMIN", "SUPERVISOR"].includes(user.rol)) {
-          router.push("/login");
-          return;
-        }
-
-        setUsuario(user);
-      } catch (error) {
-        router.push("/login");
-      } finally {
-        setLoading(false);
       }
-    };
+    }
+  });
 
-    obtenerUsuario();
-  }, [router]);
+  // Proyectos disponibles para filtros
+  const proyectos = await prisma.proyecto.findMany({
+    select: {
+      id: true,
+      nombreComercial: true
+    },
+    orderBy: {
+      nombreComercial: 'asc'
+    }
+  });
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Cargando mapa...</p>
-      </div>
-    );
+  // Órdenes activas con ubicación del cliente
+  const ordenes = await prisma.orden.findMany({
+    where: {
+      estado: {
+        in: ['ASIGNADO', 'EN_RUTA', 'ARMADO_INICIADO']
+      }
+    },
+    include: {
+      usuarioFinal: {
+        select: {
+          nombre: true,
+          direccionCompleta: true,
+          municipio: true,
+          coordenadasLat: true,
+          coordenadasLng: true
+        }
+      },
+      armador: {
+        include: {
+          usuario: {
+            select: {
+              nombre: true
+            }
+          }
+        }
+      },
+      proyecto: {
+        select: {
+          nombreComercial: true
+        }
+      }
+    }
+  });
+
+  return { armadores, ordenes, proyectos };
+}
+
+export default async function MapaPage() {
+  const session = await getSession();
+
+  if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+    redirect("/login");
   }
+
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: session.userId },
+  });
 
   if (!usuario) {
-    return null;
+    redirect("/login");
   }
+
+  const { armadores, ordenes, proyectos } = await getMapData();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={usuario} />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        <div>
           <h1 className="text-3xl font-bold text-deep-navy">
-            Tracking GPS en Tiempo Real
+            Mapa de Operaciones
           </h1>
           <p className="text-gray-600 mt-2">
-            Visualiza la ubicación de todos los armadores activos
+            Visualiza armadores y órdenes en tiempo real, filtrando por proyecto y estado.
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Mapa de Armadores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MapaArmadores />
-          </CardContent>
-        </Card>
+        {/* Filtros por Proyecto */}
+        <EnhancedCard className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center mb-4">
+            <Filter className="w-5 h-5 mr-2 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900 tracking-tight">Filtros del Mapa</h3>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="proyecto-filter" className="text-sm font-medium text-gray-700 tracking-wide">
+                Filtrar por Proyecto
+              </Label>
+              <select 
+                id="proyecto-filter"
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                onChange={(e) => {
+                  // Filtrar elementos en el mapa
+                  const event = new CustomEvent('filterByProject', { detail: e.target.value });
+                  window.dispatchEvent(event);
+                }}
+              >
+                <option value="ALL">Todos los proyectos</option>
+                {proyectos.map((proyecto) => (
+                  <option key={proyecto.id} value={proyecto.id}>
+                    {proyecto.nombreComercial}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm text-blue-800">
-            ℹ️ El mapa se actualiza automáticamente cada 30 segundos. Los armadores
-            actualizan su ubicación desde la app móvil.
-          </p>
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="estado-filter" className="text-sm font-medium text-gray-700 tracking-wide">
+                Filtrar por Estado
+              </Label>
+              <select 
+                id="estado-filter"
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                onChange={(e) => {
+                  const event = new CustomEvent('filterByEstado', { detail: e.target.value });
+                  window.dispatchEvent(event);
+                }}
+              >
+                <option value="ALL">Todos los estados</option>
+                <option value="ACTIVO">Armadores Activos</option>
+                <option value="ASIGNADO">Órdenes Asignadas</option>
+                <option value="EN_RUTA">Órdenes en Ruta</option>
+                <option value="ARMADO_INICIADO">Armado Iniciado</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700 tracking-wide">
+                Estadísticas Rápidas
+              </Label>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">Armadores Activos</span>
+                </div>
+                <span className="text-lg font-semibold text-gray-900 tracking-tight">{armadores.length}</span>
+              </div>
+            </div>
+          </div>
+        </EnhancedCard>
+
+        <MapaDashboard
+          armadores={armadores.map((a: any) => ({
+            id: a.id,
+            nombre: a.usuario.nombre,
+            lat: a.ubicacionActualLat!,
+            lng: a.ubicacionActualLng!,
+            estado: a.estado,
+          }))}
+          ordenes={ordenes
+            .filter((o: any) => o.usuarioFinal.coordenadasLat && o.usuarioFinal.coordenadasLng)
+            .map((o: any) => ({
+              id: o.id,
+              codigoReferenciaRetail: o.codigoReferenciaRetail,
+              estado: o.estado,
+              lat: o.usuarioFinal.coordenadasLat!,
+              lng: o.usuarioFinal.coordenadasLng!,
+              direccion: o.usuarioFinal.direccionCompleta,
+              municipio: o.usuarioFinal.municipio,
+              armadorNombre: o.armador?.usuario.nombre || "Sin asignar",
+              proyectoId: o.proyectoId,
+              proyectoNombre: o.proyecto.nombreComercial,
+            }))}
+        />
       </main>
     </div>
   );

@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { TableSkeleton } from "@/components/ui/loading-skeleton";
 import {
   Table,
   TableBody,
@@ -13,8 +15,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatearFecha } from "@/lib/utils";
+import { 
+  FileText, 
+  Package, 
+  Users, 
+  MapPin, 
+  Calendar, 
+  CheckSquare,
+  Square,
+  Eye,
+  Edit,
+  Truck,
+  AlertCircle,
+  Clock,
+  CheckCircle
+} from "lucide-react";
 
 export interface OrdenResumen {
   id: string;
@@ -30,15 +46,186 @@ export interface OrdenResumen {
 
 interface AdminOrdersTableProps {
   ordenes: OrdenResumen[];
+  loading?: boolean;
 }
 
-export function AdminOrdersTable({ ordenes }: AdminOrdersTableProps) {
+const ESTADOS_CONFIG = {
+  "SIN_ASIGNAR": { 
+    label: "Sin asignar", 
+    color: "bg-gray-100 text-gray-800 border-gray-200",
+    icon: Clock,
+    description: "Esperando asignación"
+  },
+  "ASIGNADO": { 
+    label: "Asignado", 
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: Users,
+    description: "Armador asignado"
+  },
+  "EN_RUTA": { 
+    label: "En ruta", 
+    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    icon: Truck,
+    description: "En transporte"
+  },
+  "ARMADO_INICIADO": { 
+    label: "Armado iniciado", 
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: AlertCircle,
+    description: "En proceso de armado"
+  },
+  "ARMADO_FINALIZADO": { 
+    label: "Armado finalizado", 
+    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    icon: CheckCircle,
+    description: "Armado completado"
+  },
+  "ARMADO_COMPLETADO": { 
+    label: "Armado completado", 
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: CheckCircle,
+    description: "Entrega finalizada"
+  },
+};
+
+function EstadoBadge({ estado }: { estado: string }) {
+  const config = ESTADOS_CONFIG[estado as keyof typeof ESTADOS_CONFIG] || ESTADOS_CONFIG["SIN_ASIGNAR"];
+  const Icon = config.icon;
+  
+  return (
+    <Badge className={`${config.color} border flex items-center gap-1 px-3 py-1`}>
+      <Icon className="w-3 h-3" />
+      {config.label}
+    </Badge>
+  );
+}
+
+function TableRowEnhanced({ 
+  orden, 
+  index, 
+  isSelected, 
+  onSelect,
+  onView
+}: { 
+  orden: OrdenResumen; 
+  index: number; 
+  isSelected: boolean;
+  onSelect: () => void;
+  onView: () => void;
+}) {
+  return (
+    <TableRow 
+      className={`hover:bg-muted/50 transition-all duration-200 cursor-pointer group ${
+        isSelected ? "bg-muted/30 border-l-4 border-primary" : ""
+      }`}
+    >
+      <TableCell className="font-medium">
+        <div className="flex items-center">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect();
+            }}
+            className="mr-3 text-muted-foreground hover:text-primary transition-colors"
+          >
+            {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+          </button>
+          <div className="flex items-center">
+            <FileText className="w-4 h-4 mr-2 text-muted-foreground" />
+            <span className="text-muted-foreground mr-2">#{index + 1}</span>
+            <span className="font-medium">{orden.codigoReferenciaRetail}</span>
+          </div>
+        </div>
+      </TableCell>
+      
+      <TableCell>
+        <div className="flex items-center">
+          <Package className="w-4 h-4 mr-2 text-muted-foreground" />
+          <div>
+            <div className="font-medium">{orden.proyectoNombre}</div>
+            <div className="text-sm text-muted-foreground">{orden.muebleNombre}</div>
+          </div>
+        </div>
+      </TableCell>
+      
+      <TableCell>
+        <div className="flex items-center">
+          <Users className="w-4 h-4 mr-2 text-muted-foreground" />
+          <div>
+            <div className="font-medium">{orden.clienteNombre}</div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <MapPin className="w-3 h-3 mr-1" />
+              {orden.clienteMunicipio}
+            </div>
+          </div>
+        </div>
+      </TableCell>
+      
+      <TableCell>
+        {orden.armadorNombre ? (
+          <div className="flex items-center">
+            <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center mr-2">
+              <Users className="w-3 h-3 text-primary" />
+            </div>
+            <span className="font-medium">{orden.armadorNombre}</span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground italic">No asignado</span>
+        )}
+      </TableCell>
+      
+      <TableCell>
+        <EstadoBadge estado={orden.estado} />
+      </TableCell>
+      
+      <TableCell>
+        <div className="flex items-center text-muted-foreground">
+          <Calendar className="w-4 h-4 mr-2" />
+          <div>
+            <div className="text-sm">{formatearFecha(orden.fechaCreacion)}</div>
+            <div className="text-xs text-muted-foreground">
+              {new Date(orden.fechaCreacion).toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit"
+              })}
+            </div>
+          </div>
+        </div>
+      </TableCell>
+      
+      <TableCell>
+        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <EnhancedButton
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView();
+            }}
+            className="h-8 w-8 p-0"
+          >
+            <Eye className="w-4 h-4" />
+          </EnhancedButton>
+          <Link href={`/admin/ordenes/${orden.id}/editar`}>
+            <EnhancedButton
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="w-4 h-4" />
+            </EnhancedButton>
+          </Link>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
   const [processing, setProcessing] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const allVisibleIds = ordenes.map((o) => o.id);
 
@@ -50,281 +237,136 @@ export function AdminOrdersTable({ ordenes }: AdminOrdersTableProps) {
 
   const toggleSelectOne = (id: string) => {
     setSelectedIds((current) =>
-      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id]
     );
   };
 
-  const handleBulkAutoAssign = async () => {
-    const eligibleIds = ordenes
-      .filter((o) => o.estado === "SIN_ASIGNAR" && selectedIds.includes(o.id))
-      .map((o) => o.id);
-
-    if (eligibleIds.length === 0) {
-      setError("Selecciona al menos una orden SIN_ASIGNAR.");
-      setFeedback(null);
-      return;
-    }
-
-    try {
-      setProcessing(true);
-      setError(null);
-      setFeedback(null);
-
-      const response = await fetch("/api/ordenes/auto-asignar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ordenIds: eligibleIds }),
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(data?.error || "No se pudo auto-asignar");
-      }
-
-      const summary = data?.summary ?? {};
-      setFeedback(
-        `Órdenes procesadas: ${summary.processed ?? eligibleIds.length}. Asignadas: ${summary.assigned ?? "0"}.`
-      );
-
-      startTransition(() => {
-        router.refresh();
-      });
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Error al auto-asignar órdenes"
-      );
-    } finally {
-      setProcessing(false);
-    }
+  const handleViewOrder = (id: string) => {
+    startTransition(() => {
+      router.push(`/admin/ordenes/${id}`);
+    });
   };
 
-  const handleBulkDeleteOrCancel = async () => {
-    if (selectedIds.length === 0) {
-      setError("Selecciona al menos una orden.");
-      setFeedback(null);
-      return;
-    }
+  if (loading) {
+    return (
+      <EnhancedCard>
+        <TableSkeleton rows={8} columns={7} />
+      </EnhancedCard>
+    );
+  }
 
-    if (!window.confirm("¿Seguro que deseas eliminar/cancelar las órdenes seleccionadas?")) {
-      return;
-    }
-
-    try {
-      setProcessing(true);
-      setError(null);
-      setFeedback(null);
-
-      let deleted = 0;
-      let cancelled = 0;
-      let errors = 0;
-
-      for (const id of selectedIds) {
-        try {
-          const response = await fetch(`/api/ordenes/${id}`, {
-            method: "DELETE",
-          });
-          const data = await response.json().catch(() => null);
-
-          if (!response.ok) {
-            errors += 1;
-            continue;
-          }
-
-          if (data?.action === "deleted") {
-            deleted += 1;
-          } else if (data?.action === "cancelled") {
-            cancelled += 1;
-          }
-        } catch (err) {
-          console.error(err);
-          errors += 1;
-        }
-      }
-
-      setFeedback(
-        `Eliminadas: ${deleted}. Canceladas: ${cancelled}. Errores: ${errors}.`
-      );
-      setSelectedIds([]);
-
-      startTransition(() => {
-        router.refresh();
-      });
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Error al eliminar/cancelar órdenes"
-      );
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const isBusy = processing || isPending;
+  if (ordenes.length === 0) {
+    return (
+      <EnhancedCard className="text-center py-12">
+        <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          No hay órdenes para mostrar
+        </h3>
+        <p className="text-muted-foreground">
+          No se encontraron órdenes con los filtros seleccionados.
+        </p>
+      </EnhancedCard>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <CardTitle>Todas las Órdenes</CardTitle>
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={toggleSelectAll}
-              disabled={ordenes.length === 0 || isBusy}
-            >
-              {selectedIds.length === allVisibleIds.length
-                ? "Deseleccionar todas"
-                : "Seleccionar todas"}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleBulkAutoAssign}
-              disabled={selectedIds.length === 0 || isBusy}
-              className="bg-vibrant-cyan hover:bg-vibrant-cyan/90"
-            >
-              Auto-asignar seleccionadas
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              onClick={handleBulkDeleteOrCancel}
-              disabled={selectedIds.length === 0 || isBusy}
-            >
-              Eliminar / cancelar seleccionadas
-            </Button>
+    <EnhancedCard>
+      {/* Header con acciones bulk */}
+      {selectedIds.length > 0 && (
+        <div className="border-b bg-muted/30 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <CheckSquare className="w-4 h-4 text-primary mr-2" />
+              <span className="text-sm font-medium">
+                {selectedIds.length} {selectedIds.length === 1 ? "orden seleccionada" : "órdenes seleccionadas"}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <EnhancedButton
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedIds([])}
+              >
+                Deseleccionar todo
+              </EnhancedButton>
+              <EnhancedButton
+                variant="default"
+                size="sm"
+                disabled={processing}
+              >
+                {processing ? "Procesando..." : "Acción en lote"}
+              </EnhancedButton>
+            </div>
           </div>
         </div>
-        {feedback ? (
-          <p className="mt-2 text-xs text-emerald-700">{feedback}</p>
-        ) : null}
-        {error ? (
-          <p className="mt-2 text-xs text-red-600">{error}</p>
-        ) : null}
-      </CardHeader>
-      <CardContent>
+      )}
+
+      <div className="rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40px] text-center">
-                <input
-                  type="checkbox"
-                  aria-label="Seleccionar todas las órdenes visibles"
-                  checked={
-                    ordenes.length > 0 &&
-                    selectedIds.length === allVisibleIds.length
-                  }
-                  onChange={toggleSelectAll}
-                  disabled={ordenes.length === 0}
-                />
+            <TableRow className="bg-muted/50 sticky top-0">
+              <TableHead className="font-semibold w-[300px]">
+                <div className="flex items-center">
+                  <button
+                    onClick={toggleSelectAll}
+                    className="mr-3 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {selectedIds.length === allVisibleIds.length ? (
+                      <CheckSquare className="w-4 h-4" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </button>
+                  Orden
+                </div>
               </TableHead>
-              <TableHead>Código</TableHead>
-              <TableHead>Proyecto</TableHead>
-              <TableHead>Mueble</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Armador</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Acciones</TableHead>
+              <TableHead className="font-semibold">Proyecto</TableHead>
+              <TableHead className="font-semibold">Cliente</TableHead>
+              <TableHead className="font-semibold">Armador</TableHead>
+              <TableHead className="font-semibold">Estado</TableHead>
+              <TableHead className="font-semibold">Fecha</TableHead>
+              <TableHead className="font-semibold text-right w-[120px]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {ordenes.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={9}
-                  className="text-center text-muted-foreground"
-                >
-                  No hay órdenes registradas
-                </TableCell>
-              </TableRow>
-            ) : (
-              ordenes.map((orden) => {
-                const isSelected = selectedIds.includes(orden.id);
-                const isSinAsignar = orden.estado === "SIN_ASIGNAR";
-
-                return (
-                  <TableRow
-                    key={orden.id}
-                    className={isSelected ? "bg-muted/60" : undefined}
-                  >
-                    <TableCell className="text-center">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelectOne(orden.id)}
-                        aria-label={`Seleccionar orden ${orden.codigoReferenciaRetail}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {orden.codigoReferenciaRetail}
-                    </TableCell>
-                    <TableCell>{orden.proyectoNombre}</TableCell>
-                    <TableCell>{orden.muebleNombre}</TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{orden.clienteNombre}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {orden.clienteMunicipio}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {orden.armadorNombre ? (
-                        <span className="text-sm">{orden.armadorNombre}</span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Sin asignar</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isSinAsignar ? (
-                        <Link
-                          href={`/admin/ordenes/${orden.id}`}
-                          className="inline-block"
-                        >
-                          <Badge
-                            variant="destructive"
-                            className="cursor-pointer transition-colors hover:opacity-90"
-                          >
-                            {orden.estado.replace(/_/g, " ")}
-                          </Badge>
-                        </Link>
-                      ) : (
-                        <Badge
-                          variant={
-                            orden.estado === "ARMADO_COMPLETADO"
-                              ? "success"
-                              : "warning"
-                          }
-                        >
-                          {orden.estado.replace(/_/g, " ")}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {formatearFecha(new Date(orden.fechaCreacion))}
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/admin/ordenes/${orden.id}`}>
-                        <Button variant="outline" size="sm">
-                          Ver
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+            {ordenes.map((orden, index) => (
+              <TableRowEnhanced
+                key={orden.id}
+                orden={orden}
+                index={index}
+                isSelected={selectedIds.includes(orden.id)}
+                onSelect={() => toggleSelectOne(orden.id)}
+                onView={() => handleViewOrder(orden.id)}
+              />
+            ))}
           </TableBody>
         </Table>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Footer con paginación o info */}
+      <div className="border-t bg-muted/20 p-4">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div>
+            Mostrando {ordenes.length} {ordenes.length === 1 ? "orden" : "órdenes"}
+          </div>
+          <div className="flex items-center space-x-4">
+            <span>Resultados por página: 100</span>
+            <div className="flex items-center space-x-2">
+              <EnhancedButton variant="outline" size="sm" disabled>
+                Anterior
+              </EnhancedButton>
+              <span className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-xs">
+                1
+              </span>
+              <EnhancedButton variant="outline" size="sm" disabled>
+                Siguiente
+              </EnhancedButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </EnhancedCard>
   );
 }

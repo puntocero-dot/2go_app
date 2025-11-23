@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { getBillingDataset } from "@/lib/facturacion-data";
 import type { BillingDataset } from "@/lib/facturacion-data";
 import { generateBillingPdf } from "@/lib/facturacion-pdf";
+import { generateBillingEmailHTML } from "@/lib/email-templates";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getBillingSecurityHeaders } from "@/lib/security-headers";
 import { billingFiltersSchema } from "@/lib/schemas/facturacion.schema";
@@ -130,8 +131,8 @@ export async function POST(request: NextRequest) {
     }
 
     proyectoId = parsed.data.proyectoId;
-    desde = parsed.data.desde;
-    hasta = parsed.data.hasta;
+    desde = parsed.data.desde || '';
+    hasta = parsed.data.hasta || '';
 
     const dataset = await getBillingDataset({ proyectoId, desde, hasta });
 
@@ -164,79 +165,8 @@ export async function POST(request: NextRequest) {
     await resend.emails.send({
       from: process.env.EMAIL_FROM || "noreply@armados2go.com",
       to: toEmail,
-      subject: `Facturación ${dataset.proyecto.nombreComercial} - ${dataset.periodoLabel}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto;">
-          <h2 style="color: #0891b2;">Resumen de facturación semanal</h2>
-
-          <p>
-            Estimado(a) <strong>${datos.contacto?.nombre || "cliente"}</strong>,
-          </p>
-
-          <p>
-            Adjuntamos el resumen de facturación para el proyecto
-            <strong>${dataset.proyecto.nombreComercial}</strong> correspondiente al periodo
-            <strong>${dataset.periodoLabel}</strong>.
-          </p>
-
-          <table
-            style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;"
-          >
-            <thead>
-              <tr>
-                <th style="text-align:left; border-bottom: 1px solid #e5e7eb; padding: 4px 0;">Concepto</th>
-                <th style="text-align:right; border-bottom: 1px solid #e5e7eb; padding: 4px 0;">Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="padding: 4px 0;">Armado</td>
-                <td style="text-align:right; padding: 4px 0;">
-                  $${dataset.totalsByConcept.armado.toFixed(2)}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 4px 0;">Tamaño</td>
-                <td style="text-align:right; padding: 4px 0;">
-                  $${dataset.totalsByConcept.tamano.toFixed(2)}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 4px 0;">Distancia</td>
-                <td style="text-align:right; padding: 4px 0;">
-                  $${dataset.totalsByConcept.distancia.toFixed(2)}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 4px 0;">Penalizaciones</td>
-                <td style="text-align:right; padding: 4px 0;">
-                  $${dataset.totalsByConcept.penalizacion.toFixed(2)}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 4px 0;">Prioridad</td>
-                <td style="text-align:right; padding: 4px 0;">
-                  $${dataset.totalsByConcept.prioridad.toFixed(2)}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 6px 0; border-top: 1px solid #e5e7eb; font-weight: 600;">Total facturado</td>
-                <td style="text-align:right; padding: 6px 0; border-top: 1px solid #e5e7eb; font-weight: 600;">
-                  $${dataset.totalsByConcept.totalFacturado.toFixed(2)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <p style="font-size: 12px; color: #6b7280; margin-top: 24px;">
-            Se adjuntan los archivos en formato PDF (resumen) y CSV (detalle por orden).
-          </p>
-
-          <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-            Armados 2Go - Plataforma de gestión de armados.
-          </p>
-        </div>
-      `,
+      subject: `📊 Facturación ${dataset.proyecto.nombreComercial} - ${dataset.periodoLabel}`,
+      html: generateBillingEmailHTML(dataset, datos),
       attachments: [
         {
           filename: `${baseFilename}.pdf`,

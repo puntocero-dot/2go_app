@@ -3,10 +3,11 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, EstadoOrden } from "@prisma/client";
 import { Navbar } from "@/components/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { EnhancedInput } from "@/components/ui/enhanced-input";
 import {
   Table,
   TableBody,
@@ -17,19 +18,85 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { 
+  TrendingUp, 
+  Package, 
+  Users, 
+  FileText, 
+  DollarSign, 
+  Activity,
+  Calendar,
+  Filter,
+  X
+} from "lucide-react";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const ESTADOS_ORDEN = [
-  { value: "SIN_ASIGNAR", label: "Sin asignar" },
-  { value: "ASIGNADO", label: "Asignado" },
-  { value: "EN_RUTA", label: "En ruta" },
-  { value: "ARMADO_INICIADO", label: "Armado iniciado" },
-  { value: "ARMADO_FINALIZADO", label: "Armado finalizado" },
-  { value: "ARMADO_COMPLETADO", label: "Armado completado" },
+  { value: "SIN_ASIGNAR", label: "Sin asignar", color: "bg-gray-100 text-gray-800" },
+  { value: "ASIGNADO", label: "Asignado", color: "bg-blue-100 text-blue-800" },
+  { value: "EN_RUTA", label: "En ruta", color: "bg-yellow-100 text-yellow-800" },
+  { value: "ARMADO_INICIADO", label: "Armado iniciado", color: "bg-purple-100 text-purple-800" },
+  { value: "ARMADO_FINALIZADO", label: "Armado finalizado", color: "bg-indigo-100 text-indigo-800" },
+  { value: "ARMADO_COMPLETADO", label: "Armado completado", color: "bg-green-100 text-green-800" },
 ];
+
+function KPICard({ 
+  title, 
+  value, 
+  description, 
+  icon: Icon, 
+  trend, 
+  color = "primary" 
+}: {
+  title: string;
+  value: string | number;
+  description: string;
+  icon: any;
+  trend?: number;
+  color?: "primary" | "secondary" | "success" | "warning";
+}) {
+  const colorClasses = {
+    primary: "text-madera-natural bg-madera-natural/10",
+    secondary: "text-terracota bg-terracota/10",
+    success: "text-green-600 bg-green-100",
+    warning: "text-yellow-600 bg-yellow-100",
+  };
+
+  return (
+    <EnhancedCard hover className="relative overflow-hidden p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+      <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10">
+        <Icon className="w-24 h-24" />
+      </div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+          {trend !== undefined && (
+            <div className={`flex items-center text-sm ${
+              trend > 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              <TrendingUp className={`w-4 h-4 mr-1 ${trend < 0 ? "rotate-180" : ""}`} />
+              {Math.abs(trend)}%
+            </div>
+          )}
+        </div>
+        <h3 className="text-2xl font-bold text-foreground mb-1">
+          {value}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-2">
+          {title}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {description}
+        </p>
+      </div>
+    </EnhancedCard>
+  );
+}
 
 export default async function AdminDashboard({ searchParams }: PageProps) {
   const session = await getSession();
@@ -152,236 +219,246 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
 
   const totalFacturado = ordenesSumatorio._sum.cobroFinal ?? 0;
 
+  const getEstadoBadge = (estado: string) => {
+    const estadoConfig = ESTADOS_ORDEN.find(e => e.value === estado);
+    return estadoConfig?.color || "bg-gray-100 text-gray-800";
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-deep-navy">
-            Dashboard Admin
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Bienvenido al panel de control. Aquí tienes un resumen de la
-            operación.
-          </p>
+        {/* Header */}
+        <div className="mb-8 fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gradient mb-2">
+                Dashboard Admin
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Bienvenido de vuelta, {usuario.nombre}. Aquí tienes el resumen operativo.
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Última actualización</p>
+                <p className="text-sm font-medium">
+                  {new Date().toLocaleTimeString("es-ES")}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Card className="mb-8">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-gray-700">
-              Filtros de métricas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form className="grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]" method="get">
-              <div className="space-y-1">
-                <Label htmlFor="proyectoId">Proyecto</Label>
-                <select
-                  id="proyectoId"
-                  name="proyectoId"
-                  defaultValue={proyectoIdFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
+        {/* Filtros */}
+        <EnhancedCard hover className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center mb-6">
+            <Filter className="w-5 h-5 mr-2 text-primary" />
+            <h3 className="text-lg font-semibold">Filtros de métricas</h3>
+          </div>
+          <form className="grid gap-6 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]" method="get">
+            <div>
+              <Label htmlFor="proyectoId" className="text-sm font-medium">Proyecto</Label>
+              <select
+                id="proyectoId"
+                name="proyectoId"
+                defaultValue={proyectoIdFilter}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              >
+                <option value="ALL">Todos los proyectos</option>
+                {proyectos.map((proyecto) => (
+                  <option key={proyecto.id} value={proyecto.id}>
+                    {proyecto.nombreComercial}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="estado" className="text-sm font-medium">Estado de orden</Label>
+              <select
+                id="estado"
+                name="estado"
+                defaultValue={estadoFilter}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm uppercase focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              >
+                <option value="ALL">Todos los estados</option>
+                {ESTADOS_ORDEN.map((estado) => (
+                  <option key={estado.value} value={estado.value}>
+                    {estado.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="fechaInicio" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Fecha desde
+              </Label>
+              <input
+                type="date"
+                id="fechaInicio"
+                name="fechaInicio"
+                defaultValue={fechaInicioFilter}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="fechaFin" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Fecha hasta
+              </Label>
+              <input
+                type="date"
+                id="fechaFin"
+                name="fechaFin"
+                defaultValue={fechaFinFilter}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              />
+            </div>
+
+            <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-2">
+              <EnhancedButton
+                type="submit"
+                variant="default"
+                className="min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                Aplicar filtros
+              </EnhancedButton>
+              <Link href="/admin" prefetch={false}>
+                <EnhancedButton 
+                  type="button" 
+                  variant="outline" 
+                  className="min-w-[100px]"
                 >
-                  <option value="ALL">Todos los proyectos</option>
-                  {proyectos.map((proyecto) => (
-                    <option key={proyecto.id} value={proyecto.id}>
-                      {proyecto.nombreComercial}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <X className="w-4 h-4 mr-2" />
+                  Limpiar
+                </EnhancedButton>
+              </Link>
+            </div>
+          </form>
+        </EnhancedCard>
 
-              <div className="space-y-1">
-                <Label htmlFor="estado">Estado de orden</Label>
-                <select
-                  id="estado"
-                  name="estado"
-                  defaultValue={estadoFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase focus:border-vibrant-cyan focus:outline-none"
-                >
-                  <option value="ALL">Todos los estados</option>
-                  {ESTADOS_ORDEN.map((estado) => (
-                    <option key={estado.value} value={estado.value}>
-                      {estado.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="fechaInicio">Fecha desde</Label>
-                <input
-                  type="date"
-                  id="fechaInicio"
-                  name="fechaInicio"
-                  defaultValue={fechaInicioFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="fechaFin">Fecha hasta</Label>
-                <input
-                  type="date"
-                  id="fechaFin"
-                  name="fechaFin"
-                  defaultValue={fechaFinFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
-                />
-              </div>
-
-              <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-1">
-                <Button
-                  type="submit"
-                  size="default"
-                  className="bg-vibrant-cyan hover:bg-vibrant-cyan/90"
-                >
-                  Aplicar filtros
-                </Button>
-                <Link href="/admin" className="inline-flex items-center" prefetch={false}>
-                  <Button type="button" variant="outline" size="default">
-                    Limpiar
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Total de Proyectos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-electric-coral">
-                {totalProyectos}
-              </p>
-              <p className="text-sm text-gray-500">
-                Proyectos registrados en el sistema
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Total de Órdenes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-electric-coral">
-                {totalOrdenes}
-              </p>
-              <p className="text-sm text-gray-500">
-                Incluye órdenes completadas y en proceso
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Órdenes Activas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <p className="text-3xl font-bold text-electric-coral">
-                  {ordenesActivas}
-                </p>
-                <Badge variant="outline" className="text-sm">
-                  En ejecución
-                </Badge>
-              </div>
-              <p className="text-sm text-gray-500">
-                Órdenes pendientes de completar
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Armadores Registrados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-electric-coral">
-                {totalArmadores}
-              </p>
-              <p className="text-sm text-gray-500">
-                Total de armadores en el sistema
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Armadores Activos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-electric-coral">
-                {armadoresActivos}
-              </p>
-              <p className="text-sm text-gray-500">
-                Armadores disponibles para asignación
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Facturado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-deep-navy">
-                {formatCurrency(totalFacturado)}
-              </p>
-              <p className="text-sm text-gray-500">
-                Basado en órdenes filtradas
-              </p>
-            </CardContent>
-          </Card>
+        {/* KPI Cards */}
+        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <KPICard
+            title="Total de Proyectos"
+            value={totalProyectos}
+            description="Proyectos registrados en el sistema"
+            icon={Package}
+            color="primary"
+          />
+          <KPICard
+            title="Total de Órdenes"
+            value={totalOrdenes}
+            description="Incluye órdenes completadas y en proceso"
+            icon={FileText}
+            color="secondary"
+          />
+          <KPICard
+            title="Órdenes Activas"
+            value={ordenesActivas}
+            description="Órdenes pendientes de completar"
+            icon={Activity}
+            color="warning"
+          />
+          <KPICard
+            title="Armadores Totales"
+            value={totalArmadores}
+            description="Total de armadores en el sistema"
+            icon={Users}
+            color="primary"
+          />
+          <KPICard
+            title="Armadores Activos"
+            value={armadoresActivos}
+            description="Disponibles para asignación"
+            icon={Users}
+            color="success"
+          />
+          <KPICard
+            title="Total Facturado"
+            value={formatCurrency(totalFacturado)}
+            description="Basado en órdenes filtradas"
+            icon={DollarSign}
+            color="success"
+          />
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-2xl font-semibold text-deep-navy mb-4">
-            Órdenes Recientes
-          </h2>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Orden</TableHead>
-                  <TableHead>Proyecto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Armador</TableHead>
-                  <TableHead>Creada</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ordenesRecientes.map((orden) => (
-                  <TableRow key={orden.id}>
-                    <TableCell className="font-medium">{orden.codigoReferenciaRetail}</TableCell>
-                    <TableCell>
-                      {orden.proyecto?.nombreComercial ?? "Proyecto sin asignar"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-electric-coral/10 text-electric-coral">
-                        {orden.estado.replace(/_/g, " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {orden.armador?.usuario?.nombre ?? "No asignado"}
-                    </TableCell>
-                    <TableCell>
-                      {orden.createdAt.toLocaleDateString("es-ES", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        {/* Tabla de Órdenes Recientes */}
+        <section className="fade-in-up">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-foreground flex items-center">
+              <FileText className="w-6 h-6 mr-2 text-primary" />
+              Órdenes Recientes
+            </h2>
+            <Link href="/admin/ordenes">
+              <EnhancedButton variant="outline" size="sm">
+                Ver todas
+              </EnhancedButton>
+            </Link>
           </div>
+          
+          <EnhancedCard hover>
+            <div className="rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Orden</TableHead>
+                    <TableHead className="font-semibold">Proyecto</TableHead>
+                    <TableHead className="font-semibold">Estado</TableHead>
+                    <TableHead className="font-semibold">Armador</TableHead>
+                    <TableHead className="font-semibold">Creada</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ordenesRecientes.map((orden, index) => (
+                    <TableRow 
+                      key={orden.id}
+                      className="hover:bg-muted/30 transition-colors cursor-pointer"
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <span className="mr-2 text-muted-foreground">#{index + 1}</span>
+                          {orden.codigoReferenciaRetail}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Package className="w-4 h-4 mr-2 text-muted-foreground" />
+                          {orden.proyecto?.nombreComercial ?? "Proyecto sin asignar"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getEstadoBadge(orden.estado)}>
+                          {orden.estado.replace(/_/g, " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-2 text-muted-foreground" />
+                          {orden.armador?.usuario?.nombre ?? "No asignado"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center text-muted-foreground">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          {orden.createdAt.toLocaleDateString("es-ES", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </EnhancedCard>
         </section>
       </main>
     </div>

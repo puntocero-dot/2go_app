@@ -227,6 +227,11 @@ export async function PUT(
       tipoCliente,
       datosFacturacion,
       activo,
+      estado,
+      descripcion,
+      contactoEmail,
+      contactoTelefono,
+      direccion,
       reglaCobro,
     } = body;
 
@@ -237,6 +242,11 @@ export async function PUT(
         ...(tipoCliente && { tipoCliente }),
         ...(datosFacturacion && { datosFacturacion }),
         ...(typeof activo === "boolean" && { activo }),
+        ...(estado && { estado }),
+        ...(descripcion !== undefined && { descripcion }),
+        ...(contactoEmail !== undefined && { contactoEmail }),
+        ...(contactoTelefono !== undefined && { contactoTelefono }),
+        ...(direccion !== undefined && { direccion }),
       },
       include: {
         reglaCobro: {

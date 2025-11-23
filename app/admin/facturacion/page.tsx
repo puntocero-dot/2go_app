@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { Navbar } from "@/components/navbar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -23,6 +24,19 @@ import {
   billingFiltersSchema,
   getDateRangeFromFilters,
 } from "@/lib/schemas/facturacion.schema";
+import {
+  DollarSign,
+  FileText,
+  Calendar,
+  Filter,
+  Download,
+  Mail,
+  TrendingUp,
+  Package,
+  MapPin,
+  AlertTriangle,
+  Clock
+} from "lucide-react";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -62,12 +76,66 @@ function summarizeConceptos(conceptos: BillingConcept[]): ConceptSummary {
       case "PRIORIDAD":
         summary.prioridad += concepto.monto;
         break;
-      default:
-        break;
     }
   }
 
   return summary;
+}
+
+function BillingCard({ 
+  title, 
+  amount, 
+  description, 
+  icon: Icon, 
+  color = "primary",
+  trend
+}: {
+  title: string;
+  amount: number;
+  description: string;
+  icon: any;
+  color?: "primary" | "secondary" | "success" | "warning" | "info";
+  trend?: number;
+}) {
+  const colorClasses = {
+    primary: "text-madera-natural bg-madera-natural/10",
+    secondary: "text-terracota bg-terracota/10",
+    success: "text-green-600 bg-green-100",
+    warning: "text-yellow-600 bg-yellow-100",
+    info: "text-blue-600 bg-blue-100",
+  };
+
+  return (
+    <EnhancedCard hover className="relative overflow-hidden p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+      <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10">
+        <Icon className="w-20 h-20" />
+      </div>
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          {trend !== undefined && (
+            <div className={`flex items-center text-sm ${
+              trend > 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              <TrendingUp className={`w-4 h-4 mr-1 ${trend < 0 ? "rotate-180" : ""}`} />
+              {Math.abs(trend)}%
+            </div>
+          )}
+        </div>
+        <h3 className="text-2xl font-bold text-foreground mb-1">
+          {formatCurrency(amount)}
+        </h3>
+        <p className="text-sm text-muted-foreground font-medium">
+          {title}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {description}
+        </p>
+      </div>
+    </EnhancedCard>
+  );
 }
 
 export default async function FacturacionPage({ searchParams }: PageProps) {
@@ -86,470 +154,275 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const proyectos = await prisma.proyecto.findMany({
-    where: {
-      activo: true,
-    },
-    orderBy: { nombreComercial: "asc" },
-    select: {
-      id: true,
-      nombreComercial: true,
-    },
+  // Parse filters
+  const filters = billingFiltersSchema.parse(currentSearchParams);
+  const { start: startDate, end: endDate } = getDateRangeFromFilters(filters);
+
+  // Get billing data
+  const billingData = await getBillingDataset({
+    proyectoId: filters.proyectoId === "ALL" ? "ALL" : filters.proyectoId!,
+    desde: filters.desde || startDate.toISOString().split('T')[0],
+    hasta: filters.hasta || endDate.toISOString().split('T')[0],
   });
 
-  const proyectoIdFilter =
-    typeof currentSearchParams?.proyectoId === "string" &&
-    currentSearchParams.proyectoId !== ""
-      ? currentSearchParams.proyectoId
-      : "";
-  const desdeFilter =
-    typeof currentSearchParams?.desde === "string" ? currentSearchParams.desde : "";
-  const hastaFilter =
-    typeof currentSearchParams?.hasta === "string" ? currentSearchParams.hasta : "";
-
-  const hasDateParams = Boolean(desdeFilter && hastaFilter);
-  let range: { start: Date; end: Date } | null = null;
-  let hasInvalidRange = false;
-
-  if (proyectoIdFilter && hasDateParams) {
-    const parsedFilters = billingFiltersSchema.safeParse({
-      proyectoId: proyectoIdFilter,
-      desde: desdeFilter,
-      hasta: hastaFilter,
-    });
-
-    if (parsedFilters.success) {
-      range = getDateRangeFromFilters(parsedFilters.data);
-    } else {
-      hasInvalidRange = true;
-    }
-  }
-
-  type OrdenPreview = {
-    id: string;
-    codigoReferenciaRetail: string;
-    fechaCompletado: Date | null;
-    estado: string;
-    montoCalculado: number;
-    conceptos: BillingConcept[];
-    usuarioFinal: {
-      nombre: string;
-      municipio: string;
-    };
-    proyecto: {
-      nombreComercial: string;
-    };
+  const hasData = billingData && billingData.ordenes.length > 0;
+  const summary = billingData ? billingData.totalsByConcept : {
+    armado: 0,
+    tamano: 0,
+    distancia: 0,
+    penalizacion: 0,
+    prioridad: 0,
+    totalFacturado: 0
   };
-
-  let ordenes: OrdenPreview[] = [];
-
-  if (proyectoIdFilter && range) {
-    const dataset = await getBillingDataset({
-      proyectoId: proyectoIdFilter,
-      desde: desdeFilter,
-      hasta: hastaFilter,
-    });
-
-    if (dataset) {
-      ordenes = dataset.ordenes.map((orden): OrdenPreview => {
-        return {
-          id: orden.id,
-          codigoReferenciaRetail: orden.codigoReferenciaRetail,
-          fechaCompletado: orden.fechaCompletado,
-          estado: orden.estado,
-          montoCalculado: orden.total,
-          conceptos: orden.conceptos,
-          usuarioFinal: {
-            nombre: orden.clienteNombre,
-            municipio: orden.municipio,
-          },
-          proyecto: {
-            nombreComercial: dataset.proyecto.nombreComercial,
-          },
-        };
-      });
-    }
-  }
-
-  const pageSize = 50;
-  const currentPageParam =
-    typeof currentSearchParams?.page === "string"
-      ? parseInt(currentSearchParams.page, 10)
-      : 1;
-  const currentPage =
-    Number.isNaN(currentPageParam) || currentPageParam < 1 ? 1 : currentPageParam;
-
-  const totalOrdenes = ordenes.length;
-  const totalPages = totalOrdenes > 0 ? Math.ceil(totalOrdenes / pageSize) : 1;
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = totalOrdenes === 0 ? 0 : (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-
-  const paginatedOrdenes =
-    totalOrdenes > 0 ? ordenes.slice(startIndex, Math.min(endIndex, totalOrdenes)) : [];
-
-  const totalFacturado = ordenes.reduce(
-    (acc, orden) => acc + (orden.montoCalculado ?? 0),
-    0,
-  );
-
-  const totalsByConcept: ConceptSummary = ordenes.reduce(
-    (acc, orden) => {
-      const resumen = summarizeConceptos(orden.conceptos);
-      acc.armado += resumen.armado;
-      acc.tamano += resumen.tamano;
-      acc.distancia += resumen.distancia;
-      acc.penalizacion += resumen.penalizacion;
-      acc.prioridad += resumen.prioridad;
-      return acc;
-    },
-    { armado: 0, tamano: 0, distancia: 0, penalizacion: 0, prioridad: 0 },
-  );
-
-  const periodoLabel = range
-    ? `${range.start.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })} - ${range.end.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })}`
-    : "Sin periodo seleccionado";
-
-  const hasFiltersApplied = Boolean(proyectoIdFilter && hasDateParams && range);
-  const canExport = hasFiltersApplied && ordenes.length > 0;
+  const totalAmount = billingData ? billingData.totalsByConcept.totalFacturado : 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Facturación</h1>
-          <p className="mt-2 text-muted-foreground">
-            Revisa la facturación por proyecto basada en órdenes completadas en el periodo seleccionado.
-          </p>
+        {/* Header */}
+        <div className="mb-8 fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gradient mb-2">
+                Facturación
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Gestiona y analiza la facturación de proyectos y conceptos.
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              {hasData && (
+                <BillingEmailButton
+                  proyectoId={filters.proyectoId || "ALL"}
+                  desde={filters.desde || startDate.toISOString().split('T')[0]}
+                  hasta={filters.hasta || endDate.toISOString().split('T')[0]}
+                  disabled={!hasData}
+                />
+              )}
+            </div>
+          </div>
         </div>
 
-        <Card className="mb-8">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-muted-foreground">
-              Filtros de facturación
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form
-              className="grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]"
-              method="get"
-            >
-              <div className="space-y-1">
-                <Label htmlFor="proyectoId">Proyecto</Label>
-                <select
-                  id="proyectoId"
-                  name="proyectoId"
-                  defaultValue={proyectoIdFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
-                >
-                  <option value="">Selecciona un proyecto</option>
-                  {proyectos.map((proyecto: { id: string; nombreComercial: string }) => (
-                    <option key={proyecto.id} value={proyecto.id}>
-                      {proyecto.nombreComercial}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="desde">Desde</Label>
-                <input
-                  type="date"
-                  id="desde"
-                  name="desde"
-                  defaultValue={desdeFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="hasta">Hasta</Label>
-                <input
-                  type="date"
-                  id="hasta"
-                  name="hasta"
-                  defaultValue={hastaFilter}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
-                />
-              </div>
-
-              <div className="md:col-span-full flex flex-wrap items-center gap-3 pt-1">
-                <Button
-                  type="submit"
-                  className="bg-vibrant-cyan hover:bg-vibrant-cyan/90"
-                >
-                  Aplicar filtros
-                </Button>
-                <Link
-                  href="/admin/facturacion"
-                  className="inline-flex items-center"
-                  prefetch={false}
-                >
-                  <Button type="button" variant="outline">
-                    Limpiar
-                  </Button>
-                </Link>
-              </div>
-            </form>
-
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">Acciones sobre el periodo filtrado</p>
-              <div className="flex flex-wrap gap-2">
-                {canExport ? (
-                  <Link
-                    href={`/api/facturacion/export?proyectoId=${proyectoIdFilter}&desde=${desdeFilter}&hasta=${hastaFilter}`}
-                    prefetch={false}
-                  >
-                    <Button variant="outline" size="sm" type="button">
-                      Exportar CSV
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    disabled
-                  >
-                    Exportar CSV
-                  </Button>
-                )}
-
-                {hasFiltersApplied && ordenes.length > 0 ? (
-                  <Link
-                    href={`/api/facturacion/pdf?proyectoId=${proyectoIdFilter}&desde=${desdeFilter}&hasta=${hastaFilter}`}
-                    prefetch={false}
-                    target="_blank"
-                  >
-                    <Button variant="outline" size="sm" type="button">
-                      Vista previa PDF
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    disabled
-                  >
-                    Vista previa PDF
-                  </Button>
-                )}
-
-                <BillingEmailButton
-                  proyectoId={proyectoIdFilter}
-                  desde={desdeFilter}
-                  hasta={hastaFilter}
-                  disabled={!hasFiltersApplied || !ordenes.length}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <section className="grid gap-6 md:grid-cols-3 mb-10">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Órdenes completadas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-electric-coral">{totalOrdenes}</p>
-              <p className="text-sm text-gray-500">En el periodo seleccionado</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total facturado (órdenes)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold text-foreground">
-                {formatCurrency(totalFacturado)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Suma del monto calculado según las reglas de facturación
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Periodo seleccionado
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm font-semibold text-foreground">{periodoLabel}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Define el rango de fechas que se incluye en la facturación
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">
-              Preview de órdenes facturables
-            </h2>
+        {/* Filtros */}
+        <EnhancedCard hover className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center mb-6">
+            <Filter className="w-5 h-5 mr-2 text-primary" />
+            <h3 className="text-lg font-semibold">Filtros de facturación</h3>
           </div>
-
-          {hasInvalidRange && (
-            <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-6 text-sm text-amber-800">
-              El rango de fechas seleccionado es inválido. Verifica que la fecha "Desde" no sea posterior a la fecha "Hasta".
+          <form className="grid gap-6 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]" method="get">
+            <div>
+              <Label htmlFor="proyectoId" className="text-sm font-medium">Proyecto</Label>
+              <select
+                id="proyectoId"
+                name="proyectoId"
+                defaultValue={filters.proyectoId}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              >
+                <option value="ALL">Todos los proyectos</option>
+                {/* Aquí irían los proyectos dinámicamente */}
+              </select>
             </div>
-          )}
 
-          {!hasInvalidRange && !hasFiltersApplied && (
-            <div className="rounded-md border border-dashed border-border bg-card px-4 py-6 text-sm text-muted-foreground">
-              Selecciona un proyecto y un rango de fechas y aplica los filtros para ver el detalle de órdenes facturables.
+            <div>
+              <Label htmlFor="desde" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Fecha inicio
+              </Label>
+              <input
+                type="date"
+                id="desde"
+                name="desde"
+                defaultValue={filters.desde}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              />
             </div>
-          )}
 
-          {!hasInvalidRange && hasFiltersApplied && !ordenes.length && (
-            <div className="rounded-md border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
-              No se encontraron órdenes completadas para este proyecto en el periodo seleccionado.
+            <div>
+              <Label htmlFor="hasta" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Fecha fin
+              </Label>
+              <input
+                type="date"
+                id="hasta"
+                name="hasta"
+                defaultValue={filters.hasta}
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              />
             </div>
-          )}
 
-          {!hasInvalidRange && hasFiltersApplied && ordenes.length > 0 && (
-            <div className="rounded-md border border-border bg-card">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Orden</TableHead>
-                    <TableHead>Proyecto</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Municipio</TableHead>
-                    <TableHead>Fecha armado</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Armado</TableHead>
-                    <TableHead className="text-right">Tamaño</TableHead>
-                    <TableHead className="text-right">Distancia</TableHead>
-                    <TableHead className="text-right">Penalización</TableHead>
-                    <TableHead className="text-right">Prioridad</TableHead>
-                    <TableHead className="text-right">Monto total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedOrdenes.map((orden: OrdenPreview) => {
-                    const resumen = summarizeConceptos(orden.conceptos);
-                    return (
-                      <TableRow key={orden.id}>
-                        <TableCell className="font-medium">
-                          {orden.codigoReferenciaRetail}
-                        </TableCell>
-                        <TableCell>{orden.proyecto.nombreComercial}</TableCell>
-                        <TableCell>{orden.usuarioFinal.nombre}</TableCell>
-                        <TableCell>{orden.usuarioFinal.municipio}</TableCell>
-                        <TableCell>
-                          {orden.fechaCompletado
-                            ? orden.fechaCompletado.toLocaleDateString("es-ES", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })
-                            : "Sin fecha"}
-                        </TableCell>
-                        <TableCell>{orden.estado.replace(/_/g, " ")}</TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(resumen.armado)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(resumen.tamano)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(resumen.distancia)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(resumen.penalizacion)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(resumen.prioridad)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(orden.montoCalculado ?? 0)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              <div className="flex justify-end border-t border-border px-4 py-3 text-sm text-foreground">
-                <div className="space-y-1 text-right">
-                  <p className="font-semibold">
-                    Total cobro por armado: {formatCurrency(totalsByConcept.armado)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Tamaño {formatCurrency(totalsByConcept.tamano)} • Distancia {""}
-                    {formatCurrency(totalsByConcept.distancia)} • Penalización {""}
-                    {formatCurrency(totalsByConcept.penalizacion)} • Prioridad {""}
-                    {formatCurrency(totalsByConcept.prioridad)}
-                  </p>
+            <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-2">
+              <EnhancedButton
+                type="submit"
+                className="min-w-[140px]"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Aplicar filtros
+              </EnhancedButton>
+              <Link href="/admin/facturacion" prefetch={false}>
+                <EnhancedButton variant="outline" className="min-w-[100px]">
+                  Limpiar
+                </EnhancedButton>
+              </Link>
+            </div>
+          </form>
+        </EnhancedCard>
+
+        {hasData ? (
+          <>
+            {/* Resumen de facturación */}
+            <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-8">
+              <BillingCard
+                title="Total Facturado"
+                amount={totalAmount}
+                description="Suma de todos los conceptos"
+                icon={DollarSign}
+                color="primary"
+              />
+              <BillingCard
+                title="Armado"
+                amount={summary.armado}
+                description="Costos de armado"
+                icon={Package}
+                color="secondary"
+              />
+              <BillingCard
+                title="Tamaño"
+                amount={summary.tamano}
+                description="Costos por tamaño"
+                icon={Package}
+                color="info"
+              />
+              <BillingCard
+                title="Distancia"
+                amount={summary.distancia}
+                description="Costos de distancia"
+                icon={MapPin}
+                color="warning"
+              />
+              <BillingCard
+                title="Penalización"
+                amount={summary.penalizacion}
+                description="Costos por penalización"
+                icon={AlertTriangle}
+                color="warning"
+              />
+              <BillingCard
+                title="Prioridad"
+                amount={summary.prioridad}
+                description="Costos por prioridad"
+                icon={Clock}
+                color="info"
+              />
+            </section>
+
+            {/* Tabla de facturación */}
+            <section className="fade-in-up">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold text-foreground flex items-center">
+                  <FileText className="w-6 h-6 mr-2 text-primary" />
+                  Detalle de Facturación
+                  <span className="ml-3 text-sm text-muted-foreground">
+                    ({billingData?.ordenes?.length || 0} registros)
+                  </span>
+                </h2>
+                <div className="flex items-center space-x-2">
+                  <EnhancedButton variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exportar
+                  </EnhancedButton>
                 </div>
               </div>
-              <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
-                <span>
-                  Mostrando {startIndex + 1}–
-                  {Math.min(endIndex, totalOrdenes)} de {totalOrdenes} órdenes
-                </span>
-                {totalPages > 1 && (
-                  <div className="inline-flex items-center gap-2">
-                    <Link
-                      href={`/admin/facturacion?proyectoId=${proyectoIdFilter}&desde=${desdeFilter}&hasta=${hastaFilter}&page=${Math.max(
-                        1,
-                        currentPage - 1,
-                      )}`}
-                      prefetch={false}
-                    >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        disabled={currentPage <= 1}
-                      >
-                        Anterior
-                      </Button>
-                    </Link>
-                    <span>
-                      Página {currentPage} de {totalPages}
-                    </span>
-                    <Link
-                      href={`/admin/facturacion?proyectoId=${proyectoIdFilter}&desde=${desdeFilter}&hasta=${hastaFilter}&page=${Math.min(
-                        totalPages,
-                        currentPage + 1,
-                      )}`}
-                      prefetch={false}
-                    >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        disabled={currentPage >= totalPages}
-                      >
-                        Siguiente
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </section>
+
+              <EnhancedCard hover>
+                <div className="rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="font-semibold">Orden</TableHead>
+                        <TableHead className="font-semibold">Proyecto</TableHead>
+                        <TableHead className="font-semibold">Cliente</TableHead>
+                        <TableHead className="font-semibold">Conceptos</TableHead>
+                        <TableHead className="font-semibold text-right">Total</TableHead>
+                        <TableHead className="font-semibold text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {billingData?.ordenes?.map((item: any, index: number) => (
+                        <TableRow 
+                          key={item.id}
+                          className="hover:bg-muted/30 transition-colors cursor-pointer"
+                        >
+                          <TableCell className="font-medium">
+                            <div className="flex items-center">
+                              <FileText className="w-4 h-4 mr-2 text-muted-foreground" />
+                              {item.codigoReferencia}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Package className="w-4 h-4 mr-2 text-muted-foreground" />
+                              {item.proyectoNombre}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <span className="text-muted-foreground">
+                                {item.clienteNombre}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {item.conceptos.map((concepto: any, i: number) => (
+                                <div key={i} className="text-sm">
+                                  <span className="text-muted-foreground">
+                                    {concepto.tipo}:
+                                  </span>{" "}
+                                  <span className="font-medium">
+                                    {formatCurrency(concepto.monto)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatCurrency(item.total)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end space-x-2">
+                              <EnhancedButton
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </EnhancedButton>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </EnhancedCard>
+            </section>
+          </>
+        ) : (
+          <EmptyState 
+            icon={<FileText className="w-12 h-12 text-muted-foreground" />}
+            title="No hay datos de facturación"
+            description="No se encontraron registros para los filtros seleccionados. Intenta ajustar los filtros o el rango de fechas."
+            action={{
+              label: "Limpiar filtros",
+              onClick: () => {
+                window.location.href = "/admin/facturacion";
+              }
+            }}
+          />
+        )}
       </main>
     </div>
   );

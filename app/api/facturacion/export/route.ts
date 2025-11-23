@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
     }
 
     proyectoId = parsed.data.proyectoId;
-    desde = parsed.data.desde;
-    hasta = parsed.data.hasta;
+    desde = parsed.data.desde || '';
+    hasta = parsed.data.hasta || '';
 
     const dataset = await getBillingDataset({ proyectoId, desde, hasta });
 

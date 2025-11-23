@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { ProjectBillingManager } from "@/components/project-billing-manager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -246,6 +246,24 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
 
         <section>
           <ProjectBillingManager projectId={proyecto.id} initialRule={reglaCobroInicial} />
+        </section>
+
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Reglas de Cobro</CardTitle>
+              <CardDescription>
+                Configura cómo se calculará la facturación para este proyecto
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href={`/admin/proyectos/${proyecto.id}/reglas`}>
+                  Configurar Reglas de Cobro →
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">

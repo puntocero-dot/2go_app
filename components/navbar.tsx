@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -47,333 +48,357 @@ export function Navbar({ user }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-negro-azabache text-white shadow-lg">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
-          <div className="flex items-center gap-6">
-            <Link href={getDashboardLink()} className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight">Armados 2Go</span>
+    <nav className="bg-negro-azabache text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo y Dashboard */}
+          <div className="flex items-center space-x-8">
+            <Link href={getDashboardLink()} className="flex items-center space-x-3 group">
+              <div className="w-8 h-8 bg-madera-natural rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gradient">Armados 2Go</span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-4">
+            {/* Navigation Links - Desktop */}
+            <div className="hidden md:flex items-center space-x-1">
               {user.rol === "ADMIN" && (
                 <>
-                  <Link
-                    href="/admin"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Dashboard
-                    {isActive("/admin") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/admin/proyectos"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin/proyectos")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Proyectos
-                    {isActive("/admin/proyectos") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/ordenes">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/ordenes") && "text-white bg-white/10"
+                      )}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Órdenes
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/admin/ordenes"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin/ordenes")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Órdenes
-                    {isActive("/admin/ordenes") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/facturacion">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/facturacion") && "text-white bg-white/10"
+                      )}
+                    >
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Facturación
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/admin/reportes/tiempos-pedido"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin/reportes")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Reportes
-                    {isActive("/admin/reportes") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/proyectos">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/proyectos") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Proyectos
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/admin/facturacion"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin/facturacion")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Facturación
-                    {isActive("/admin/facturacion") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/reportes/bi-dashboard">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
+                      )}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      BI Dashboard
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/admin/usuarios"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin/usuarios")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Usuarios
-                    {isActive("/admin/usuarios") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/mapa">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/mapa") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      Mapa
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/admin/mapa"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/admin/mapa")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Mapa
-                    {isActive("/admin/mapa") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/usuarios">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/usuarios") && "text-white bg-white/10"
+                      )}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Usuarios
+                    </EnhancedButton>
                   </Link>
                 </>
               )}
 
               {user.rol === "SUPERVISOR" && (
                 <>
-                  <Link
-                    href="/supervisor"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/supervisor")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Dashboard
-                    {isActive("/supervisor") && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/supervisor">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/supervisor") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </EnhancedButton>
                   </Link>
-                  <Link
-                    href="/supervisor/ordenes"
-                    className={cn(
-                      "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive("/supervisor/ordenes")
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    Órdenes
-                    {isActive("/supervisor/ordenes") && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                    )}
+                  <Link href="/admin/ordenes">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/ordenes") && "text-white bg-white/10"
+                      )}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Órdenes
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/mapa">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/mapa") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      Mapa
+                    </EnhancedButton>
                   </Link>
                 </>
               )}
 
               {user.rol === "ARMADOR" && (
-                <Link
-                  href="/armador"
-                  className={cn(
-                    "relative px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive("/armador")
-                      ? "bg-white/10 text-white"
-                      : "text-white/80 hover:bg-white/5 hover:text-white",
-                  )}
-                >
-                  Mis Órdenes
-                  {isActive("/armador") && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-madera-natural" />
-                  )}
+                <Link href="/armador">
+                  <EnhancedButton 
+                    variant="ghost" 
+                    size="sm"
+                    className={cn(
+                      "text-gray-300 hover:text-white hover:bg-white/10",
+                      isActive("/armador") && "text-white bg-white/10"
+                    )}
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    Mis Órdenes
+                  </EnhancedButton>
                 </Link>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:block text-right text-sm">
-              <div className="font-medium">{user.nombre}</div>
-              <div className="text-xs text-white/70">{user.rol}</div>
-            </div>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white md:hidden"
-              aria-label="Abrir menú de navegación"
-              onClick={() => setMobileMenuOpen((open) => !open)}
-            >
-              <svg
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d={
-                    mobileMenuOpen
-                      ? "M6 18L18 6M6 6l12 12"
-                      : "M4 6h16M4 12h16M4 18h16"
-                  }
-                />
-              </svg>
-            </button>
+          {/* Right side items */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
-            <Button
-              variant="outline"
+            
+            {/* User menu - desktop only */}
+            <div className="hidden md:flex items-center space-x-3">
+              <div className="text-right">
+                <div className="text-sm font-medium text-white">{user.nombre}</div>
+                <div className="text-xs text-gray-400 capitalize">{user.rol.toLowerCase()}</div>
+              </div>
+              <div className="w-8 h-8 bg-terracota rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+            </div>
+
+            {/* Logout button - visible on all screen sizes */}
+            <EnhancedButton 
+              variant="outline" 
               size="sm"
-              className="border-white/40 bg-white/5 text-white hover:bg-white/10"
               onClick={handleLogout}
+              className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 flex-shrink-0"
+              title="Cerrar sesión"
             >
-              Cerrar sesión
-            </Button>
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline ml-2">Salir</span>
+            </EnhancedButton>
+
+            {/* Mobile menu button */}
+            <EnhancedButton
+              variant="ghost"
+              size="icon"
+              className="md:hidden text-white hover:bg-white/10"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </EnhancedButton>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-700 fade-in">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {user.rol === "ADMIN" && (
+                <>
+                  <Link href="/admin" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/ordenes" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/ordenes") && "text-white bg-white/10"
+                      )}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Órdenes
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/proyectos" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/proyectos") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Proyectos
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/armadores" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/armadores") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Armadores
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/mapa" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/mapa") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      Mapa
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/usuarios" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/usuarios") && "text-white bg-white/10"
+                      )}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Usuarios
+                    </EnhancedButton>
+                  </Link>
+                </>
+              )}
+
+              {user.rol === "SUPERVISOR" && (
+                <>
+                  <Link href="/supervisor" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/supervisor") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/ordenes" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/ordenes") && "text-white bg-white/10"
+                      )}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Órdenes
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/mapa" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/mapa") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      Mapa
+                    </EnhancedButton>
+                  </Link>
+                </>
+              )}
+
+              {user.rol === "ARMADOR" && (
+                <Link href="/armador" className="block">
+                  <EnhancedButton 
+                    variant="ghost" 
+                    className={cn(
+                      "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                      isActive("/armador") && "text-white bg-white/10"
+                    )}
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    Mis Órdenes
+                  </EnhancedButton>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-
-      {mobileMenuOpen && (
-    <div className="md:hidden border-t border-white/10 pb-3 pt-2">
-      <div className="flex flex-col gap-1">
-        {user.rol === "ADMIN" && (
-          <>
-            <Link
-              href="/admin"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin")
-                  ? "bg-white/10 text-white"
-                  : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/proyectos"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin/proyectos") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Proyectos
-            </Link>
-            <Link
-              href="/admin/ordenes"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin/ordenes") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Órdenes
-            </Link>
-            <Link
-              href="/admin/reportes/tiempos-pedido"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin/reportes") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Reportes
-            </Link>
-            <Link
-              href="/admin/mapa"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin/mapa") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Mapa
-            </Link>
-            <Link
-              href="/admin/facturacion"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin/facturacion") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Facturación
-            </Link>
-            <Link
-              href="/admin/usuarios"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/admin/usuarios") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Usuarios
-            </Link>
-          </>
-        )}
-
-        {user.rol === "SUPERVISOR" && (
-          <>
-            <Link
-              href="/supervisor"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/supervisor") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/supervisor/ordenes"
-              className={cn(
-                "block rounded-md px-3 py-2 text-sm font-medium",
-                isActive("/supervisor/ordenes") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-              )}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Órdenes
-            </Link>
-          </>
-        )}
-
-        {user.rol === "ARMADOR" && (
-          <Link
-            href="/armador"
-            className={cn(
-              "block rounded-md px-3 py-2 text-sm font-medium",
-              isActive("/armador") ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white",
-            )}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Mis Órdenes
-          </Link>
-        )}
-      </div>
-    </div>
-  )}
-</nav>
+    </nav>
   );
 }

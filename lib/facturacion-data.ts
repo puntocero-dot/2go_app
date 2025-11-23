@@ -31,6 +31,7 @@ export type BillingOrderRow = {
   estado: string;
   clienteNombre: string;
   municipio: string;
+  proyectoNombre: string;
   conceptos: BillingConcept[];
   resumen: ConceptSummary;
   total: number;
@@ -229,6 +230,7 @@ export async function getBillingDataset(input: {
       estado: orden.estado,
       clienteNombre: orden.usuarioFinal.nombre,
       municipio: orden.usuarioFinal.municipio,
+      proyectoNombre: proyecto.nombreComercial,
       conceptos: calculo.conceptos,
       resumen,
       total: calculo.total,
