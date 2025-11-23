@@ -46,6 +46,26 @@ async function main() {
   console.log("📧 Email: supervisor@armados2go.com");
   console.log("🔑 Contraseña: 123456");
 
+  // Crear usuario superadmin
+  const superadminPassword = await hashPassword("admin123");
+  
+  const superadmin = await prisma.usuario.upsert({
+    where: { email: "superadmin@armados2go.com" },
+    update: {},
+    create: {
+      email: "superadmin@armados2go.com",
+      password: superadminPassword,
+      nombre: "Super Administrador",
+      telefono: "7777-8888",
+      rol: "ADMIN",
+      activo: true,
+    },
+  });
+
+  console.log("✅ Usuario superadmin creado:", superadmin.email);
+  console.log("📧 Email: superadmin@armados2go.com");
+  console.log("🔑 Contraseña: admin123");
+
   // Crear usuario armador de ejemplo
   const armadorPassword = await hashPassword("123456");
   

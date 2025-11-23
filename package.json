@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "create-superadmin": "tsx scripts/create-superadmin.ts",
+    "create-superadmin-prd": "tsx scripts/create-superadmin-prd.ts"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seed.ts"
