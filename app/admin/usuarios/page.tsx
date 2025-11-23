@@ -19,23 +19,37 @@ export default async function AdminUsuariosPage() {
     redirect("/login");
   }
 
-  const usuarios = await prisma.usuario.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      armador: {
-        include: {
-          ordenes: {
-            where: {
-              estado: {
-                in: ["ASIGNADO", "EN_RUTA", "ARMADO_INICIADO"],
+  const [usuarios, proyectos] = await Promise.all([
+    prisma.usuario.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        armador: {
+          include: {
+            ordenes: {
+              where: {
+                estado: {
+                  in: ["ASIGNADO", "EN_RUTA", "ARMADO_INICIADO"],
+                },
               },
+              select: { id: true },
             },
-            select: { id: true },
+          },
+        },
+        supervisorProyectos: {
+          include: {
+            proyecto: {
+              select: { id: true, nombreComercial: true },
+            },
           },
         },
       },
-    },
-  });
+    }),
+    prisma.proyecto.findMany({
+      where: { activo: true },
+      select: { id: true, nombreComercial: true },
+      orderBy: { nombreComercial: 'asc' },
+    }),
+  ]);
 
   const serializableUsuarios = usuarios.map((usuario) => ({
     id: usuario.id,
@@ -53,6 +67,10 @@ export default async function AdminUsuariosPage() {
           ordenesActivas: usuario.armador.ordenes.length,
         }
       : null,
+    proyectos: usuario.supervisorProyectos.map(sp => ({
+      id: sp.proyecto.id,
+      nombreComercial: sp.proyecto.nombreComercial,
+    })),
   }));
 
   return (
@@ -67,7 +85,10 @@ export default async function AdminUsuariosPage() {
           </p>
         </div>
 
-        <AdminUsersManager initialUsers={serializableUsuarios} />
+        <AdminUsersManager 
+          initialUsers={serializableUsuarios} 
+          proyectos={proyectos}
+        />
       </main>
     </div>
   );

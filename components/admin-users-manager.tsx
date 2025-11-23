@@ -39,10 +39,16 @@ const DEFAULT_FORM_STATE: FormState = {
   rol: "ARMADOR",
   estadoArmador: "ACTIVO",
   habilidades: "",
+  proyectosIds: [],
 };
 
 export type RolPermitido = "ADMIN" | "SUPERVISOR" | "ARMADOR";
 export type EstadoArmadorPermitido = "ACTIVO" | "INACTIVO" | "VACACIONES";
+
+type ProyectoItem = {
+  id: string;
+  nombreComercial: string;
+};
 
 type UsuarioItem = {
   id: string;
@@ -58,6 +64,7 @@ type UsuarioItem = {
     habilidades: string[];
     ordenesActivas: number;
   } | null;
+  proyectos: ProyectoItem[];
 };
 
 type FormState = {
@@ -68,6 +75,7 @@ type FormState = {
   rol: RolPermitido;
   estadoArmador: EstadoArmadorPermitido;
   habilidades: string;
+  proyectosIds: string[];
 };
 
 type EditFormState = {
@@ -82,6 +90,7 @@ type EditFormState = {
 
 type Props = {
   initialUsers: UsuarioItem[];
+  proyectos: ProyectoItem[];
 };
 
 function getPasswordChecks(value: string) {
@@ -95,7 +104,7 @@ function getPasswordChecks(value: string) {
   };
 }
 
-export function AdminUsersManager({ initialUsers }: Props) {
+export function AdminUsersManager({ initialUsers, proyectos }: Props) {
   const [usuarios, setUsuarios] = useState<UsuarioItem[]>(initialUsers);
   const [filterRol, setFilterRol] = useState<"ALL" | RolPermitido>("ALL");
   const [listLoading, setListLoading] = useState(false);
@@ -280,6 +289,10 @@ export function AdminUsersManager({ initialUsers }: Props) {
           }
         }
 
+        if (formState.rol === "SUPERVISOR") {
+          payload.proyectosIds = formState.proyectosIds;
+        }
+
         const response = await fetch("/api/usuarios", {
           method: "POST",
           headers: {
@@ -353,6 +366,7 @@ export function AdminUsersManager({ initialUsers }: Props) {
             ordenesActivas: raw.armador.ordenesActivas ?? 0,
           }
         : null,
+      proyectos: raw.proyectos ?? [],
     };
   }, []);
 
@@ -710,6 +724,42 @@ export function AdminUsersManager({ initialUsers }: Props) {
                 ))}
               </select>
             </div>
+
+            {formState.rol === "SUPERVISOR" ? (
+              <div className="space-y-4 rounded-md border border-blue-200 bg-blue-50 p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="proyectos">Proyectos asignados *</Label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3 bg-white">
+                    {proyectos.map((proyecto) => (
+                      <label key={proyecto.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                          type="checkbox"
+                          checked={formState.proyectosIds.includes(proyecto.id)}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setFormState((prev) => ({
+                              ...prev,
+                              proyectosIds: isChecked
+                                ? [...prev.proyectosIds, proyecto.id]
+                                : prev.proyectosIds.filter(id => id !== proyecto.id),
+                            }));
+                          }}
+                          disabled={isSubmitting}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">{proyecto.nombreComercial}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    El supervisor solo podrá ver y gestionar órdenes de los proyectos seleccionados.
+                  </p>
+                  {formFieldErrors.proyectosIds && (
+                    <p className="text-xs text-red-600">{formFieldErrors.proyectosIds}</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             {formState.rol === "ARMADOR" ? (
               <div className="space-y-4 rounded-md border border-gray-200 p-4">
