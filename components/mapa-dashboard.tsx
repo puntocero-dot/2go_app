@@ -82,48 +82,6 @@ export default function MapaDashboard({ armadores, ordenes }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Proyecto</label>
-          <select
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            value={proyectoId}
-            onChange={(e) => setProyectoId(e.target.value)}
-          >
-            <option value="ALL">Todos los proyectos</option>
-            {proyectos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Estado de orden</label>
-          <select
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            value={estado}
-            onChange={(e) => setEstado(e.target.value)}
-          >
-            {ESTADOS_OPCIONES.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Resumen</label>
-          <div className="w-full rounded-md border border-dashed border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            Mostrando <span className="font-semibold text-foreground">{filteredOrdenes.length}</span> órdenes
-            activas que cumplen los filtros seleccionados.
-          </div>
-        </div>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>

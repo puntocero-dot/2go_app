@@ -21,7 +21,8 @@ import {
   Calendar,
   Filter,
   Plus,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 
 interface PageProps {
@@ -236,11 +237,11 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
         <EnhancedCard hover className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="flex items-center mb-6">
             <Filter className="w-5 h-5 mr-2 text-primary" />
-            <h3 className="text-lg font-semibold text-gray-900 tracking-tight">Filtros de búsqueda</h3>
+            <h3 className="text-lg font-semibold">Filtros de métricas</h3>
           </div>
-          <form className="grid gap-6 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] p-6 bg-gray-50 rounded-xl border border-gray-200 shadow-sm" method="get">
-            <div className="space-y-2">
-              <Label htmlFor="proyectoId" className="text-sm font-medium text-gray-700 tracking-wide">Proyecto</Label>
+          <form className="grid gap-6 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]" method="get">
+            <div>
+              <Label htmlFor="proyectoId" className="text-sm font-medium">Proyecto</Label>
               <select
                 id="proyectoId"
                 name="proyectoId"
@@ -256,13 +257,13 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="estado" className="text-sm font-medium text-gray-700 tracking-wide">Estado</Label>
+            <div>
+              <Label htmlFor="estado" className="text-sm font-medium">Estado de orden</Label>
               <select
                 id="estado"
                 name="estado"
                 defaultValue={estadoFilter}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm uppercase focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               >
                 <option value="ALL">Todos los estados</option>
                 {ESTADOS_ORDEN.map((estado) => (
@@ -273,10 +274,10 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio" className="text-sm font-medium text-gray-700 tracking-wide">
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Fecha inicio
+            <div>
+              <Label htmlFor="fechaInicio" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Fecha desde
               </Label>
               <input
                 type="date"
@@ -287,10 +288,10 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fechaFin" className="text-sm font-medium text-gray-700 tracking-wide">
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Fecha fin
+            <div>
+              <Label htmlFor="fechaFin" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Fecha hasta
               </Label>
               <input
                 type="date"
@@ -301,16 +302,21 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
               />
             </div>
 
-            <div className="md:col-span-full flex items-center flex-wrap gap-4 pt-6 border-t border-gray-200">
+            <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-2">
               <EnhancedButton
                 type="submit"
-                className="min-w-[140px]"
+                variant="default"
+                className="min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
-                <Filter className="w-4 h-4 mr-2" />
                 Aplicar filtros
               </EnhancedButton>
               <Link href="/admin/ordenes" prefetch={false}>
-                <EnhancedButton variant="outline" className="min-w-[100px]">
+                <EnhancedButton 
+                  type="button" 
+                  variant="outline" 
+                  className="min-w-[100px]"
+                >
+                  <X className="w-4 h-4 mr-2" />
                   Limpiar
                 </EnhancedButton>
               </Link>

@@ -1,40 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Activity, RefreshCw } from "lucide-react";
 
 interface RealTimeButtonProps {
-  onRefresh: () => void;
   isLoading?: boolean;
 }
 
-export function RealTimeButton({ onRefresh, isLoading = false }: RealTimeButtonProps) {
+export function RealTimeButton({ isLoading = false }: RealTimeButtonProps) {
+  const router = useRouter();
   const [isActive, setIsActive] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+  const handleRefresh = () => {
+    router.refresh();
+    setLastUpdate(new Date());
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (isActive) {
       interval = setInterval(() => {
-        onRefresh();
-        setLastUpdate(new Date());
+        handleRefresh();
       }, 30000); // Actualizar cada 30 segundos
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, onRefresh]);
+  }, [isActive]);
 
   const handleToggleRealTime = () => {
     if (isActive) {
       setIsActive(false);
     } else {
       setIsActive(true);
-      onRefresh();
-      setLastUpdate(new Date());
+      handleRefresh();
     }
   };
 

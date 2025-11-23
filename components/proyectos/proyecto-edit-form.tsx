@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Label } from "@/components/ui/label";
-import { prisma } from "@/lib/prisma";
 
 interface ProyectoEditFormProps {
   proyecto: any;
@@ -13,6 +12,8 @@ interface ProyectoEditFormProps {
 export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const datosFacturacion = typeof proyecto.datosFacturacion === 'object' ? proyecto.datosFacturacion : {};
+  
   const [formData, setFormData] = useState({
     nombreComercial: proyecto.nombreComercial || "",
     activo: proyecto.activo ?? true,
@@ -21,7 +22,12 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
     contactoTelefono: proyecto.contactoTelefono || "",
     direccion: proyecto.direccion || "",
     descripcion: proyecto.descripcion || "",
-    datosFacturacion: typeof proyecto.datosFacturacion === 'object' ? proyecto.datosFacturacion : {},
+    // Campos fiscales
+    nit: (datosFacturacion as any)?.nit || "",
+    dui: (datosFacturacion as any)?.dui || "",
+    nrc: (datosFacturacion as any)?.nrc || "",
+    giro: (datosFacturacion as any)?.giro || "",
+    razonSocial: (datosFacturacion as any)?.razonSocial || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,12 +35,35 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
     setIsLoading(true);
 
     try {
+      // Construir datosFacturacion según el tipo de cliente
+      const datosFacturacion: any = {};
+      
+      if (formData.tipoCliente === "CREDITO_FISCAL") {
+        datosFacturacion.nit = formData.nit;
+        datosFacturacion.nrc = formData.nrc;
+        datosFacturacion.razonSocial = formData.razonSocial;
+        datosFacturacion.giro = formData.giro;
+      } else {
+        datosFacturacion.dui = formData.dui;
+      }
+
+      const payload = {
+        nombreComercial: formData.nombreComercial,
+        activo: formData.activo,
+        tipoCliente: formData.tipoCliente,
+        contactoEmail: formData.contactoEmail,
+        contactoTelefono: formData.contactoTelefono,
+        direccion: formData.direccion,
+        descripcion: formData.descripcion,
+        datosFacturacion,
+      };
+
       const response = await fetch(`/api/proyectos/${proyecto.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -164,6 +193,89 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
               Selecciona el tipo de facturación según las leyes de El Salvador
             </p>
           </div>
+
+          {/* Campos fiscales según tipo de cliente */}
+          {formData.tipoCliente === "CREDITO_FISCAL" ? (
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h4 className="font-semibold text-gray-900">Datos Fiscales - Crédito Fiscal</h4>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="nit">NIT *</Label>
+                  <input
+                    type="text"
+                    id="nit"
+                    name="nit"
+                    value={formData.nit}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="0000-000000-000-0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="nrc">NRC *</Label>
+                  <input
+                    type="text"
+                    id="nrc"
+                    name="nrc"
+                    value={formData.nrc}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="000000-0"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="razonSocial">Razón Social *</Label>
+                  <input
+                    type="text"
+                    id="razonSocial"
+                    name="razonSocial"
+                    value={formData.razonSocial}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="Nombre de la empresa S.A. de C.V."
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="giro">Giro del Negocio *</Label>
+                  <input
+                    type="text"
+                    id="giro"
+                    name="giro"
+                    value={formData.giro}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="Ej: Venta de muebles y accesorios"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h4 className="font-semibold text-gray-900">Datos Fiscales - Consumidor Final</h4>
+              
+              <div>
+                <Label htmlFor="dui">DUI</Label>
+                <input
+                  type="text"
+                  id="dui"
+                  name="dui"
+                  value={formData.dui}
+                  onChange={handleChange}
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="00000000-0"
+                />
+                <p className="text-xs text-gray-500 mt-1">Opcional para consumidor final</p>
+              </div>
+            </div>
+          )}
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
@@ -177,7 +289,7 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
         <EnhancedButton
           type="button"
           variant="outline"
-          onClick={() => router.back()}
+          onClick={() => router.push('/admin/proyectos')}
           disabled={isLoading}
         >
           Cancelar

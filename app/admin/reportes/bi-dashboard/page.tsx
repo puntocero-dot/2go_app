@@ -268,13 +268,7 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
                 <Download className="w-4 h-4 mr-2" />
                 Exportar Reporte
               </EnhancedButton>
-              <RealTimeButton 
-                onRefresh={() => {
-                  // Esta función se ejecutará cuando se presione el botón
-                  // Por ahora solo recargará la página
-                  window.location.reload();
-                }}
-              />
+              <RealTimeButton />
             </div>
           </div>
         </div>
@@ -349,11 +343,7 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
         </EnhancedCard>
 
         {hasInsufficientData ? (
-          <EmptyBIDashboard 
-            onResetFilters={() => {
-              window.location.href = "/admin/reportes/bi-dashboard";
-            }}
-          />
+          <EmptyBIDashboard />
         ) : (
           <>
             {/* KPIs Principales */}

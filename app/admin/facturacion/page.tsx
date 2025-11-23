@@ -35,7 +35,8 @@ import {
   Package,
   MapPin,
   AlertTriangle,
-  Clock
+  Clock,
+  X,
 } from "lucide-react";
 
 interface PageProps {
@@ -159,6 +160,13 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
     const filters = billingFiltersSchema.parse(currentSearchParams);
     const { start: startDate, end: endDate } = getDateRangeFromFilters(filters);
 
+    // Get proyectos activos
+    const proyectos = await prisma.proyecto.findMany({
+      where: { activo: true },
+      select: { id: true, nombreComercial: true },
+      orderBy: { nombreComercial: 'asc' }
+    });
+
     // Get billing data
     const billingData = await getBillingDataset({
       proyectoId: filters.proyectoId === "ALL" ? "ALL" : filters.proyectoId!,
@@ -222,7 +230,11 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                 className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               >
                 <option value="ALL">Todos los proyectos</option>
-                {/* Aquí irían los proyectos dinámicamente */}
+                {proyectos.map((proyecto) => (
+                  <option key={proyecto.id} value={proyecto.id}>
+                    {proyecto.nombreComercial}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -255,15 +267,20 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
             </div>
 
             <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-2">
-              <EnhancedButton
-                type="submit"
-                className="min-w-[140px]"
+              <EnhancedButton 
+                type="submit" 
+                variant="default"
+                className="min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
-                <Filter className="w-4 h-4 mr-2" />
                 Aplicar filtros
               </EnhancedButton>
               <Link href="/admin/facturacion" prefetch={false}>
-                <EnhancedButton variant="outline" className="min-w-[100px]">
+                <EnhancedButton 
+                  type="button"
+                  variant="outline"
+                  className="min-w-[100px]"
+                >
+                  <X className="w-4 h-4 mr-2" />
                   Limpiar
                 </EnhancedButton>
               </Link>
@@ -418,9 +435,7 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
             description="No se encontraron registros para los filtros seleccionados. Intenta ajustar los filtros o el rango de fechas."
             action={{
               label: "Limpiar filtros",
-              onClick: () => {
-                window.location.href = "/admin/facturacion";
-              }
+              href: "/admin/facturacion"
             }}
           />
         )}

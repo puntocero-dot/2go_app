@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
+import Link from "next/link";
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -7,7 +8,8 @@ interface EmptyStateProps {
   description?: string;
   action?: {
     label: string;
-    onClick: () => void;
+    onClick?: () => void;
+    href?: string;
     variant?: "default" | "outline" | "secondary" | "ghost" | "destructive" | "link";
   };
   className?: string;
@@ -42,13 +44,24 @@ export function EmptyState({
       )}
       
       {action && (
-        <Button 
-          variant={action.variant || "default"} 
-          onClick={action.onClick}
-          className="min-w-[120px]"
-        >
-          {action.label}
-        </Button>
+        action.href ? (
+          <Link href={action.href}>
+            <Button 
+              variant={action.variant || "default"}
+              className="min-w-[120px]"
+            >
+              {action.label}
+            </Button>
+          </Link>
+        ) : (
+          <Button 
+            variant={action.variant || "default"} 
+            onClick={action.onClick}
+            className="min-w-[120px]"
+          >
+            {action.label}
+          </Button>
+        )
       )}
     </div>
   );
@@ -118,7 +131,7 @@ export function EmptyUsers({ onCreate }: { onCreate?: () => void }) {
   );
 }
 
-export function EmptyBIDashboard({ onResetFilters }: { onResetFilters: () => void }) {
+export function EmptyBIDashboard() {
   return (
     <EmptyState
       icon={
@@ -130,7 +143,7 @@ export function EmptyBIDashboard({ onResetFilters }: { onResetFilters: () => voi
       description="No hay suficientes datos en el período seleccionado para generar el análisis de Business Intelligence. Se recomienda tener al menos 30 días de datos."
       action={{
         label: "Ver Todos los Datos",
-        onClick: onResetFilters,
+        href: "/admin/reportes/bi-dashboard",
         variant: "default"
       }}
     />
