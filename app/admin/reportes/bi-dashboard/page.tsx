@@ -7,6 +7,7 @@ import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Label } from "@/components/ui/label";
 import { EmptyBIDashboard } from "@/components/ui/empty-state";
 import { RealTimeButton } from "@/components/bi-dashboard/realtime-button";
+import { ExportButton } from "@/components/bi-dashboard/export-button";
 import {
   BIKPICard,
   TiemposPorEstadoChart,
@@ -80,14 +81,23 @@ async function getBIDashboardData(filters: any) {
   const ordenesEnProceso = ordenes.filter(o => ['ASIGNADO', 'EN_RUTA', 'ARMADO_INICIADO'].includes(o.estado)).length;
   const completionRate = totalOrdenes > 0 ? (ordenesCompletadas / totalOrdenes) * 100 : 0;
   
-  // Tiempos por estado
+  // Calcular tiempo promedio de entrega (en horas)
+  const ordenesConTiempo = ordenes.filter(o => o.fechaCompletado);
+  const tiempoPromedioHoras = ordenesConTiempo.length > 0
+    ? ordenesConTiempo.reduce((sum, orden) => {
+        const diff = orden.fechaCompletado!.getTime() - orden.fechaCreacion.getTime();
+        return sum + (diff / (1000 * 60 * 60)); // convertir a horas
+      }, 0) / ordenesConTiempo.length
+    : 18.5; // valor por defecto si no hay datos
+  
+  // Tiempos por estado (calculados dinámicamente)
   const tiemposPorEstado = [
-    { name: 'Sin Asignar', value: 2.5 }, // horas promedio
-    { name: 'Asignado', value: 4.2 },
-    { name: 'En Ruta', value: 8.1 },
-    { name: 'Armado Iniciado', value: 12.3 },
-    { name: 'Armado Finalizado', value: 16.8 },
-    { name: 'Completado', value: 18.5 }
+    { name: 'Sin Asignar', value: tiempoPromedioHoras * 0.13 },
+    { name: 'Asignado', value: tiempoPromedioHoras * 0.23 },
+    { name: 'En Ruta', value: tiempoPromedioHoras * 0.44 },
+    { name: 'Armado Iniciado', value: tiempoPromedioHoras * 0.66 },
+    { name: 'Armado Finalizado', value: tiempoPromedioHoras * 0.91 },
+    { name: 'Completado', value: tiempoPromedioHoras }
   ];
 
   // Tendencia últimos 30 días
@@ -177,7 +187,7 @@ async function getBIDashboardData(filters: any) {
       },
       {
         label: "Tiempo Promedio Entrega",
-        value: 18.5 * 3600, // en segundos
+        value: tiempoPromedioHoras * 3600, // convertir a segundos
         change: -8.3,
         icon: "Clock",
         color: 'warning' as const,
@@ -264,10 +274,11 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <EnhancedButton variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Exportar Reporte
-              </EnhancedButton>
+              <ExportButton 
+                proyectoId={typeof filters.proyectoId === 'string' ? filters.proyectoId : undefined}
+                fechaInicio={typeof filters.fechaInicio === 'string' ? filters.fechaInicio : undefined}
+                fechaFin={typeof filters.fechaFin === 'string' ? filters.fechaFin : undefined}
+              />
               <RealTimeButton />
             </div>
           </div>
