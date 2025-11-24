@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BillingEmailButton } from "@/components/billing-email-button";
+import { BillingExportButton } from "@/components/billing-export-button";
 import { formatCurrency } from "@/lib/utils";
 import type { BillingConcept } from "@/lib/facturacion-helpers";
 import { getBillingDataset } from "@/lib/facturacion-data";
@@ -349,10 +350,12 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                   </span>
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <EnhancedButton variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Exportar
-                  </EnhancedButton>
+                  <BillingExportButton
+                    proyectoId={filters.proyectoId || "ALL"}
+                    desde={filters.desde || startDate.toISOString().split('T')[0]}
+                    hasta={filters.hasta || endDate.toISOString().split('T')[0]}
+                    disabled={!hasData}
+                  />
                 </div>
               </div>
 
@@ -364,7 +367,11 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                         <TableHead className="font-semibold">Orden</TableHead>
                         <TableHead className="font-semibold">Proyecto</TableHead>
                         <TableHead className="font-semibold">Cliente</TableHead>
-                        <TableHead className="font-semibold">Conceptos</TableHead>
+                        <TableHead className="font-semibold text-right">Armado</TableHead>
+                        <TableHead className="font-semibold text-right">Tamaño</TableHead>
+                        <TableHead className="font-semibold text-right">Prioridad</TableHead>
+                        <TableHead className="font-semibold text-right">Distancia</TableHead>
+                        <TableHead className="font-semibold text-right">Penalización</TableHead>
                         <TableHead className="font-semibold text-right">Total</TableHead>
                         <TableHead className="font-semibold text-right">Acciones</TableHead>
                       </TableRow>
@@ -394,19 +401,20 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              {item.conceptos.map((concepto: any, i: number) => (
-                                <div key={i} className="text-sm">
-                                  <span className="text-muted-foreground">
-                                    {concepto.tipo}:
-                                  </span>{" "}
-                                  <span className="font-medium">
-                                    {formatCurrency(concepto.monto)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.resumen?.armado || 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.resumen?.tamano || 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.resumen?.prioridad || 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.resumen?.distancia || 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.resumen?.penalizacion || 0)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {formatCurrency(item.total)}

@@ -248,24 +248,6 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
           <ProjectBillingManager projectId={proyecto.id} initialRule={reglaCobroInicial} />
         </section>
 
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle>Reglas de Cobro</CardTitle>
-              <CardDescription>
-                Configura cómo se calculará la facturación para este proyecto
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild>
-                <Link href={`/admin/proyectos/${proyecto.id}/reglas`}>
-                  Configurar Reglas de Cobro →
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </section>
-
         <section className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>

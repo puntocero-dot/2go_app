@@ -40,6 +40,11 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
     nrc: datosFacturacion?.nrc || "",
     giro: datosFacturacion?.giro || "",
     razonSocial: datosFacturacion?.razonSocial || "",
+    nombreCompleto: datosFacturacion?.nombreCompleto || "",
+    // Campos de contacto de facturación
+    contactoNombre: datosFacturacion?.contacto?.nombre || "",
+    contactoEmailFacturacion: datosFacturacion?.contacto?.email || "",
+    contactoTelefonoFacturacion: datosFacturacion?.contacto?.telefono || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,15 +53,24 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
 
     try {
       // Construir datosFacturacion según el tipo de cliente
-      const datosFacturacion: any = {};
+      const datosFacturacion: any = {
+        contacto: {
+          nombre: formData.contactoNombre,
+          email: formData.contactoEmailFacturacion,
+          telefono: formData.contactoTelefonoFacturacion,
+        }
+      };
       
       if (formData.tipoCliente === "CREDITO_FISCAL") {
         datosFacturacion.nit = formData.nit;
         datosFacturacion.nrc = formData.nrc;
         datosFacturacion.razonSocial = formData.razonSocial;
         datosFacturacion.giro = formData.giro;
+        datosFacturacion.direccion = formData.direccion;
       } else {
+        datosFacturacion.nombreCompleto = formData.nombreCompleto;
         datosFacturacion.dui = formData.dui;
+        datosFacturacion.direccion = formData.direccion;
       }
 
       const payload = {
@@ -274,6 +288,19 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
               <h4 className="font-semibold text-gray-900">Datos Fiscales - Consumidor Final</h4>
               
               <div>
+                <Label htmlFor="nombreCompleto">Nombre Completo</Label>
+                <input
+                  type="text"
+                  id="nombreCompleto"
+                  name="nombreCompleto"
+                  value={formData.nombreCompleto}
+                  onChange={handleChange}
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="Nombre completo del cliente"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="dui">DUI</Label>
                 <input
                   type="text"
@@ -288,6 +315,51 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
               </div>
             </div>
           )}
+
+          {/* Información de Contacto de Facturación */}
+          <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
+            <h4 className="font-semibold text-gray-900">Información de Contacto para Facturación</h4>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <Label htmlFor="contactoNombre">Nombre de Contacto</Label>
+                <input
+                  type="text"
+                  id="contactoNombre"
+                  name="contactoNombre"
+                  value={formData.contactoNombre}
+                  onChange={handleChange}
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="Nombre del contacto"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="contactoEmailFacturacion">Email de Contacto</Label>
+                <input
+                  type="email"
+                  id="contactoEmailFacturacion"
+                  name="contactoEmailFacturacion"
+                  value={formData.contactoEmailFacturacion}
+                  onChange={handleChange}
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="contacto@empresa.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="contactoTelefonoFacturacion">Teléfono de Contacto</Label>
+                <input
+                  type="tel"
+                  id="contactoTelefonoFacturacion"
+                  name="contactoTelefonoFacturacion"
+                  value={formData.contactoTelefonoFacturacion}
+                  onChange={handleChange}
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="+503 1234 5678"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

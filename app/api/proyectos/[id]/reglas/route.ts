@@ -97,7 +97,7 @@ export async function POST(
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
           create: penalizaciones.map((p: any) => ({
             tipo: p.tipo,
-            monto: p.monto
+            precio: p.precio ?? 0
           }))
         } : undefined
       },
@@ -188,7 +188,7 @@ export async function PUT(
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
           create: penalizaciones.map((p: any) => ({
             tipo: p.tipo,
-            monto: p.monto
+            precio: p.precio ?? p.monto ?? 0
           }))
         } : undefined
       },
@@ -219,7 +219,7 @@ export async function PUT(
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
           create: penalizaciones.map((p: any) => ({
             tipo: p.tipo,
-            monto: p.monto
+            precio: p.precio ?? p.monto ?? 0
           }))
         } : undefined
       },

@@ -241,12 +241,20 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
                 Administra y monitorea todas las órdenes del sistema.
               </p>
             </div>
-            <Link href="/admin/ordenes/crear">
-              <EnhancedButton variant="default" className="min-w-[160px] bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
-                <Plus className="w-4 h-4 mr-2" />
-                Nueva Orden
-              </EnhancedButton>
-            </Link>
+            <div className="flex gap-3">
+              <Link href="/admin/ordenes/carga-masiva">
+                <EnhancedButton variant="outline" className="min-w-[160px] hover:shadow-md hover:scale-[1.02] active:scale-[0.98]">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Carga Masiva CSV
+                </EnhancedButton>
+              </Link>
+              <Link href="/admin/ordenes/crear">
+                <EnhancedButton variant="default" className="min-w-[160px] bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nueva Orden
+                </EnhancedButton>
+              </Link>
+            </div>
           </div>
         </div>
 

@@ -19,8 +19,8 @@ type CobroMunicipio = {
 };
 
 type Penalizacion = {
-  tipo: 'CANCELADA' | 'NO_CONTESTA';
-  monto: number;
+  tipo: 'PEDIDO_CANCELADO_EN_RUTA' | 'CLIENTE_NO_CONTESTO';
+  precio: number;
 };
 
 type ReglaCobroFormProps = {
@@ -70,8 +70,8 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
   // Penalizaciones
   const [penalizaciones, setPenalizaciones] = useState<Penalizacion[]>(
     reglaActual?.penalizaciones || [
-      { tipo: 'CANCELADA', monto: 20 },
-      { tipo: 'NO_CONTESTA', monto: 10 }
+      { tipo: 'PEDIDO_CANCELADO_EN_RUTA', precio: 20 },
+      { tipo: 'CLIENTE_NO_CONTESTO', precio: 10 }
     ]
   );
 
@@ -116,7 +116,7 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
   };
 
   const agregarPenalizacion = () => {
-    setPenalizaciones([...penalizaciones, { tipo: 'CANCELADA', monto: 20 }]);
+    setPenalizaciones([...penalizaciones, { tipo: 'PEDIDO_CANCELADO_EN_RUTA', precio: 20 }]);
   };
 
   const eliminarPenalizacion = (index: number) => {
@@ -513,18 +513,18 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
                   onChange={(e) => actualizarPenalizacion(index, 'tipo', e.target.value)}
                   className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm"
                 >
-                  <option value="CANCELADA">Orden Cancelada</option>
-                  <option value="NO_CONTESTA">Cliente No Contesta</option>
+                  <option value="PEDIDO_CANCELADO_EN_RUTA">Orden Cancelada</option>
+                  <option value="CLIENTE_NO_CONTESTO">Cliente No Contesta</option>
                 </select>
               </div>
               <div>
-                <Label>Monto ($)</Label>
+                <Label>Precio ($)</Label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={pen.monto}
-                  onChange={(e) => actualizarPenalizacion(index, 'monto', parseFloat(e.target.value))}
+                  value={pen.precio}
+                  onChange={(e) => actualizarPenalizacion(index, 'precio', parseFloat(e.target.value))}
                 />
               </div>
               <div className="flex items-end">
