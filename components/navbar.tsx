@@ -48,9 +48,9 @@ export function Navbar({ user }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-negro-azabache text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav className="bg-negro-azabache text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95 overflow-x-hidden">
+      <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-16 gap-2">
           {/* Logo y Dashboard */}
           <div className="flex items-center space-x-8">
             <Link href={getDashboardLink()} className="flex items-center space-x-3 group">
@@ -221,17 +221,17 @@ export function Navbar({ user }: NavbarProps) {
           </div>
 
           {/* Right side items */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <ThemeToggle />
             
             {/* User menu - desktop only */}
-            <div className="hidden md:flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-sm font-medium text-white">{user.nombre}</div>
-                <div className="text-xs text-gray-400 capitalize">{user.rol.toLowerCase()}</div>
+            <div className="hidden lg:flex items-center gap-2 px-2">
+              <div className="text-right max-w-[120px]">
+                <div className="text-xs font-medium text-white truncate">{user.nombre}</div>
+                <div className="text-[10px] text-gray-400 capitalize">{user.rol.toLowerCase()}</div>
               </div>
-              <div className="w-8 h-8 bg-terracota rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 bg-terracota rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
 
@@ -240,11 +240,11 @@ export function Navbar({ user }: NavbarProps) {
               variant="outline" 
               size="sm"
               onClick={handleLogout}
-              className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 flex-shrink-0"
+              className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 flex-shrink-0 px-2 sm:px-3"
               title="Cerrar sesión"
             >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline ml-2">Salir</span>
+              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline ml-1.5 text-xs">Salir</span>
             </EnhancedButton>
 
             {/* Mobile menu button */}
