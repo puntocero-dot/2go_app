@@ -13,6 +13,16 @@ type RangoVolumen = {
   precio: number;
 };
 
+type CobroMunicipio = {
+  municipio: string;
+  precio: number;
+};
+
+type Penalizacion = {
+  tipo: 'CANCELADA' | 'NO_CONTESTA';
+  monto: number;
+};
+
 type ReglaCobroFormProps = {
   proyectoId: string;
   reglaActual: any;
@@ -39,6 +49,32 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
     ]
   );
 
+  // Prioridades
+  const [precioVIP, setPrecioVIP] = useState(reglaActual?.precioVIP || 50);
+  const [precioUrgente, setPrecioUrgente] = useState(reglaActual?.precioUrgente || 30);
+  const [precioMedia, setPrecioMedia] = useState(reglaActual?.precioMedia || 15);
+  const [precioNormal, setPrecioNormal] = useState(reglaActual?.precioNormal || 0);
+
+  // Tamaños
+  const [precioGrande, setPrecioGrande] = useState(reglaActual?.precioGrande || 40);
+  const [precioMediano, setPrecioMediano] = useState(reglaActual?.precioMediano || 25);
+  const [precioPequeno, setPrecioPequeno] = useState(reglaActual?.precioPequeno || 15);
+
+  // Municipios
+  const [municipios, setMunicipios] = useState<CobroMunicipio[]>(
+    reglaActual?.cobrosDistancia || []
+  );
+  const [nuevoMunicipio, setNuevoMunicipio] = useState('');
+  const [nuevoPrecioMunicipio, setNuevoPrecioMunicipio] = useState(10);
+
+  // Penalizaciones
+  const [penalizaciones, setPenalizaciones] = useState<Penalizacion[]>(
+    reglaActual?.penalizaciones || [
+      { tipo: 'CANCELADA', monto: 20 },
+      { tipo: 'NO_CONTESTA', monto: 10 }
+    ]
+  );
+
   const agregarRango = () => {
     const ultimoRango = rangos[rangos.length - 1];
     const nuevoDesde = (ultimoRango?.hasta || 0) + 1;
@@ -58,6 +94,42 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
       [field]: value === '' ? null : value
     };
     setRangos(nuevosRangos);
+  };
+
+  const agregarMunicipio = () => {
+    setMunicipios([...municipios, { municipio: nuevoMunicipio, precio: nuevoPrecioMunicipio }]);
+    setNuevoMunicipio('');
+    setNuevoPrecioMunicipio(10);
+  };
+
+  const eliminarMunicipio = (index: number) => {
+    setMunicipios(municipios.filter((_, i) => i !== index));
+  };
+
+  const actualizarMunicipio = (index: number, field: keyof CobroMunicipio, value: any) => {
+    const nuevosMunicipios = [...municipios];
+    nuevosMunicipios[index] = {
+      ...nuevosMunicipios[index],
+      [field]: value
+    };
+    setMunicipios(nuevosMunicipios);
+  };
+
+  const agregarPenalizacion = () => {
+    setPenalizaciones([...penalizaciones, { tipo: 'CANCELADA', monto: 20 }]);
+  };
+
+  const eliminarPenalizacion = (index: number) => {
+    setPenalizaciones(penalizaciones.filter((_, i) => i !== index));
+  };
+
+  const actualizarPenalizacion = (index: number, field: keyof Penalizacion, value: any) => {
+    const nuevasPenalizaciones = [...penalizaciones];
+    nuevasPenalizaciones[index] = {
+      ...nuevasPenalizaciones[index],
+      [field]: value
+    };
+    setPenalizaciones(nuevasPenalizaciones);
   };
 
   const validarRangos = (): boolean => {
@@ -104,7 +176,20 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
         ...(tipo === 'COBRO_FIJO_UNITARIO' 
           ? { precioFijoUnitario: parseFloat(precioFijo.toString()) }
           : { rangosVolumen: rangos }
-        )
+        ),
+        // Prioridades
+        precioVIP: parseFloat(precioVIP.toString()),
+        precioUrgente: parseFloat(precioUrgente.toString()),
+        precioMedia: parseFloat(precioMedia.toString()),
+        precioNormal: parseFloat(precioNormal.toString()),
+        // Tamaños
+        precioGrande: parseFloat(precioGrande.toString()),
+        precioMediano: parseFloat(precioMediano.toString()),
+        precioPequeno: parseFloat(precioPequeno.toString()),
+        // Municipios
+        cobrosDistancia: municipios,
+        // Penalizaciones
+        penalizaciones: penalizaciones
       };
 
       const res = await fetch(`/api/proyectos/${proyectoId}/reglas`, {
@@ -241,6 +326,227 @@ export default function ReglaCobroForm({ proyectoId, reglaActual }: ReglaCobroFo
           </p>
         </div>
       )}
+
+      {/* Prioridades */}
+      <div className="space-y-4 border-t pt-6">
+        <h3 className="text-lg font-semibold">Recargos por Prioridad</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <Label htmlFor="precioVIP">VIP ($)</Label>
+            <Input
+              id="precioVIP"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioVIP}
+              onChange={(e) => setPrecioVIP(parseFloat(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="precioUrgente">Urgente ($)</Label>
+            <Input
+              id="precioUrgente"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioUrgente}
+              onChange={(e) => setPrecioUrgente(parseFloat(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="precioMedia">Media ($)</Label>
+            <Input
+              id="precioMedia"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioMedia}
+              onChange={(e) => setPrecioMedia(parseFloat(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="precioNormal">Normal ($)</Label>
+            <Input
+              id="precioNormal"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioNormal}
+              onChange={(e) => setPrecioNormal(parseFloat(e.target.value))}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Tamaños */}
+      <div className="space-y-4 border-t pt-6">
+        <h3 className="text-lg font-semibold">Recargos por Tamaño</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="precioGrande">Grande ($)</Label>
+            <Input
+              id="precioGrande"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioGrande}
+              onChange={(e) => setPrecioGrande(parseFloat(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="precioMediano">Mediano ($)</Label>
+            <Input
+              id="precioMediano"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioMediano}
+              onChange={(e) => setPrecioMediano(parseFloat(e.target.value))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="precioPequeno">Pequeño ($)</Label>
+            <Input
+              id="precioPequeno"
+              type="number"
+              step="0.01"
+              min="0"
+              value={precioPequeno}
+              onChange={(e) => setPrecioPequeno(parseFloat(e.target.value))}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Municipios */}
+      <div className="space-y-4 border-t pt-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Cobros por Municipio</h3>
+        </div>
+        
+        {/* Agregar nuevo municipio */}
+        <Card className="p-4 bg-blue-50">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <Label htmlFor="nuevoMunicipio">Municipio</Label>
+              <Input
+                id="nuevoMunicipio"
+                value={nuevoMunicipio}
+                onChange={(e) => setNuevoMunicipio(e.target.value)}
+                placeholder="Ej: San Salvador"
+              />
+            </div>
+            <div>
+              <Label htmlFor="nuevoPrecioMunicipio">Precio ($)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="nuevoPrecioMunicipio"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={nuevoPrecioMunicipio}
+                  onChange={(e) => setNuevoPrecioMunicipio(parseFloat(e.target.value))}
+                />
+                <Button
+                  type="button"
+                  onClick={agregarMunicipio}
+                  disabled={!nuevoMunicipio.trim()}
+                  size="sm"
+                >
+                  Agregar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Lista de municipios */}
+        {municipios.length > 0 && (
+          <div className="space-y-2">
+            {municipios.map((mun, index) => (
+              <Card key={index} className="p-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                  <div>
+                    <Input
+                      value={mun.municipio}
+                      onChange={(e) => actualizarMunicipio(index, 'municipio', e.target.value)}
+                      placeholder="Municipio"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={mun.precio}
+                      onChange={(e) => actualizarMunicipio(index, 'precio', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => eliminarMunicipio(index)}
+                      className="w-full"
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Penalizaciones */}
+      <div className="space-y-4 border-t pt-6">
+        <h3 className="text-lg font-semibold">Penalizaciones</h3>
+        {penalizaciones.map((pen, index) => (
+          <Card key={index} className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+              <div>
+                <Label>Tipo</Label>
+                <select
+                  value={pen.tipo}
+                  onChange={(e) => actualizarPenalizacion(index, 'tipo', e.target.value)}
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm"
+                >
+                  <option value="CANCELADA">Orden Cancelada</option>
+                  <option value="NO_CONTESTA">Cliente No Contesta</option>
+                </select>
+              </div>
+              <div>
+                <Label>Monto ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={pen.monto}
+                  onChange={(e) => actualizarPenalizacion(index, 'monto', parseFloat(e.target.value))}
+                />
+              </div>
+              <div className="flex items-end">
+                {penalizaciones.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => eliminarPenalizacion(index)}
+                    className="w-full"
+                  >
+                    Eliminar
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+        <Button type="button" onClick={agregarPenalizacion} variant="outline" size="sm">
+          + Agregar Penalización
+        </Button>
+      </div>
 
       {/* Error */}
       {error && (
