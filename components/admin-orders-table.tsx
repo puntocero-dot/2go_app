@@ -249,6 +249,41 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
     });
   };
 
+  const handleBulkAutoAssign = async () => {
+    if (selectedIds.length === 0) return;
+    
+    setProcessing(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedIds.map(async (ordenId) => {
+          const response = await fetch(`/api/ordenes/${ordenId}/asignacion-automatica`, {
+            method: 'POST',
+          });
+          if (!response.ok) {
+            throw new Error(`Error en orden ${ordenId}`);
+          }
+          return response.json();
+        })
+      );
+
+      const successful = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+
+      if (successful > 0) {
+        alert(`✅ ${successful} orden(es) asignada(s) automáticamente${failed > 0 ? `. ${failed} fallaron.` : ''}`);
+        setSelectedIds([]);
+        router.refresh();
+      } else {
+        alert('❌ No se pudo asignar ninguna orden automáticamente');
+      }
+    } catch (error) {
+      console.error('Error en asignación automática:', error);
+      alert('❌ Error al procesar asignación automática');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
       <EnhancedCard>
@@ -294,7 +329,8 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
               <EnhancedButton
                 variant="default"
                 size="sm"
-                disabled={processing}
+                disabled={processing || selectedIds.length === 0}
+                onClick={handleBulkAutoAssign}
               >
                 {processing ? "Procesando..." : "Asignación Automática"}
               </EnhancedButton>
