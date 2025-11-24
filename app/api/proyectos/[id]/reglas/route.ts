@@ -41,7 +41,20 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { tipoPrincipal, precioFijoUnitario, rangosVolumen } = body;
+    const { 
+      tipoPrincipal, 
+      precioFijoUnitario, 
+      rangosVolumen,
+      precioVIP,
+      precioUrgente,
+      precioMedia,
+      precioNormal,
+      precioGrande,
+      precioMediano,
+      precioPequeno,
+      cobrosDistancia,
+      penalizaciones
+    } = body;
 
     // Validar que no exista ya una regla
     const reglaExistente = await prisma.reglaCobro.findUnique({
@@ -55,13 +68,43 @@ export async function POST(
       );
     }
 
-    // Crear regla
+    // Crear regla con transacción para incluir relaciones
     const regla = await prisma.reglaCobro.create({
       data: {
         proyectoId: id,
         tipoPrincipal,
         precioFijoUnitario: tipoPrincipal === 'COBRO_FIJO_UNITARIO' ? precioFijoUnitario : null,
-        rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' ? rangosVolumen : null
+        precioVIP: precioVIP || 0,
+        precioUrgente: precioUrgente || 0,
+        precioMedia: precioMedia || 0,
+        precioNormal: precioNormal || 0,
+        precioGrande: precioGrande || 0,
+        precioMediano: precioMediano || 0,
+        precioPequeno: precioPequeno || 0,
+        rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' && rangosVolumen ? {
+          create: rangosVolumen.map((r: any) => ({
+            desde: r.desde,
+            hasta: r.hasta,
+            precio: r.precio
+          }))
+        } : undefined,
+        cobrosDistancia: cobrosDistancia && cobrosDistancia.length > 0 ? {
+          create: cobrosDistancia.map((c: any) => ({
+            municipio: c.municipio,
+            precio: c.precio
+          }))
+        } : undefined,
+        penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
+          create: penalizaciones.map((p: any) => ({
+            tipo: p.tipo,
+            monto: p.monto
+          }))
+        } : undefined
+      },
+      include: {
+        rangosVolumen: true,
+        cobrosDistancia: true,
+        penalizaciones: true
       }
     });
 
@@ -88,21 +131,102 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { tipoPrincipal, precioFijoUnitario, rangosVolumen } = body;
+    const { 
+      tipoPrincipal, 
+      precioFijoUnitario, 
+      rangosVolumen,
+      precioVIP,
+      precioUrgente,
+      precioMedia,
+      precioNormal,
+      precioGrande,
+      precioMediano,
+      precioPequeno,
+      cobrosDistancia,
+      penalizaciones
+    } = body;
 
-    // Actualizar o crear si no existe
+    // Primero eliminar relaciones existentes
+    const reglaExistente = await prisma.reglaCobro.findUnique({
+      where: { proyectoId: id }
+    });
+
+    if (reglaExistente) {
+      await prisma.$transaction([
+        prisma.rangoVolumen.deleteMany({ where: { reglaCobroId: reglaExistente.id } }),
+        prisma.cobroDistancia.deleteMany({ where: { reglaCobroId: reglaExistente.id } }),
+        prisma.penalizacion.deleteMany({ where: { reglaCobroId: reglaExistente.id } })
+      ]);
+    }
+
+    // Actualizar o crear con nuevas relaciones
     const regla = await prisma.reglaCobro.upsert({
       where: { proyectoId: id },
       update: {
         tipoPrincipal,
         precioFijoUnitario: tipoPrincipal === 'COBRO_FIJO_UNITARIO' ? precioFijoUnitario : null,
-        rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' ? rangosVolumen : null
+        precioVIP: precioVIP || 0,
+        precioUrgente: precioUrgente || 0,
+        precioMedia: precioMedia || 0,
+        precioNormal: precioNormal || 0,
+        precioGrande: precioGrande || 0,
+        precioMediano: precioMediano || 0,
+        precioPequeno: precioPequeno || 0,
+        rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' && rangosVolumen ? {
+          create: rangosVolumen.map((r: any) => ({
+            desde: r.desde,
+            hasta: r.hasta,
+            precio: r.precio
+          }))
+        } : undefined,
+        cobrosDistancia: cobrosDistancia && cobrosDistancia.length > 0 ? {
+          create: cobrosDistancia.map((c: any) => ({
+            municipio: c.municipio,
+            precio: c.precio
+          }))
+        } : undefined,
+        penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
+          create: penalizaciones.map((p: any) => ({
+            tipo: p.tipo,
+            monto: p.monto
+          }))
+        } : undefined
       },
       create: {
         proyectoId: id,
         tipoPrincipal,
         precioFijoUnitario: tipoPrincipal === 'COBRO_FIJO_UNITARIO' ? precioFijoUnitario : null,
-        rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' ? rangosVolumen : null
+        precioVIP: precioVIP || 0,
+        precioUrgente: precioUrgente || 0,
+        precioMedia: precioMedia || 0,
+        precioNormal: precioNormal || 0,
+        precioGrande: precioGrande || 0,
+        precioMediano: precioMediano || 0,
+        precioPequeno: precioPequeno || 0,
+        rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' && rangosVolumen ? {
+          create: rangosVolumen.map((r: any) => ({
+            desde: r.desde,
+            hasta: r.hasta,
+            precio: r.precio
+          }))
+        } : undefined,
+        cobrosDistancia: cobrosDistancia && cobrosDistancia.length > 0 ? {
+          create: cobrosDistancia.map((c: any) => ({
+            municipio: c.municipio,
+            precio: c.precio
+          }))
+        } : undefined,
+        penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
+          create: penalizaciones.map((p: any) => ({
+            tipo: p.tipo,
+            monto: p.monto
+          }))
+        } : undefined
+      },
+      include: {
+        rangosVolumen: true,
+        cobrosDistancia: true,
+        penalizaciones: true
       }
     });
 
