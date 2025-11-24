@@ -81,15 +81,15 @@ export async function GET(request: NextRequest) {
     }
 
     const headers = [
-      "proyecto",
-      "ordenCodigo",
-      "clienteNombre",
-      "clienteMunicipio",
-      "fechaArmado",
-      "estado",
-      "concepto",
-      "detalleConcepto",
-      "monto",
+      "Proyecto",
+      "Código Orden",
+      "Cliente",
+      "Municipio",
+      "Fecha Armado",
+      "Estado",
+      "Tipo Concepto",
+      "Detalle",
+      "Monto ($)",
     ];
 
     const lines: string[] = [];

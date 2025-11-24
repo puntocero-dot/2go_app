@@ -13,36 +13,58 @@ export async function generateBillingPdf(dataset: BillingDataset): Promise<Uint8
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const margin = 40;
+  const margin = 50;
   let y = height - margin;
 
-  const drawText = (text: string, x: number, yPos: number, size = 10, bold = false) => {
+  // Colores corporativos
+  const primaryColor = rgb(0.2, 0.4, 0.8); // Azul
+  const secondaryColor = rgb(0.5, 0.3, 0.7); // Morado
+  const grayColor = rgb(0.4, 0.4, 0.4);
+  const lightGray = rgb(0.95, 0.95, 0.95);
+
+  const drawText = (text: string, x: number, yPos: number, size = 10, bold = false, color = rgb(0, 0, 0)) => {
     const usedFont = bold ? fontBold : font;
     page.drawText(text, {
       x,
       y: yPos,
       size,
       font: usedFont,
-      color: rgb(0, 0, 0),
+      color,
     });
   };
 
-  const centerText = (text: string, yPos: number, size = 12, bold = false) => {
+  const centerText = (text: string, yPos: number, size = 12, bold = false, color = rgb(0, 0, 0)) => {
     const usedFont = bold ? fontBold : font;
     const textWidth = usedFont.widthOfTextAtSize(text, size);
     const x = (width - textWidth) / 2;
-    drawText(text, x, yPos, size, bold);
+    drawText(text, x, yPos, size, bold, color);
   };
 
-  centerText(
-    factura.tipoDocumento === "FACTURA_CONSUMIDOR_FINAL"
-      ? "FACTURA CONSUMIDOR FINAL"
-      : "FACTURA CRÉDITO FISCAL",
-    y,
-    14,
-    true,
-  );
-  y -= 18;
+  const drawBox = (x: number, yPos: number, boxWidth: number, boxHeight: number, fillColor: any) => {
+    page.drawRectangle({
+      x,
+      y: yPos,
+      width: boxWidth,
+      height: boxHeight,
+      color: fillColor,
+    });
+  };
+
+  // Header con fondo de color
+  drawBox(0, height - 80, width, 80, primaryColor);
+  
+  // Logo/Título en header
+  drawText("ARMADOS 2GO", margin, height - 35, 20, true, rgb(1, 1, 1));
+  drawText("Sistema de Facturación", margin, height - 55, 10, false, rgb(0.9, 0.9, 0.9));
+
+  // Tipo de documento en header
+  const tipoDoc = factura.tipoDocumento === "FACTURA_CONSUMIDOR_FINAL"
+    ? "FACTURA CONSUMIDOR FINAL"
+    : "FACTURA CRÉDITO FISCAL";
+  const tipoDocWidth = fontBold.widthOfTextAtSize(tipoDoc, 12);
+  drawText(tipoDoc, width - margin - tipoDocWidth, height - 45, 12, true, rgb(1, 1, 1));
+
+  y = height - 100;
 
   drawText(factura.emisor.nombreComercial, margin, y, 11, true);
   y -= 12;
@@ -124,7 +146,12 @@ export async function generateBillingPdf(dataset: BillingDataset): Promise<Uint8
     }
   }
 
-  y -= 16;
+  y -= 20;
+
+  // Sección de items con header destacado
+  drawBox(margin - 5, y - 5, width - 2 * margin + 10, 18, lightGray);
+  drawText("DETALLE DE SERVICIOS", margin, y, 11, true, primaryColor);
+  y -= 20;
 
   const headers = [
     "N°",
@@ -144,17 +171,17 @@ export async function generateBillingPdf(dataset: BillingDataset): Promise<Uint8
   }
 
   const formatMoney = (value: number) => `$${value.toFixed(2)}`;
-  const lineHeight = 12;
+  const lineHeight = 14;
 
-  const drawRow = (values: string[], yPos: number, bold = false) => {
+  // Header de tabla con fondo
+  drawBox(margin - 2, y - 2, width - 2 * margin + 4, lineHeight + 2, secondaryColor);
+  const drawRow = (values: string[], yPos: number, bold = false, color = rgb(0, 0, 0)) => {
     values.forEach((value, index) => {
-      drawText(value, columnX[index], yPos, 8, bold);
+      drawText(value, columnX[index], yPos, 8, bold, color);
     });
   };
 
-  drawText("Detalle de servicios", margin, y, 11, true);
-  y -= 14;
-  drawRow(headers, y, true);
+  drawRow(headers, y, true, rgb(1, 1, 1)); // Header con texto blanco
   y -= lineHeight;
 
   for (const item of factura.cuerpoDocumento) {
