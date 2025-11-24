@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth";
 import { getBillingDataset } from "@/lib/facturacion-data";
-import { generateBillingPdf } from "@/lib/facturacion-pdf";
+import { generateBillingPdfEnhanced } from "@/lib/facturacion-pdf-enhanced";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getBillingSecurityHeaders } from "@/lib/security-headers";
 import { billingFiltersSchema } from "@/lib/schemas/facturacion.schema";
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const pdfBytes = await generateBillingPdf(dataset);
+    const pdfBytes = await generateBillingPdfEnhanced(dataset);
     const pdfArrayBuffer = (pdfBytes.buffer as ArrayBuffer).slice(
       pdfBytes.byteOffset,
       pdfBytes.byteOffset + pdfBytes.byteLength,
