@@ -274,19 +274,20 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
         </div>
 
         {/* Filtros */}
-        <EnhancedCard hover className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center mb-6">
-            <Filter className="w-5 h-5 mr-2 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900 tracking-tight">Filtros de Análisis</h3>
-          </div>
-          <form className="grid gap-6 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] p-6 bg-gray-50 rounded-xl border border-gray-200 shadow-sm" method="get">
-            <div className="space-y-2">
-              <Label htmlFor="proyectoId" className="text-sm font-medium text-gray-700 tracking-wide">Proyecto</Label>
+        <EnhancedCard className="mb-8">
+          <div className="p-6">
+            <div className="flex items-center mb-6">
+              <Filter className="w-5 h-5 mr-2 text-gray-700" />
+              <h3 className="text-lg font-semibold text-gray-900">Filtros de Análisis</h3>
+            </div>
+          <form className="grid gap-6 md:grid-cols-3" method="get">
+            <div>
+              <Label htmlFor="proyectoId" className="text-sm font-medium">Proyecto</Label>
               <select
                 id="proyectoId"
                 name="proyectoId"
                 defaultValue={filters.proyectoId}
-                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
                 <option value="ALL">Todos los proyectos</option>
                 {proyectos.map((proyecto) => (
@@ -297,9 +298,9 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fechaInicio" className="text-sm font-medium text-gray-700 tracking-wide">
-                <Calendar className="w-4 h-4 inline mr-2" />
+            <div>
+              <Label htmlFor="fechaInicio" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
                 Fecha inicio
               </Label>
               <input
@@ -307,13 +308,13 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
                 id="fechaInicio"
                 name="fechaInicio"
                 defaultValue={filters.fechaInicio}
-                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fechaFin" className="text-sm font-medium text-gray-700 tracking-wide">
-                <Calendar className="w-4 h-4 inline mr-2" />
+            <div>
+              <Label htmlFor="fechaFin" className="text-sm font-medium">
+                <Calendar className="w-4 h-4 inline mr-1" />
                 Fecha fin
               </Label>
               <input
@@ -321,17 +322,17 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
                 id="fechaFin"
                 name="fechaFin"
                 defaultValue={filters.fechaFin}
-                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
             </div>
 
-            <div className="md:col-span-full flex items-center flex-wrap gap-4 pt-6 border-t border-gray-200">
+            <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-2">
               <EnhancedButton
                 type="submit"
-                className="min-w-[140px]"
+                variant="default"
+                className="min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
-                <Filter className="w-4 h-4 mr-2" />
-                Aplicar Filtros
+                Aplicar filtros
               </EnhancedButton>
               <Link href="/admin/reportes/bi-dashboard" prefetch={false}>
                 <EnhancedButton variant="outline" className="min-w-[100px]">
@@ -340,6 +341,7 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
               </Link>
             </div>
           </form>
+          </div>
         </EnhancedCard>
 
         {hasInsufficientData ? (
