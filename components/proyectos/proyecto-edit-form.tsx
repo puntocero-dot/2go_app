@@ -12,7 +12,19 @@ interface ProyectoEditFormProps {
 export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const datosFacturacion = typeof proyecto.datosFacturacion === 'object' ? proyecto.datosFacturacion : {};
+  
+  // Parsear datosFacturacion si viene como string JSON
+  let datosFacturacion: any = {};
+  try {
+    if (typeof proyecto.datosFacturacion === 'string') {
+      datosFacturacion = JSON.parse(proyecto.datosFacturacion);
+    } else if (typeof proyecto.datosFacturacion === 'object' && proyecto.datosFacturacion !== null) {
+      datosFacturacion = proyecto.datosFacturacion;
+    }
+  } catch (e) {
+    console.error('Error parseando datosFacturacion:', e);
+    datosFacturacion = {};
+  }
   
   const [formData, setFormData] = useState({
     nombreComercial: proyecto.nombreComercial || "",
@@ -23,11 +35,11 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
     direccion: proyecto.direccion || "",
     descripcion: proyecto.descripcion || "",
     // Campos fiscales
-    nit: (datosFacturacion as any)?.nit || "",
-    dui: (datosFacturacion as any)?.dui || "",
-    nrc: (datosFacturacion as any)?.nrc || "",
-    giro: (datosFacturacion as any)?.giro || "",
-    razonSocial: (datosFacturacion as any)?.razonSocial || "",
+    nit: datosFacturacion?.nit || "",
+    dui: datosFacturacion?.dui || "",
+    nrc: datosFacturacion?.nrc || "",
+    giro: datosFacturacion?.giro || "",
+    razonSocial: datosFacturacion?.razonSocial || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -276,12 +288,6 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
               </div>
             </div>
           )}
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Nota:</strong> Las reglas de facturación (cobro por volumen, prioridad, distancia, etc.) se configuran en la sección de "Reglas de Cobro" del proyecto.
-            </p>
-          </div>
         </div>
       </div>
 
