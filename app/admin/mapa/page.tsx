@@ -10,6 +10,8 @@ import { EnhancedButton } from "@/components/ui/enhanced-button";
 import Link from "next/link";
 import { MapaFilters } from "@/components/mapa/mapa-filters";
 
+export const dynamic = 'force-dynamic';
+
 type Usuario = {
   nombre: string;
   email: string;
