@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "pre-commit": "node scripts/pre-commit-check.js",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma migrate deploy && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "seed": "tsx scripts/seed.ts",
     "create-superadmin": "tsx scripts/create-superadmin.ts",
     "create-superadmin-prd": "tsx scripts/create-superadmin-prd.ts",
