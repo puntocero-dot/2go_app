@@ -15,6 +15,8 @@ model Usuario {
   telefono            String?
   rol                 RolUsuario
   activo              Boolean              @default(true)
+  fotoPerfil          String?
+  estadoLoggeo        EstadoLoggeo         @default(OFFLINE)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   armador             Armador?
@@ -377,4 +379,29 @@ enum TipoPenalizacion {
 enum TipoReglaPrincipal {
   COBRO_FIJO_UNITARIO
   COBRO_POR_VOLUMEN
+}
+
+model ConfiguracionFacturacion {
+  id                String   @id @default(uuid())
+  nombreEmpresa     String   @default("Armados 2Go")
+  giro              String   @default("Servicios de armado de muebles")
+  direccion         String   @default("San Salvador, El Salvador")
+  telefono          String   @default("+503 0000-0000")
+  email             String   @default("facturacion@armados2go.com")
+  logoUrl           String?
+  colorPrimario     String   @default("#2E4F4F")
+  colorAccent       String   @default("#ED7D32")
+  terminosCondiciones String?
+  notasPiePagina    String   @default("Esta factura es un documento oficial generado por el sistema Armados 2Go.")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("configuracion_facturacion")
+}
+
+enum EstadoLoggeo {
+  ACTIVO
+  LUNCH
+  BREAK
+  OFFLINE
 }
