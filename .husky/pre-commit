@@ -1,0 +1,30 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Ejecutando verificaciones pre-commit..."
+echo ""
+
+# 1. Type check
+echo "📝 1/2: Verificando tipos TypeScript..."
+npm run type-check
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Type-check falló. Por favor corrige los errores de tipo."
+  exit 1
+fi
+echo "✅ Type-check pasó"
+echo ""
+
+# 2. Build check (más rápido que build completo)
+echo "🏗️  2/2: Verificando que el código compila..."
+npm run build
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Build falló. Por favor corrige los errores de compilación."
+  exit 1
+fi
+echo "✅ Build pasó"
+echo ""
+
+echo "✨ Todas las verificaciones pasaron! Procediendo con el commit..."
+echo ""
