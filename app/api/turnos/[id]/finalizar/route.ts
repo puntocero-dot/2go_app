@@ -10,7 +10,7 @@ import { logAuditFromSession } from "@/lib/audit-logger";
 const handler = async (
   data: { latitud: number; longitud: number; descripcion?: string },
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
     const session = await getSession();
@@ -19,7 +19,7 @@ const handler = async (
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const { id: turnoId } = params;
+    const { id: turnoId } = await params;
     const { latitud, longitud, descripcion } = data;
 
     // Verificar que el turno existe y está activo

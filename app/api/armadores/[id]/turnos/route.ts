@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // GET - Listar turnos históricos de un armador
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const { id: armadorId } = params;
+    const { id: armadorId } = await params;
     const { searchParams } = new URL(request.url);
     const estado = searchParams.get("estado");
     const limit = parseInt(searchParams.get("limit") || "50");

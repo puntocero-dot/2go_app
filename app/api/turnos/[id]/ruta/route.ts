@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // GET - Obtener todos los puntos de ruta de un turno
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const { id: turnoId } = params;
+    const { id: turnoId } = await params;
 
     // Obtener turno con puntos de ruta
     const turno = await prisma.turno.findUnique({
