@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     const usuario = await prisma.usuario.findUnique({
-      where: { id: session.id },
+      where: { id: session.userId },
       select: {
         id: true,
         email: true,
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest) {
       }
 
       const usuario = await prisma.usuario.findUnique({
-        where: { id: session.id },
+        where: { id: session.userId },
       });
 
       if (!usuario) {
@@ -81,7 +81,7 @@ export async function PUT(request: NextRequest) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const usuarioActualizado = await prisma.usuario.update({
-        where: { id: session.id },
+        where: { id: session.userId },
         data: {
           nombre,
           telefono,
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
 
     // Actualizar sin cambiar contraseña
     const usuarioActualizado = await prisma.usuario.update({
-      where: { id: session.id },
+      where: { id: session.userId },
       data: {
         nombre,
         telefono,

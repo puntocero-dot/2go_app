@@ -61,6 +61,23 @@ const uploadHandler = async (request: NextRequest) => {
       uploadStream.end(buffer);
     });
 
+    // Auditar upload (session ya fue verificado arriba)
+    await logAuditFromSession({
+      session: session!,
+      action: "UPLOAD_FILE",
+      resource: "archivo",
+      resourceId: result.public_id,
+      changes: {
+        after: {
+          url: result.secure_url,
+          folder,
+          size: file.size,
+          type: file.type,
+        },
+      },
+      request,
+    });
+
     return NextResponse.json({
       url: result.secure_url,
       publicId: result.public_id,
@@ -68,25 +85,6 @@ const uploadHandler = async (request: NextRequest) => {
       height: result.height,
       format: result.format,
     });
-
-    // Auditar upload
-    if (session) {
-      await logAuditFromSession({
-        session,
-        action: "UPLOAD_FILE",
-        resource: "archivo",
-        resourceId: result.public_id,
-        changes: {
-          after: {
-            url: result.secure_url,
-            folder,
-            size: file.size,
-            type: file.type,
-          },
-        },
-        request,
-      });
-    }
   } catch (error) {
     console.error("Error subiendo archivo:", error);
     return NextResponse.json(
