@@ -52,7 +52,7 @@ const handler = async (
         turnoId,
         latitud,
         longitud,
-        tipo: tipo || "INTERMEDIO",
+        tipo: (tipo || "INTERMEDIO") as "INICIO" | "INTERMEDIO" | "PARADA" | "FIN",
         descripcion,
       },
     });
