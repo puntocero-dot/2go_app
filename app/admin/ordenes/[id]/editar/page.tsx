@@ -2,49 +2,84 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/navbar";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 interface Orden {
   id: string;
-  clienteNombre: string;
-  clienteTelefono?: string;
-  direccion: string;
-  latitud: number;
-  longitud: number;
-  estado: "pending" | "assigned" | "in_route" | "delivered" | "cancelled";
-  motoAsignada?: {
-    id: string;
-    placa: string;
-    conductorNombre: string;
+  codigoReferenciaRetail: string;
+  usuarioFinal: {
+    nombre: string;
+    telefono: string | null;
+    direccion: string;
+    municipio: string;
+    departamento: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  direccionEntrega: string;
+  latitud: number | null;
+  longitud: number | null;
+  estado: string;
+  armadorId: string | null;
+  armador?: {
+    id: string;
+    usuario: {
+      nombre: string;
+    };
+  } | null;
 }
 
-interface Moto {
+interface Armador {
   id: string;
-  placa: string;
-  conductorNombre: string;
-  estado: "available" | "busy" | "inactive";
+  usuario: {
+    nombre: string;
+  };
+  estado: string;
 }
 
 export default function EditarOrdenPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { toast } = useToast();
 
+  const [user, setUser] = useState<any>(null);
   const [orden, setOrden] = useState<Orden | null>(null);
-  const [motos, setMotos] = useState<Moto[]>([]);
+  const [armadores, setArmadores] = useState<Armador[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    clienteNombre: "",
+    clienteTelefono: "",
+    direccion: "",
+    latitud: "",
+    longitud: "",
+    estado: "SIN_ASIGNAR",
+    armadorId: "",
+  });
 
   useEffect(() => {
+    cargarUsuario();
     if (id) {
       cargarOrden();
-      cargarMotos();
+      cargarArmadores();
     }
   }, [id]);
+  
+  const cargarUsuario = async () => {
+    try {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data);
+      }
+    } catch (error) {
+      console.error("Error cargando usuario:", error);
+    }
+  };
 
   const cargarOrden = async () => {
     try {
@@ -53,25 +88,32 @@ export default function EditarOrdenPage() {
       
       const data = await response.json();
       setOrden(data);
+      
+      // Cargar datos en el formulario
+      setFormData({
+        clienteNombre: data.usuarioFinal?.nombre || "",
+        clienteTelefono: data.usuarioFinal?.telefono || "",
+        direccion: data.direccionEntrega || "",
+        latitud: data.latitud?.toString() || "",
+        longitud: data.longitud?.toString() || "",
+        estado: data.estado || "SIN_ASIGNAR",
+        armadorId: data.armadorId || "",
+      });
     } catch (error) {
       console.error("Error:", error);
-      toast({
-        title: "Error",
-        description: "Error al cargar la orden",
-        variant: "destructive",
-      });
+      alert("Error al cargar la orden");
     } finally {
       setLoading(false);
     }
   };
 
-  const cargarMotos = async () => {
+  const cargarArmadores = async () => {
     try {
-      const response = await fetch("/api/motos?estado=available");
-      if (!response.ok) throw new Error("Error al cargar motos");
+      const response = await fetch("/api/armadores");
+      if (!response.ok) throw new Error("Error al cargar armadores");
       
       const data = await response.json();
-      setMotos(data);
+      setArmadores(data.filter((a: Armador) => a.estado === "ACTIVO"));
     } catch (error) {
       console.error("Error:", error);
     }
@@ -83,36 +125,45 @@ export default function EditarOrdenPage() {
 
     setSaving(true);
     try {
+      const payload: any = {
+        estado: formData.estado,
+      };
+      
+      if (formData.armadorId) {
+        payload.armadorId = formData.armadorId;
+      }
+      
+      // Solo actualizar ubicación si se proporcionan ambos valores
+      if (formData.latitud && formData.longitud) {
+        payload.latitud = parseFloat(formData.latitud);
+        payload.longitud = parseFloat(formData.longitud);
+      }
+
       const response = await fetch(`/api/ordenes/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(orden),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Error al actualizar orden");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al actualizar orden");
+      }
       
-      toast({
-        title: "Éxito",
-        description: "Orden actualizada correctamente",
-      });
+      alert("✅ Orden actualizada correctamente");
       router.push("/admin/ordenes");
     } catch (error) {
       console.error("Error:", error);
-      toast({
-        title: "Error",
-        description: "Error al actualizar la orden",
-        variant: "destructive",
-      });
+      alert("❌ Error al actualizar la orden: " + (error instanceof Error ? error.message : "Error desconocido"));
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInputChange = (field: keyof Orden, value: any) => {
-    if (!orden) return;
-    setOrden({ ...orden, [field]: value });
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (loading) {
@@ -139,168 +190,178 @@ export default function EditarOrdenPage() {
     );
   }
 
+  const ESTADOS_ORDEN = [
+    { value: "SIN_ASIGNAR", label: "Sin asignar" },
+    { value: "ASIGNADO", label: "Asignado" },
+    { value: "EN_RUTA", label: "En ruta" },
+    { value: "ARMADO_INICIADO", label: "Armado iniciado" },
+    { value: "ARMADO_FINALIZADO", label: "Armado finalizado" },
+    { value: "ARMADO_COMPLETADO", label: "Armado completado" },
+    { value: "CANCELADA", label: "Cancelada" },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Editar Orden</h1>
-          <button
-            onClick={() => router.push("/admin/ordenes")}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            ← Volver
-          </button>
-        </div>
-
-        <form onSubmit={handleSave} className="space-y-6">
-          {/* Información del Cliente */}
-          <div className="border rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Información del Cliente</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Cliente
-                </label>
-                <input
-                  type="text"
-                  value={orden.clienteNombre}
-                  onChange={(e) => handleInputChange("clienteNombre", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono del Cliente
-                </label>
-                <input
-                  type="tel"
-                  value={orden.clienteTelefono || ""}
-                  onChange={(e) => handleInputChange("clienteTelefono", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+    <>
+      {user && <Navbar user={user} />}
+      <div className="max-w-5xl mx-auto p-6">
+        <EnhancedCard>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold text-foreground">Editar Orden</h1>
+              <Link href="/admin/ordenes">
+                <EnhancedButton variant="outline" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Volver
+                </EnhancedButton>
+              </Link>
             </div>
-          </div>
 
-          {/* Dirección */}
-          <div className="border rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Dirección de Entrega</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dirección
-                </label>
-                <input
-                  type="text"
-                  value={orden.direccion}
-                  onChange={(e) => handleInputChange("direccion", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+            {orden && (
+              <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Código:</strong> {orden.codigoReferenciaRetail}
+                </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Latitud
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={orden.latitud}
-                    onChange={(e) => handleInputChange("latitud", parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Longitud
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={orden.longitud}
-                    onChange={(e) => handleInputChange("longitud", parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+            )}
+
+            <form onSubmit={handleSave} className="space-y-6">
+              {/* Información del Cliente */}
+              <div className="border rounded-lg p-6 bg-background">
+                <h2 className="text-xl font-semibold mb-4 text-foreground">Información del Cliente</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="clienteNombre">Nombre del Cliente</Label>
+                    <input
+                      id="clienteNombre"
+                      type="text"
+                      value={formData.clienteNombre}
+                      disabled
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Campo no editable</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="clienteTelefono">Teléfono del Cliente</Label>
+                    <input
+                      id="clienteTelefono"
+                      type="tel"
+                      value={formData.clienteTelefono}
+                      disabled
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Campo no editable</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Estado y Moto */}
-          <div className="border rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Estado de la Orden</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
-                </label>
-                <select
-                  value={orden.estado}
-                  onChange={(e) => handleInputChange("estado", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="pending">Pendiente</option>
-                  <option value="assigned">Asignada</option>
-                  <option value="in_route">En Ruta</option>
-                  <option value="delivered">Entregada</option>
-                  <option value="cancelled">Cancelada</option>
-                </select>
+              {/* Dirección */}
+              <div className="border rounded-lg p-6 bg-background">
+                <h2 className="text-xl font-semibold mb-4 text-foreground">Dirección de Entrega</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="direccion">Dirección</Label>
+                    <input
+                      id="direccion"
+                      type="text"
+                      value={formData.direccion}
+                      disabled
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Campo no editable</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="latitud">Latitud</Label>
+                      <input
+                        id="latitud"
+                        type="number"
+                        step="any"
+                        value={formData.latitud}
+                        onChange={(e) => handleInputChange("latitud", e.target.value)}
+                        className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="longitud">Longitud</Label>
+                      <input
+                        id="longitud"
+                        type="number"
+                        step="any"
+                        value={formData.longitud}
+                        onChange={(e) => handleInputChange("longitud", e.target.value)}
+                        className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Moto Asignada
-                </label>
-                <select
-                  value={orden.motoAsignada?.id || ""}
-                  onChange={(e) => {
-                    const motoId = e.target.value;
-                    if (motoId) {
-                      const moto = motos.find(m => m.id === motoId);
-                      handleInputChange("motoAsignada", moto ? {
-                        id: moto.id,
-                        placa: moto.placa,
-                        conductorNombre: moto.conductorNombre
-                      } : undefined);
-                    } else {
-                      handleInputChange("motoAsignada", undefined);
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Sin asignar</option>
-                  {motos.map((moto) => (
-                    <option key={moto.id} value={moto.id}>
-                      {moto.placa} - {moto.conductorNombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
 
-          {/* Botones */}
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => router.push("/admin/ordenes")}
-              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? "Guardando..." : "Guardar Cambios"}
-            </button>
+              {/* Estado y Armador */}
+              <div className="border rounded-lg p-6 bg-background">
+                <h2 className="text-xl font-semibold mb-4 text-foreground">Estado de la Orden</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="estado">Estado</Label>
+                    <select
+                      id="estado"
+                      value={formData.estado}
+                      onChange={(e) => handleInputChange("estado", e.target.value)}
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      {ESTADOS_ORDEN.map((estado) => (
+                        <option key={estado.value} value={estado.value}>
+                          {estado.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="armadorId">Moto Asignada</Label>
+                    <select
+                      id="armadorId"
+                      value={formData.armadorId}
+                      onChange={(e) => handleInputChange("armadorId", e.target.value)}
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Sin asignar</option>
+                      {armadores.map((armador) => (
+                        <option key={armador.id} value={armador.id}>
+                          {armador.usuario.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="flex justify-end space-x-4">
+                <Link href="/admin/ordenes">
+                  <EnhancedButton type="button" variant="outline">
+                    Cancelar
+                  </EnhancedButton>
+                </Link>
+                <EnhancedButton
+                  type="submit"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Guardar Cambios
+                    </>
+                  )}
+                </EnhancedButton>
+              </div>
+            </form>
           </div>
-        </form>
+        </EnhancedCard>
       </div>
-    </div>
+    </>
   );
 }

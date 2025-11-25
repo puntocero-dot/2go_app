@@ -254,15 +254,50 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
     
     setProcessing(true);
     try {
+      // Paso 1: Obtener sugerencias y asignar en un solo paso
       const results = await Promise.allSettled(
         selectedIds.map(async (ordenId) => {
-          const response = await fetch(`/api/ordenes/${ordenId}/asignacion-automatica`, {
+          // Obtener sugerencia
+          const suggestionResponse = await fetch(`/api/ordenes/${ordenId}/asignacion-automatica`, {
             method: 'POST',
           });
-          if (!response.ok) {
-            throw new Error(`Error en orden ${ordenId}`);
+          
+          if (!suggestionResponse.ok) {
+            throw new Error(`Error obteniendo sugerencia para orden ${ordenId}`);
           }
-          return response.json();
+          
+          const suggestionData = await suggestionResponse.json();
+          
+          if (!suggestionData.sugerencia) {
+            throw new Error(`No hay sugerencia disponible para orden ${ordenId}`);
+          }
+          
+          // Paso 2: Asignar el armador sugerido
+          const assignResponse = await fetch(`/api/ordenes/${ordenId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              armadorId: suggestionData.sugerencia.armadorId,
+              estado: 'ASIGNADO',
+              autoAssignMeta: {
+                heuristica: suggestionData.heuristica || null,
+                score: suggestionData.sugerencia.score,
+                etaEstimadoMin: suggestionData.sugerencia.etaEstimadoMin,
+                alternativas: (suggestionData.alternativas || []).map((alt: any) => ({
+                  armadorId: alt.armadorId,
+                  score: alt.score,
+                  etaEstimadoMin: alt.etaEstimadoMin,
+                })),
+                generadoEn: new Date().toISOString(),
+              },
+            }),
+          });
+          
+          if (!assignResponse.ok) {
+            throw new Error(`Error asignando armador para orden ${ordenId}`);
+          }
+          
+          return { ordenId, success: true };
         })
       );
 
@@ -272,7 +307,9 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
       if (successful > 0) {
         alert(`✅ ${successful} orden(es) asignada(s) automáticamente${failed > 0 ? `. ${failed} fallaron.` : ''}`);
         setSelectedIds([]);
-        router.refresh();
+        startTransition(() => {
+          router.refresh();
+        });
       } else {
         alert('❌ No se pudo asignar ninguna orden automáticamente');
       }

@@ -189,10 +189,11 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
 
   // Columna derecha - Receptor (Cliente)
   const rightX = margin + (width - 2 * margin) / 2 + 5;
+  const rightBoxWidth = (width - 2 * margin - 10) / 2;
   page.drawRectangle({
     x: rightX - 5,
     y: startY - 85,
-    width: (width - 2 * margin - 10) / 2,
+    width: rightBoxWidth,
     height: 85,
     color: COLORS.background,
     borderColor: COLORS.border,
@@ -210,24 +211,40 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
   y = startY - 30;
   const datosFacturacion = dataset.proyecto.datosFacturacion as any;
   
+  // Función para truncar texto si es muy largo
+  const truncateText = (text: string, maxWidth: number, fontSize: number, font: any) => {
+    const textWidth = font.widthOfTextAtSize(text, fontSize);
+    if (textWidth <= maxWidth) return text;
+    
+    let truncated = text;
+    while (font.widthOfTextAtSize(truncated + "...", fontSize) > maxWidth && truncated.length > 0) {
+      truncated = truncated.slice(0, -1);
+    }
+    return truncated + "...";
+  };
+  
   const receptorInfo: string[] = [];
   if (dataset.proyecto.tipoCliente === "CREDITO_FISCAL") {
+    const razonSocial = datosFacturacion?.razonSocial || "N/A";
     receptorInfo.push(
-      `Razón Social: ${datosFacturacion?.razonSocial || "N/A"}`,
+      truncateText(`Razón Social: ${razonSocial}`, rightBoxWidth - 15, 8, font),
       `NIT: ${datosFacturacion?.nit || "N/A"}`,
       `NRC: ${datosFacturacion?.nrc || "N/A"}`,
-      `Giro: ${datosFacturacion?.giro || "N/A"}`,
+      truncateText(`Giro: ${datosFacturacion?.giro || "N/A"}`, rightBoxWidth - 15, 8, font),
     );
   } else {
+    const nombreCompleto = datosFacturacion?.nombreCompleto || dataset.proyecto.nombreComercial;
     receptorInfo.push(
-      `Nombre: ${datosFacturacion?.nombreCompleto || dataset.proyecto.nombreComercial}`,
+      truncateText(`Nombre: ${nombreCompleto}`, rightBoxWidth - 15, 8, font),
       `DUI: ${datosFacturacion?.dui || "N/A"}`,
     );
   }
 
+  const contactoNombre = datosFacturacion?.contacto?.nombre || "N/A";
+  const contactoEmail = datosFacturacion?.contacto?.email || "N/A";
   receptorInfo.push(
-    `Contacto: ${datosFacturacion?.contacto?.nombre || "N/A"}`,
-    `Email: ${datosFacturacion?.contacto?.email || "N/A"}`,
+    truncateText(`Contacto: ${contactoNombre}`, rightBoxWidth - 15, 8, font),
+    truncateText(`Email: ${contactoEmail}`, rightBoxWidth - 15, 7, font),
   );
 
   receptorInfo.forEach((line) => {
