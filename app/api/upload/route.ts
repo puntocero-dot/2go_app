@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { v2 as cloudinary } from "cloudinary";
+import { withRateLimit } from "@/lib/api-helpers";
+import { RATE_LIMITS } from "@/lib/rate-limit";
+import { validateImageFile } from "@/lib/schemas/upload.schemas";
 
 // Configurar Cloudinary
 cloudinary.config({
@@ -10,7 +13,7 @@ cloudinary.config({
 });
 
 // POST - Subir imagen a Cloudinary
-export async function POST(request: NextRequest) {
+const uploadHandler = async (request: NextRequest) => {
   try {
     const session = await getSession();
 
@@ -26,22 +29,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 });
     }
 
-    // Validar tipo de archivo
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-    if (!validTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Tipo de archivo no válido. Solo se permiten imágenes." },
-        { status: 400 }
-      );
-    }
-
-    // Validar tamaño (máximo 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "El archivo es demasiado grande. Máximo 5MB." },
-        { status: 400 }
-      );
+    // Validar archivo con helper
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     // Convertir archivo a buffer
@@ -83,7 +74,20 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+// Exportar con rate limiting
+export const POST = withRateLimit(
+  uploadHandler,
+  RATE_LIMITS.UPLOAD,
+  (request) => {
+    // Key: userId (necesitamos extraerlo del session)
+    // Por ahora usamos IP como fallback
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    return `upload:${ip}`;
+  }
+);
 
 // DELETE - Eliminar imagen de Cloudinary
 export async function DELETE(request: NextRequest) {

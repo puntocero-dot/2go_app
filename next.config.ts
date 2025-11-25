@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { securityHeaders } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -37,6 +38,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // Security headers globales
+      {
+        source: "/:path*",
+        headers: Object.entries(securityHeaders).map(([key, value]) => ({
+          key,
+          value,
+        })),
+      },
+      // Service Worker
       {
         source: "/sw.js",
         headers: [
@@ -50,6 +60,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Manifest
       {
         source: "/manifest.json",
         headers: [
