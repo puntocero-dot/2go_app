@@ -101,7 +101,7 @@ const crearOrdenHandler = async (
       prioridad,
     } = data;
 
-    const prioridadValida = prioridad || "NORMAL";
+    const prioridadValida = (prioridad || "NORMAL") as "VIP" | "URGENTE" | "MEDIA" | "NORMAL";
 
     // Crear la orden
     const orden = await prisma.orden.create({
