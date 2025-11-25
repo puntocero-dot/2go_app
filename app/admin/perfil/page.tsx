@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/ImageUpload";
 import { Save, Loader2, User, Lock, Image } from "lucide-react";
 
 export default function PerfilPage() {
@@ -194,30 +195,15 @@ export default function PerfilPage() {
                   Foto de Perfil
                 </h2>
                 <div>
-                  <Label htmlFor="fotoPerfil">URL de la Foto</Label>
-                  <input
-                    id="fotoPerfil"
-                    type="url"
-                    value={formData.fotoPerfil}
-                    onChange={(e) => handleInputChange("fotoPerfil", e.target.value)}
-                    className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="https://ejemplo.com/foto.jpg"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    URL pública de tu foto de perfil (próximamente podrás subir archivos)
-                  </p>
-                  {formData.fotoPerfil && (
-                    <div className="mt-4">
-                      <img
-                        src={formData.fotoPerfil}
-                        alt="Vista previa"
-                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://via.placeholder.com/96";
-                        }}
-                      />
-                    </div>
-                  )}
+                  <Label>Subir Foto</Label>
+                  <div className="mt-2">
+                    <ImageUpload
+                      currentImage={formData.fotoPerfil}
+                      onUploadComplete={(url) => handleInputChange("fotoPerfil", url)}
+                      folder="perfiles"
+                      label="Click para subir"
+                    />
+                  </div>
                 </div>
               </div>
 

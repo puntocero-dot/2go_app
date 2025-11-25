@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/ImageUpload";
 import { Save, Loader2, Building2, Palette, FileText } from "lucide-react";
 
 interface ConfiguracionFacturacion {
@@ -211,18 +212,15 @@ export default function ConfiguracionFacturacionPage() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="logoUrl">URL del Logo (opcional)</Label>
-                    <input
-                      id="logoUrl"
-                      type="url"
-                      value={formData.logoUrl}
-                      onChange={(e) => handleInputChange("logoUrl", e.target.value)}
-                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="https://ejemplo.com/logo.png"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      URL pública de tu logo (próximamente podrás subir archivos)
-                    </p>
+                    <Label>Logo de la Empresa (opcional)</Label>
+                    <div className="mt-2">
+                      <ImageUpload
+                        currentImage={formData.logoUrl}
+                        onUploadComplete={(url) => handleInputChange("logoUrl", url)}
+                        folder="logos"
+                        label="Subir logo"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
