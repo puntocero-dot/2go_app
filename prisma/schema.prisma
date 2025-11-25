@@ -453,3 +453,29 @@ model RutaPunto {
   @@index([timestamp])
   @@map("ruta_puntos")
 }
+
+// Modelo de auditoría para trazabilidad de acciones críticas
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   // ID del usuario que realizó la acción
+  userName   String   // Nombre del usuario (desnormalizado para histórico)
+  userRole   String   // Rol del usuario en el momento de la acción
+  action     String   // Acción realizada (CREATE_ORDER, UPDATE_CONFIG, DELETE_USER, etc.)
+  resource   String   // Tipo de recurso afectado (orden, turno, usuario, configuracion, etc.)
+  resourceId String?  // ID del recurso afectado (si aplica)
+  changes    Json?    // Cambios realizados (before/after)
+  metadata   Json?    // Metadata adicional (query params, headers relevantes, etc.)
+  ip         String?  // IP del cliente
+  userAgent  String?  // User agent del cliente
+  status     String   @default("SUCCESS") // SUCCESS, FAILED, BLOCKED
+  errorMsg   String?  // Mensaje de error si status = FAILED
+  createdAt  DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([resourceId])
+  @@index([createdAt])
+  @@index([status])
+  @@map("audit_logs")
+}

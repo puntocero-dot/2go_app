@@ -5,6 +5,7 @@ import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
 import { withValidation } from "@/lib/api-helpers";
 import { CrearOrdenSchema } from "@/lib/schemas/orden.schemas";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 // GET - Listar órdenes con filtros
 export async function GET(request: NextRequest) {
@@ -120,6 +121,24 @@ const crearOrdenHandler = async (
         usuarioFinal: true,
         proyecto: true,
       },
+    });
+
+    // Auditar creación de orden
+    await logAuditFromSession({
+      session,
+      action: "CREATE_ORDER",
+      resource: "orden",
+      resourceId: orden.id,
+      changes: {
+        after: {
+          codigoReferenciaRetail,
+          muebleId,
+          usuarioFinalId,
+          proyectoId,
+          prioridad: prioridadValida,
+        },
+      },
+      request,
     });
 
     // Si se solicita auto-asignación, buscar armador disponible

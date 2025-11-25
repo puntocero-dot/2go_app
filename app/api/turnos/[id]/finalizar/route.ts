@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { withRateLimitAndValidation } from "@/lib/api-helpers";
 import { FinalizarTurnoSchema } from "@/lib/schemas/turno.schemas";
 import { RATE_LIMITS } from "@/lib/rate-limit";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 // POST - Finalizar turno y crear punto final
 const handler = async (
@@ -66,6 +67,19 @@ const handler = async (
           orderBy: { timestamp: "asc" },
         },
       },
+    });
+
+    // Auditar finalización de turno
+    await logAuditFromSession({
+      session,
+      action: "END_SHIFT",
+      resource: "turno",
+      resourceId: turnoId,
+      changes: {
+        before: { estado: "ACTIVO" },
+        after: { estado: "FINALIZADO", latitud, longitud },
+      },
+      request,
     });
 
     return NextResponse.json(turnoFinalizado);

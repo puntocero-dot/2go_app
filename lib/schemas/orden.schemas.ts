@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { zodSanitizeText } from "../sanitize";
 
 // Schema para crear orden (sistema de armado de muebles)
 export const CrearOrdenSchema = z.object({
-  codigoReferenciaRetail: z.string().min(1).max(100),
+  codigoReferenciaRetail: z.string().min(1).max(100).transform(zodSanitizeText),
   muebleId: z.string().uuid(),
   usuarioFinalId: z.string().uuid(),
   proyectoId: z.string().uuid(),

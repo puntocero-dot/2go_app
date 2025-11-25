@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { withRateLimitAndValidation } from "@/lib/api-helpers";
 import { CambiarEstadoLoggeoSchema } from "@/lib/schemas/usuario.schemas";
 import { RATE_LIMITS } from "@/lib/rate-limit";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 // PUT - Actualizar estado de loggeo del usuario
 const handler = async (
@@ -29,6 +30,18 @@ const handler = async (
         nombre: true,
         estadoLoggeo: true,
       },
+    });
+
+    // Auditar cambio de estado
+    await logAuditFromSession({
+      session,
+      action: "CHANGE_LOGIN_STATUS",
+      resource: "usuario",
+      resourceId: session.userId,
+      changes: {
+        after: { estadoLoggeo },
+      },
+      request,
     });
 
     return NextResponse.json(usuario);

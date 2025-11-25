@@ -4,6 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { withRateLimit } from "@/lib/api-helpers";
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { validateImageFile } from "@/lib/schemas/upload.schemas";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 // Configurar Cloudinary
 cloudinary.config({
@@ -67,6 +68,25 @@ const uploadHandler = async (request: NextRequest) => {
       height: result.height,
       format: result.format,
     });
+
+    // Auditar upload
+    if (session) {
+      await logAuditFromSession({
+        session,
+        action: "UPLOAD_FILE",
+        resource: "archivo",
+        resourceId: result.public_id,
+        changes: {
+          after: {
+            url: result.secure_url,
+            folder,
+            size: file.size,
+            type: file.type,
+          },
+        },
+        request,
+      });
+    }
   } catch (error) {
     console.error("Error subiendo archivo:", error);
     return NextResponse.json(

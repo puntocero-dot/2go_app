@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { withValidation } from "@/lib/api-helpers";
 import { ConfiguracionFacturacionSchema } from "@/lib/schemas/configuracion.schemas";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 // GET - Obtener configuración de facturación
 export async function GET(request: NextRequest) {
@@ -104,6 +105,18 @@ const actualizarConfigHandler = async (
         },
       });
     }
+
+    // Auditar actualización de configuración
+    await logAuditFromSession({
+      session,
+      action: "UPDATE_BILLING_CONFIG",
+      resource: "configuracion",
+      resourceId: config.id,
+      changes: {
+        after: data,
+      },
+      request,
+    });
 
     return NextResponse.json(config);
   } catch (error) {

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { withRateLimitAndValidation } from "@/lib/api-helpers";
 import { IniciarTurnoSchema } from "@/lib/schemas/turno.schemas";
 import { RATE_LIMITS } from "@/lib/rate-limit";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 // POST - Iniciar turno y crear punto inicial
 const handler = async (
@@ -73,6 +74,22 @@ const handler = async (
         ubicacionActualLng: longitud,
         ultimaActualizacionGPS: new Date(),
       },
+    });
+
+    // Auditar inicio de turno
+    await logAuditFromSession({
+      session,
+      action: "START_SHIFT",
+      resource: "turno",
+      resourceId: turno.id,
+      changes: {
+        after: {
+          armadorId: armador.id,
+          latitud,
+          longitud,
+        },
+      },
+      request,
     });
 
     return NextResponse.json(turno);
