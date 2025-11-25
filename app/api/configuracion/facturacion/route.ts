@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withValidation } from "@/lib/api-helpers";
+import { ConfiguracionFacturacionSchema } from "@/lib/schemas/configuracion.schemas";
 
 // GET - Obtener configuración de facturación
 export async function GET(request: NextRequest) {
@@ -32,7 +34,21 @@ export async function GET(request: NextRequest) {
 }
 
 // PUT - Actualizar configuración de facturación
-export async function PUT(request: NextRequest) {
+const actualizarConfigHandler = async (
+  data: {
+    nombreEmpresa?: string;
+    giro?: string;
+    direccion?: string;
+    telefono?: string;
+    email?: string;
+    logoUrl?: string;
+    colorPrimario?: string;
+    colorAccent?: string;
+    terminosCondiciones?: string;
+    notasPiePagina?: string;
+  },
+  request: NextRequest
+) => {
   try {
     const session = await getSession();
 
@@ -40,7 +56,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
     const {
       nombreEmpresa,
       giro,
@@ -52,7 +67,7 @@ export async function PUT(request: NextRequest) {
       colorAccent,
       terminosCondiciones,
       notasPiePagina,
-    } = body;
+    } = data;
 
     // Obtener la configuración existente o crear una nueva
     let config = await prisma.configuracionFacturacion.findFirst();
@@ -98,4 +113,10 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+// Exportar PUT con validación
+export const PUT = withValidation(
+  ConfiguracionFacturacionSchema,
+  actualizarConfigHandler
+);

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withRateLimitAndValidation } from "@/lib/api-helpers";
+import { IniciarTurnoSchema } from "@/lib/schemas/turno.schemas";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 
 // POST - Iniciar turno y crear punto inicial
-export async function POST(request: NextRequest) {
+const handler = async (
+  data: { latitud: number; longitud: number; descripcion?: string },
+  request: NextRequest
+) => {
   try {
     const session = await getSession();
 
@@ -11,23 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { latitud, longitud, descripcion } = body;
-
-    // Validar coordenadas
-    if (!latitud || !longitud) {
-      return NextResponse.json(
-        { error: "Latitud y longitud son requeridas" },
-        { status: 400 }
-      );
-    }
-
-    if (latitud < -90 || latitud > 90 || longitud < -180 || longitud > 180) {
-      return NextResponse.json(
-        { error: "Coordenadas inválidas" },
-        { status: 400 }
-      );
-    }
+    const { latitud, longitud, descripcion } = data;
 
     // Buscar armador del usuario
     const armador = await prisma.armador.findUnique({
@@ -93,4 +83,17 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+// Exportar con rate limiting y validación
+export const POST = withRateLimitAndValidation(
+  IniciarTurnoSchema,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    // Key: IP (ya que aún no sabemos el userId del armador)
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    return `iniciar-turno:${ip}`;
+  },
+  handler
+);

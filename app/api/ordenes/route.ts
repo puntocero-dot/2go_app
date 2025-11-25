@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
+import { withValidation } from "@/lib/api-helpers";
+import { CrearOrdenSchema } from "@/lib/schemas/orden.schemas";
 
 // GET - Listar órdenes con filtros
 export async function GET(request: NextRequest) {
@@ -69,7 +71,18 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Crear nueva orden
-export async function POST(request: NextRequest) {
+const crearOrdenHandler = async (
+  data: {
+    codigoReferenciaRetail: string;
+    muebleId: string;
+    usuarioFinalId: string;
+    proyectoId: string;
+    fechaSolicitadaCliente?: string;
+    autoAsignar?: boolean;
+    prioridad?: string;
+  },
+  request: NextRequest
+) => {
   try {
     const session = await getSession();
 
@@ -77,7 +90,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
     const {
       codigoReferenciaRetail,
       muebleId,
@@ -86,19 +98,9 @@ export async function POST(request: NextRequest) {
       fechaSolicitadaCliente,
       autoAsignar,
       prioridad,
-    } = body;
+    } = data;
 
-    if (!codigoReferenciaRetail || !muebleId || !usuarioFinalId || !proyectoId) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
-      );
-    }
-
-    const prioridadValida =
-      prioridad && ["VIP", "URGENTE", "MEDIA", "NORMAL"].includes(prioridad)
-        ? prioridad
-        : "NORMAL";
+    const prioridadValida = prioridad || "NORMAL";
 
     // Crear la orden
     const orden = await prisma.orden.create({
@@ -169,4 +171,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+// Exportar POST con validación
+export const POST = withValidation(CrearOrdenSchema, crearOrdenHandler);

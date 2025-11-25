@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withRateLimitAndValidation } from "@/lib/api-helpers";
+import { FinalizarTurnoSchema } from "@/lib/schemas/turno.schemas";
+import { RATE_LIMITS } from "@/lib/rate-limit";
 
 // POST - Finalizar turno y crear punto final
-export async function POST(
+const handler = async (
+  data: { latitud: number; longitud: number; descripcion?: string },
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const session = await getSession();
 
@@ -15,16 +19,7 @@ export async function POST(
     }
 
     const { id: turnoId } = params;
-    const body = await request.json();
-    const { latitud, longitud, descripcion } = body;
-
-    // Validar coordenadas
-    if (!latitud || !longitud) {
-      return NextResponse.json(
-        { error: "Latitud y longitud son requeridas" },
-        { status: 400 }
-      );
-    }
+    const { latitud, longitud, descripcion } = data;
 
     // Verificar que el turno existe y está activo
     const turno = await prisma.turno.findUnique({
@@ -81,4 +76,17 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+};
+
+// Exportar con rate limiting y validación
+export const POST = withRateLimitAndValidation(
+  FinalizarTurnoSchema,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    // Key: turnoId del path
+    const url = new URL(request.url);
+    const turnoId = url.pathname.split("/")[3]; // /api/turnos/[id]/finalizar
+    return `finalizar-turno:${turnoId}`;
+  },
+  handler
+);
