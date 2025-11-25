@@ -8,12 +8,15 @@ import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, B
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
+import { EstadoLoggeoSelector } from "./estado-loggeo-selector";
 
 interface NavbarProps {
   user: {
     nombre: string;
     email: string;
     rol: "ADMIN" | "SUPERVISOR" | "ARMADOR";
+    estadoLoggeo?: string;
+    fotoPerfil?: string;
   };
 }
 
@@ -25,6 +28,22 @@ export function Navbar({ user }: NavbarProps) {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
+  };
+
+  const handleCambioEstado = async (nuevoEstado: string) => {
+    try {
+      const response = await fetch("/api/usuarios/estado-loggeo", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estadoLoggeo: nuevoEstado }),
+      });
+
+      if (response.ok) {
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error cambiando estado:", error);
+    }
   };
 
   const getDashboardLink = () => {
@@ -222,7 +241,43 @@ export function Navbar({ user }: NavbarProps) {
 
           {/* Right side items */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* Estado de Loggeo */}
+            {user.estadoLoggeo && (
+              <div className="hidden sm:block">
+                <EstadoLoggeoSelector
+                  estadoActual={user.estadoLoggeo}
+                  onCambioEstado={handleCambioEstado}
+                />
+              </div>
+            )}
+
             <ThemeToggle />
+
+            {/* Perfil Link */}
+            <Link href="/admin/perfil">
+              <EnhancedButton
+                variant="ghost"
+                size="sm"
+                className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
+                title="Mi Perfil"
+              >
+                <User className="w-4 h-4" />
+              </EnhancedButton>
+            </Link>
+
+            {/* Configuración (solo ADMIN) */}
+            {user.rol === "ADMIN" && (
+              <Link href="/admin/configuracion/facturacion">
+                <EnhancedButton
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
+                  title="Configuración"
+                >
+                  <Settings className="w-4 h-4" />
+                </EnhancedButton>
+              </Link>
+            )}
             
             {/* User menu - desktop only */}
             <div className="hidden lg:flex items-center gap-2 px-2">
@@ -230,9 +285,20 @@ export function Navbar({ user }: NavbarProps) {
                 <div className="text-xs font-medium text-white truncate">{user.nombre}</div>
                 <div className="text-[10px] text-gray-400 capitalize">{user.rol.toLowerCase()}</div>
               </div>
-              <div className="w-7 h-7 bg-terracota rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-3.5 h-3.5 text-white" />
-              </div>
+              {user.fotoPerfil ? (
+                <img
+                  src={user.fotoPerfil}
+                  alt={user.nombre}
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/28";
+                  }}
+                />
+              ) : (
+                <div className="w-7 h-7 bg-terracota rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-3.5 h-3.5 text-white" />
+                </div>
+              )}
             </div>
 
             {/* Logout button - visible on all screen sizes */}
@@ -395,6 +461,47 @@ export function Navbar({ user }: NavbarProps) {
                   </EnhancedButton>
                 </Link>
               )}
+
+              {/* Enlaces comunes para todos */}
+              <div className="border-t border-gray-700 mt-2 pt-2">
+                <Link href="/admin/perfil" className="block">
+                  <EnhancedButton 
+                    variant="ghost" 
+                    className={cn(
+                      "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                      isActive("/admin/perfil") && "text-white bg-white/10"
+                    )}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Mi Perfil
+                  </EnhancedButton>
+                </Link>
+
+                {user.rol === "ADMIN" && (
+                  <Link href="/admin/configuracion/facturacion" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/configuracion/facturacion") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Configuración
+                    </EnhancedButton>
+                  </Link>
+                )}
+
+                {/* Selector de estado en móvil */}
+                {user.estadoLoggeo && (
+                  <div className="px-3 py-2">
+                    <EstadoLoggeoSelector
+                      estadoActual={user.estadoLoggeo}
+                      onCambioEstado={handleCambioEstado}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
