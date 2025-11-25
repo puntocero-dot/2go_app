@@ -364,31 +364,19 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
       </div>
 
       {/* Sección de Reglas de Facturación */}
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6">
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">
-              Reglas de Facturación
-            </h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Las reglas de cobro (volumen, prioridad, distancia, penalizaciones, etc.) se configuran en una sección dedicada del proyecto.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push(`/admin/proyectos/${proyecto.id}/reglas`)}
-              className="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
-            >
-              Configurar reglas de cobro
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+      <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+        <div className="flex-shrink-0 mt-1">
+          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">
+            Reglas de Facturación
+          </h3>
+          <p className="text-sm text-gray-600">
+            Las reglas de cobro (volumen, prioridad, distancia, penalizaciones, etc.) se configuran en la página de detalle del proyecto después de guardarlo.
+          </p>
         </div>
       </div>
 
