@@ -77,11 +77,15 @@ export default async function ReglasCobroPage({ params }: { params: Promise<{ id
                 <div>
                   <span className="text-sm font-medium">Rangos de Volumen:</span>
                   <div className="mt-2 space-y-1">
-                    {(proyecto.reglaCobro.rangosVolumen as any[])?.map((rango, i) => (
-                      <div key={i} className="text-sm bg-muted p-2 rounded">
-                        De {rango.desde} a {rango.hasta === null ? '∞' : rango.hasta} órdenes → ${rango.precio}
-                      </div>
-                    ))}
+                    {Array.isArray(proyecto.reglaCobro.rangosVolumen) && proyecto.reglaCobro.rangosVolumen.length > 0 ? (
+                      proyecto.reglaCobro.rangosVolumen.map((rango: any, i: number) => (
+                        <div key={i} className="text-sm bg-muted p-2 rounded">
+                          De {rango.desde} a {rango.hasta === null ? '∞' : rango.hasta} órdenes → ${rango.precio}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No hay rangos configurados</p>
+                    )}
                   </div>
                 </div>
               )}

@@ -87,21 +87,28 @@ export default function EditarOrdenPage() {
       if (!response.ok) throw new Error("Error al cargar orden");
       
       const data = await response.json();
+      
+      // Validar que data tenga la estructura esperada
+      if (!data || typeof data !== 'object') {
+        throw new Error("Datos de orden inválidos");
+      }
+      
       setOrden(data);
       
-      // Cargar datos en el formulario
+      // Cargar datos en el formulario con validaciones
       setFormData({
         clienteNombre: data.usuarioFinal?.nombre || "",
         clienteTelefono: data.usuarioFinal?.telefono || "",
         direccion: data.direccionEntrega || "",
         latitud: data.latitud?.toString() || "",
         longitud: data.longitud?.toString() || "",
-        estado: data.estado || "SIN_ASIGNAR",
+        estado: (data.estado && typeof data.estado === 'string') ? data.estado : "SIN_ASIGNAR",
         armadorId: data.armadorId || "",
       });
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cargar la orden");
+      alert("Error al cargar la orden: " + (error instanceof Error ? error.message : "Error desconocido"));
+      setOrden(null);
     } finally {
       setLoading(false);
     }
@@ -113,9 +120,12 @@ export default function EditarOrdenPage() {
       if (!response.ok) throw new Error("Error al cargar armadores");
       
       const data = await response.json();
-      setArmadores(data.filter((a: Armador) => a.estado === "ACTIVO"));
+      // Asegurar que data es un array antes de filtrar
+      const armadoresArray = Array.isArray(data) ? data : [];
+      setArmadores(armadoresArray.filter((a: Armador) => a.estado === "ACTIVO"));
     } catch (error) {
       console.error("Error:", error);
+      setArmadores([]); // Fallback a array vacío
     }
   };
 
