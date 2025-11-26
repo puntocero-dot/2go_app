@@ -242,14 +242,12 @@ export function Navbar({ user }: NavbarProps) {
           {/* Right side items */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Estado de Loggeo */}
-            {user.estadoLoggeo && (
-              <div className="hidden sm:block">
-                <EstadoLoggeoSelector
-                  estadoActual={user.estadoLoggeo}
-                  onCambioEstado={handleCambioEstado}
-                />
-              </div>
-            )}
+            <div className="hidden sm:block">
+              <EstadoLoggeoSelector
+                estadoActual={user.estadoLoggeo || "OFFLINE"}
+                onCambioEstado={handleCambioEstado}
+              />
+            </div>
 
             <ThemeToggle />
 
@@ -493,14 +491,12 @@ export function Navbar({ user }: NavbarProps) {
                 )}
 
                 {/* Selector de estado en móvil */}
-                {user.estadoLoggeo && (
-                  <div className="px-3 py-2">
-                    <EstadoLoggeoSelector
-                      estadoActual={user.estadoLoggeo}
-                      onCambioEstado={handleCambioEstado}
-                    />
-                  </div>
-                )}
+                <div className="px-3 py-2">
+                  <EstadoLoggeoSelector
+                    estadoActual={user.estadoLoggeo || "OFFLINE"}
+                    onCambioEstado={handleCambioEstado}
+                  />
+                </div>
               </div>
             </div>
           </div>
