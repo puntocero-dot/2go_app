@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit, XCircle } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,10 +13,15 @@ interface AdminOrderActionsProps {
 
 export function AdminOrderActions({ ordenId, estado }: AdminOrderActionsProps) {
   const { toast } = useToast();
+  const router = useRouter();
 
   if (["CANCELADA", "RECHAZADO", "ARMADO_COMPLETADO"].includes(estado)) {
     return null;
   }
+
+  const handleEditarOrden = () => {
+    router.push(`/admin/ordenes/${ordenId}/editar`);
+  };
 
   const handleInactivarOrden = () => {
     toast({
@@ -27,12 +32,10 @@ export function AdminOrderActions({ ordenId, estado }: AdminOrderActionsProps) {
 
   return (
     <>
-      <Link href={`/admin/ordenes/${ordenId}/editar`}>
-        <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4 mr-2" />
-          Editar orden
-        </Button>
-      </Link>
+      <Button variant="outline" size="sm" onClick={handleEditarOrden}>
+        <Edit className="h-4 w-4 mr-2" />
+        Editar orden
+      </Button>
       <Button
         variant="outline"
         size="sm"

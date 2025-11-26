@@ -1,12 +1,11 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
-import { ProjectBillingManager } from "@/components/project-billing-manager";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProjectBillingManager } from "@/components/project-billing-manager";
+import { ProyectoDetailActions } from "@/components/proyecto-detail-actions";
 import {
   Table,
   TableBody,
@@ -138,16 +137,7 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
             <Badge variant="outline">
               {esCreditoFiscal ? "Crédito Fiscal" : "Consumidor Final"}
             </Badge>
-            <Link href={`/admin/proyectos/${proyecto.id}/editar`}>
-              <Button variant="default" size="sm">
-                Editar Proyecto
-              </Button>
-            </Link>
-            <Link href="/admin/proyectos">
-              <Button variant="outline" size="sm">
-                ← Volver a Proyectos
-              </Button>
-            </Link>
+            <ProyectoDetailActions proyectoId={proyecto.id} />
           </div>
         </div>
 
