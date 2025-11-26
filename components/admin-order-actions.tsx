@@ -1,6 +1,7 @@
 "use client";
 
 import { Edit, XCircle } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -17,13 +18,6 @@ export function AdminOrderActions({ ordenId, estado }: AdminOrderActionsProps) {
     return null;
   }
 
-  const handleEditarOrden = () => {
-    toast({
-      title: "Edición de orden en desarrollo",
-      description: "Pronto podrás editar los datos de la orden desde aquí.",
-    });
-  };
-
   const handleInactivarOrden = () => {
     toast({
       title: "Inactivar orden en desarrollo",
@@ -33,10 +27,12 @@ export function AdminOrderActions({ ordenId, estado }: AdminOrderActionsProps) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={handleEditarOrden}>
-        <Edit className="h-4 w-4 mr-2" />
-        Editar orden
-      </Button>
+      <Link href={`/admin/ordenes/${ordenId}/editar`}>
+        <Button variant="outline" size="sm">
+          <Edit className="h-4 w-4 mr-2" />
+          Editar orden
+        </Button>
+      </Link>
       <Button
         variant="outline"
         size="sm"

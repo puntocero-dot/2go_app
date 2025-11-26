@@ -336,7 +336,7 @@ export default function EditarOrdenPage() {
                       <option value="">Sin asignar</option>
                       {armadores.map((armador) => (
                         <option key={armador.id} value={armador.id}>
-                          {armador.usuario.nombre}
+                          {armador.usuario?.nombre || `Armador ${armador.id}`}
                         </option>
                       ))}
                     </select>

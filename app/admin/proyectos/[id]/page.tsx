@@ -138,6 +138,11 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
             <Badge variant="outline">
               {esCreditoFiscal ? "Crédito Fiscal" : "Consumidor Final"}
             </Badge>
+            <Link href={`/admin/proyectos/${proyecto.id}/editar`}>
+              <Button variant="default" size="sm">
+                Editar Proyecto
+              </Button>
+            </Link>
             <Link href="/admin/proyectos">
               <Button variant="outline" size="sm">
                 ← Volver a Proyectos
