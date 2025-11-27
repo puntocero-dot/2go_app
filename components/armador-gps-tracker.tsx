@@ -100,7 +100,29 @@ export function ArmadorGpsTracker() {
       (pos) => {
         if (cancelled) return;
 
-        const { latitude, longitude, speed } = pos.coords;
+        const { latitude, longitude, speed, accuracy } = pos.coords;
+        
+        // Filtrar lecturas con baja precisión (más de 100 metros de error)
+        if (accuracy && accuracy > 100) {
+          console.warn(`GPS con baja precisión: ${accuracy.toFixed(0)}m - ignorando lectura`);
+          return;
+        }
+
+        // Validar saltos drásticos (más de 5km desde última posición)
+        if (lastPosition) {
+          const distance = calculateDistance(
+            lastPosition.lat,
+            lastPosition.lng,
+            latitude,
+            longitude
+          );
+          
+          if (distance > 5000) {
+            console.warn(`Salto GPS detectado: ${(distance/1000).toFixed(1)}km - ignorando lectura`);
+            return;
+          }
+        }
+        
         // speed viene en m/s, null si no está disponible
         sendLocation(latitude, longitude, speed);
       },
