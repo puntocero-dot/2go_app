@@ -251,17 +251,19 @@ export function Navbar({ user }: NavbarProps) {
 
             <ThemeToggle />
 
-            {/* Perfil Link */}
-            <Link href="/admin/perfil">
-              <EnhancedButton
-                variant="ghost"
-                size="sm"
-                className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
-                title="Mi Perfil"
-              >
-                <User className="w-4 h-4" />
-              </EnhancedButton>
-            </Link>
+            {/* Perfil Link - Solo para ADMIN y SUPERVISOR */}
+            {user.rol !== "ARMADOR" && (
+              <Link href="/admin/perfil">
+                <EnhancedButton
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
+                  title="Mi Perfil"
+                >
+                  <User className="w-4 h-4" />
+                </EnhancedButton>
+              </Link>
+            )}
 
             {/* Configuración (solo ADMIN) */}
             {user.rol === "ADMIN" && (
@@ -462,18 +464,20 @@ export function Navbar({ user }: NavbarProps) {
 
               {/* Enlaces comunes para todos */}
               <div className="border-t border-gray-700 mt-2 pt-2">
-                <Link href="/admin/perfil" className="block">
-                  <EnhancedButton 
-                    variant="ghost" 
-                    className={cn(
-                      "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                      isActive("/admin/perfil") && "text-white bg-white/10"
-                    )}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Mi Perfil
-                  </EnhancedButton>
-                </Link>
+                {user.rol !== "ARMADOR" && (
+                  <Link href="/admin/perfil" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/perfil") && "text-white bg-white/10"
+                      )}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Mi Perfil
+                    </EnhancedButton>
+                  </Link>
+                )}
 
                 {user.rol === "ADMIN" && (
                   <Link href="/admin/configuracion/facturacion" className="block">
