@@ -33,7 +33,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Actualizar ubicación
+    // Buscar turno activo
+    const turnoActivo = await prisma.turno.findFirst({
+      where: {
+        armadorId: armador.id,
+        estado: "ACTIVO",
+      },
+      orderBy: {
+        inicioTurno: "desc",
+      },
+    });
+
+    // Actualizar ubicación del armador y guardar punto de ruta si hay turno activo
     const armadorActualizado = await prisma.armador.update({
       where: { id: armador.id },
       data: {
@@ -43,6 +54,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Si hay turno activo, guardar punto de ruta
+    if (turnoActivo) {
+      await prisma.rutaPunto.create({
+        data: {
+          turnoId: turnoActivo.id,
+          latitud: lat,
+          longitud: lng,
+          tipo: "INTERMEDIO",
+        },
+      });
+    }
+
     return NextResponse.json({
       message: "Ubicación actualizada",
       armador: {
@@ -51,6 +74,7 @@ export async function POST(request: NextRequest) {
         lng: armadorActualizado.ubicacionActualLng,
         ultimaActualizacion: armadorActualizado.ultimaActualizacionGPS,
       },
+      rutaGuardada: !!turnoActivo,
     });
   } catch (error) {
     console.error("Error actualizando ubicación:", error);

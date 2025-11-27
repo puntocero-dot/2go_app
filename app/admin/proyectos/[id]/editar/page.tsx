@@ -8,6 +8,7 @@ import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Building, Save, X } from "lucide-react";
 import { ProyectoEditForm } from "@/components/proyectos/proyecto-edit-form";
+import { ProjectBillingManager } from "@/components/project-billing-manager";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -29,7 +30,7 @@ export default async function EditarProyectoPage({ params }: PageProps) {
     redirect("/login");
   }
 
-  // Obtener el proyecto
+  // Obtener el proyecto con reglas de cobro
   const proyecto = await prisma.proyecto.findUnique({
     where: { id: resolvedParams.id },
     include: {
@@ -42,7 +43,14 @@ export default async function EditarProyectoPage({ params }: PageProps) {
           usuariosFinales: true,
           muebles: true
         }
-      }
+      },
+      reglaCobro: {
+        include: {
+          rangosVolumen: true,
+          cobrosDistancia: true,
+          penalizaciones: true,
+        },
+      },
     }
   });
 
@@ -55,6 +63,38 @@ export default async function EditarProyectoPage({ params }: PageProps) {
     where: { id: resolvedParams.id },
     select: { activo: true }
   });
+
+  // Preparar regla de cobro inicial
+  const reglaCobroInicial = proyecto.reglaCobro
+    ? {
+        id: proyecto.reglaCobro.id,
+        tipoPrincipal: proyecto.reglaCobro.tipoPrincipal,
+        precioFijoUnitario: proyecto.reglaCobro.precioFijoUnitario ?? null,
+        precioVIP: proyecto.reglaCobro.precioVIP,
+        precioUrgente: proyecto.reglaCobro.precioUrgente,
+        precioMedia: proyecto.reglaCobro.precioMedia,
+        precioNormal: proyecto.reglaCobro.precioNormal,
+        precioGrande: proyecto.reglaCobro.precioGrande,
+        precioMediano: proyecto.reglaCobro.precioMediano,
+        precioPequeno: proyecto.reglaCobro.precioPequeno,
+        rangosVolumen: proyecto.reglaCobro.rangosVolumen.map((rango) => ({
+          id: rango.id,
+          desde: rango.desde,
+          hasta: rango.hasta,
+          precio: rango.precio,
+        })),
+        cobrosDistancia: proyecto.reglaCobro.cobrosDistancia.map((cobro) => ({
+          id: cobro.id,
+          municipio: cobro.municipio,
+          precio: cobro.precio,
+        })),
+        penalizaciones: proyecto.reglaCobro.penalizaciones.map((penalizacion) => ({
+          id: penalizacion.id,
+          tipo: penalizacion.tipo,
+          precio: penalizacion.precio,
+        })),
+      }
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -81,7 +121,7 @@ export default async function EditarProyectoPage({ params }: PageProps) {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Link href={`/admin/proyectos/${proyecto.id}`}>
+              <Link href="/admin/proyectos">
                 <EnhancedButton variant="outline">
                   <X className="w-4 h-4 mr-2" />
                   Cancelar
@@ -133,9 +173,14 @@ export default async function EditarProyectoPage({ params }: PageProps) {
         </div>
 
         {/* Formulario de Edición */}
-        <EnhancedCard className="p-8 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <EnhancedCard className="p-8 bg-white rounded-xl border border-gray-200 shadow-sm mb-8">
           <ProyectoEditForm proyecto={proyecto} />
         </EnhancedCard>
+
+        {/* Reglas de Facturación */}
+        <div className="mb-8">
+          <ProjectBillingManager projectId={proyecto.id} initialRule={reglaCobroInicial} />
+        </div>
       </main>
     </div>
   );

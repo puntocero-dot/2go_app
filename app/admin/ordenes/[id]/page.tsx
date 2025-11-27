@@ -13,6 +13,7 @@ import { OrderStatusTimeline } from "@/components/order-status-timeline";
 import { AdminOrderActions } from "@/components/admin-order-actions";
 import { Button } from "@/components/ui/button";
 import { calcularCobroOrden } from "@/lib/facturacion-helpers";
+import { OrdenRutaMapa } from "@/components/orden-ruta-mapa";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -320,6 +321,11 @@ export default async function OrdenDetallePage({ params }: PageProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Mapa de Ruta */}
+        {orden.armador && (
+          <OrdenRutaMapa ordenId={orden.id} />
+        )}
 
         <Card>
           <CardHeader>
