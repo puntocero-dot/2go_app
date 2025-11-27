@@ -63,6 +63,7 @@ function findMunicipioCharge(
   municipioRaw: string,
   cobrosDistancia: CobroDistancia[],
 ): CobroDistancia | null {
+  if (!municipioRaw) return null;
   const target = municipioRaw.trim().toLowerCase();
   if (!target) return null;
   return (

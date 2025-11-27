@@ -67,11 +67,11 @@ export function Navbar({ user }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-negro-azabache text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95 overflow-x-hidden">
+    <nav className="bg-negro-azabache text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
       <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-16 gap-2">
           {/* Logo y Dashboard */}
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-4 md:space-x-8">
             <Link href={getDashboardLink()} className="flex items-center space-x-3 group">
               <div className="w-8 h-8 bg-madera-natural rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <Package className="w-5 h-5 text-white" />
@@ -283,7 +283,9 @@ export function Navbar({ user }: NavbarProps) {
             <div className="hidden lg:flex items-center gap-2 px-2">
               <div className="text-right max-w-[120px]">
                 <div className="text-xs font-medium text-white truncate">{user.nombre}</div>
-                <div className="text-[10px] text-gray-400 capitalize">{user.rol.toLowerCase()}</div>
+                <div className="text-[10px] text-gray-400 capitalize">
+                  {typeof user.rol === "string" ? user.rol.toLowerCase() : ""}
+                </div>
               </div>
               {user.fotoPerfil ? (
                 <img
