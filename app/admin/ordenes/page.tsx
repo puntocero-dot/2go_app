@@ -104,10 +104,17 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
   const fechaFinFilter =
     typeof currentSearchParams?.fechaFin === "string" ? currentSearchParams.fechaFin : "";
   const verCanceladas = currentSearchParams?.verCanceladas === "1";
-  const searchText =
+
+  // Texto de búsqueda (sin tocar aún el símbolo #)
+  const rawSearch =
     typeof currentSearchParams?.search === "string" && currentSearchParams.search !== ""
-      ? currentSearchParams.search.trim()
+      ? currentSearchParams.search
       : "";
+  const searchText = rawSearch.trim();
+
+  // Normalizar búsqueda para códigos que empiezan con # (por ejemplo #p123456)
+  const normalizedSearch =
+    searchText.startsWith("#") ? searchText.slice(1) : searchText;
 
   if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
     redirect("/login");
@@ -176,12 +183,53 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
   }
 
   // Búsqueda por texto (nombre, correo, teléfono, código de orden)
-  if (searchText) {
-    ordenWhere.OR = [
-      { codigoReferenciaRetail: { contains: searchText, mode: 'insensitive' } },
-      { usuarioFinal: { nombre: { contains: searchText, mode: 'insensitive' } } },
-      { usuarioFinal: { email: { contains: searchText, mode: 'insensitive' } } },
-      { usuarioFinal: { telefono: { contains: searchText, mode: 'insensitive' } } },
+  if (normalizedSearch) {
+    const orSearch: Prisma.OrdenWhereInput[] = [
+      {
+        codigoReferenciaRetail: {
+          contains: normalizedSearch,
+          mode: "insensitive" as const,
+        },
+      },
+      {
+        usuarioFinal: {
+          nombre: {
+            contains: normalizedSearch,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+      {
+        usuarioFinal: {
+          email: {
+            contains: normalizedSearch,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+      {
+        usuarioFinal: {
+          telefono: {
+            contains: normalizedSearch,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+    ];
+
+    // Combinar con otros filtros usando AND para evitar conflictos en Prisma
+    const existingAnd: Prisma.OrdenWhereInput[] = [];
+    if (ordenWhere.AND) {
+      if (Array.isArray(ordenWhere.AND)) {
+        existingAnd.push(...ordenWhere.AND);
+      } else {
+        existingAnd.push(ordenWhere.AND);
+      }
+    }
+
+    ordenWhere.AND = [
+      ...existingAnd,
+      { OR: orSearch },
     ];
   }
 
@@ -231,7 +279,12 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     completadas: statsMap.ARMADO_COMPLETADO || 0,
   };
 
-  const hasActiveFilters = proyectoIdFilter !== "ALL" || estadoFilter !== "ALL" || fechaInicioFilter || fechaFinFilter || searchText;
+  const hasActiveFilters =
+    proyectoIdFilter !== "ALL" ||
+    estadoFilter !== "ALL" ||
+    fechaInicioFilter ||
+    fechaFinFilter ||
+    searchText;
   const hasOrders = ordenesVisibles.length > 0;
 
   const getEstadoBadge = (estado: string) => {

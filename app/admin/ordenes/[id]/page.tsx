@@ -176,9 +176,11 @@ export default async function OrdenDetallePage({ params }: PageProps) {
                   <p className="mt-1 text-xs text-gray-500">
                     {calculoCobro.conceptos
                       .map((concepto) => {
-                        return `${concepto.tipo.toLowerCase()} ${formatCurrency(
-                          concepto.monto,
-                        )}`;
+                        const tipoLabel =
+                          typeof concepto.tipo === "string"
+                            ? concepto.tipo.toLowerCase()
+                            : String(concepto.tipo ?? "");
+                        return `${tipoLabel} ${formatCurrency(concepto.monto)}`;
                       })
                       .join(" • ")}
                   </p>
