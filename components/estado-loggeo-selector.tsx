@@ -42,12 +42,12 @@ export function EstadoLoggeoSelector({ estadoActual, onCambioEstado }: EstadoLog
         <>
           {/* Overlay */}
           <div
-            className="fixed inset-0 z-[100]"
+            className="fixed inset-0 z-[200]"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[101]">
+          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[201]">
             <div className="py-1" role="menu">
               {ESTADOS.map((estado) => {
                 const EstadoIcon = estado.icon;

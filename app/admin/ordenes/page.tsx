@@ -104,6 +104,10 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
   const fechaFinFilter =
     typeof currentSearchParams?.fechaFin === "string" ? currentSearchParams.fechaFin : "";
   const verCanceladas = currentSearchParams?.verCanceladas === "1";
+  const searchText =
+    typeof currentSearchParams?.search === "string" && currentSearchParams.search !== ""
+      ? currentSearchParams.search.trim()
+      : "";
 
   if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
     redirect("/login");
@@ -171,6 +175,16 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     ordenWhere.fechaCreacion = rango;
   }
 
+  // Búsqueda por texto (nombre, correo, teléfono, código de orden)
+  if (searchText) {
+    ordenWhere.OR = [
+      { codigoReferenciaRetail: { contains: searchText, mode: 'insensitive' } },
+      { usuarioFinal: { nombre: { contains: searchText, mode: 'insensitive' } } },
+      { usuarioFinal: { email: { contains: searchText, mode: 'insensitive' } } },
+      { usuarioFinal: { telefono: { contains: searchText, mode: 'insensitive' } } },
+    ];
+  }
+
   const [
     proyectos,
     ordenesVisibles,
@@ -217,7 +231,7 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     completadas: statsMap.ARMADO_COMPLETADO || 0,
   };
 
-  const hasActiveFilters = proyectoIdFilter !== "ALL" || estadoFilter !== "ALL" || fechaInicioFilter || fechaFinFilter;
+  const hasActiveFilters = proyectoIdFilter !== "ALL" || estadoFilter !== "ALL" || fechaInicioFilter || fechaFinFilter || searchText;
   const hasOrders = ordenesVisibles.length > 0;
 
   const getEstadoBadge = (estado: string) => {
@@ -310,6 +324,18 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="search" className="text-sm font-medium">Buscar</Label>
+              <input
+                type="text"
+                id="search"
+                name="search"
+                defaultValue={searchText}
+                placeholder="Nombre, correo, teléfono o código de orden..."
+                className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              />
             </div>
 
             <div>
