@@ -86,23 +86,24 @@ export default function EditarOrdenPage() {
       const response = await fetch(`/api/ordenes/${id}`);
       if (!response.ok) throw new Error("Error al cargar orden");
       
-      const data = await response.json();
+      const json = await response.json();
+      const data: any = (json as any).orden ?? json;
       
       // Validar que data tenga la estructura esperada
       if (!data || typeof data !== 'object') {
         throw new Error("Datos de orden inválidos");
       }
       
-      setOrden(data);
+      setOrden(data as Orden);
       
       // Cargar datos en el formulario con validaciones
       setFormData({
         clienteNombre: data.usuarioFinal?.nombre || "",
         clienteTelefono: data.usuarioFinal?.telefono || "",
         direccion: data.direccionEntrega || "",
-        latitud: data.latitud?.toString() || "",
-        longitud: data.longitud?.toString() || "",
-        estado: (data.estado && typeof data.estado === 'string') ? data.estado : "SIN_ASIGNAR",
+        latitud: data.latitud != null ? data.latitud.toString() : "",
+        longitud: data.longitud != null ? data.longitud.toString() : "",
+        estado: typeof data.estado === 'string' ? data.estado : "SIN_ASIGNAR",
         armadorId: data.armadorId || "",
       });
     } catch (error) {
@@ -210,6 +211,8 @@ export default function EditarOrdenPage() {
     { value: "CANCELADA", label: "Cancelada" },
   ];
 
+  const canEdit = orden.estado === "SIN_ASIGNAR" || orden.estado === "ASIGNADO";
+
   return (
     <>
       {user && <Navbar user={user} />}
@@ -231,6 +234,12 @@ export default function EditarOrdenPage() {
                 <p className="text-sm text-muted-foreground">
                   <strong>Código:</strong> {orden.codigoReferenciaRetail}
                 </p>
+              </div>
+            )}
+
+            {!canEdit && (
+              <div className="mb-4 p-4 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                Esta orden está en estado <strong>{orden.estado.replace(/_/g, " ")}</strong>. Solo se pueden editar órdenes en estado <strong>SIN_ASIGNAR</strong> o <strong>ASIGNADO</strong>.
               </div>
             )}
 
@@ -288,7 +297,8 @@ export default function EditarOrdenPage() {
                         step="any"
                         value={formData.latitud}
                         onChange={(e) => handleInputChange("latitud", e.target.value)}
-                        className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        disabled={!canEdit}
+                        className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -299,7 +309,8 @@ export default function EditarOrdenPage() {
                         step="any"
                         value={formData.longitud}
                         onChange={(e) => handleInputChange("longitud", e.target.value)}
-                        className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        disabled={!canEdit}
+                        className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -316,7 +327,8 @@ export default function EditarOrdenPage() {
                       id="estado"
                       value={formData.estado}
                       onChange={(e) => handleInputChange("estado", e.target.value)}
-                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={!canEdit}
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                     >
                       {ESTADOS_ORDEN.map((estado) => (
                         <option key={estado.value} value={estado.value}>
@@ -331,7 +343,8 @@ export default function EditarOrdenPage() {
                       id="armadorId"
                       value={formData.armadorId}
                       onChange={(e) => handleInputChange("armadorId", e.target.value)}
-                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={!canEdit}
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                     >
                       <option value="">Sin asignar</option>
                       {armadores.map((armador) => (
@@ -353,7 +366,7 @@ export default function EditarOrdenPage() {
                 </Link>
                 <EnhancedButton
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || !canEdit}
                 >
                   {saving ? (
                     <>
