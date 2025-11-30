@@ -1,8 +1,8 @@
 {
   "name": "Armados 2Go",
   "short_name": "2Go",
-  "description": "Sistema de gestión de armado de muebles para armadores",
-  "start_url": "/armador",
+  "description": "Sistema de gestión de armado de muebles para administración y armadores",
+  "start_url": "/inicio",
   "display": "standalone",
   "background_color": "#0D0D0D",
   "theme_color": "#8B6F47",

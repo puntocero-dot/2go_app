@@ -1,6 +1,8 @@
-const CACHE_NAME = '2go-v1';
+const CACHE_NAME = '2go-v2';
 const urlsToCache = [
   '/',
+  '/inicio',
+  '/login',
   '/armador',
   '/manifest.json',
   '/icon-192.png',
