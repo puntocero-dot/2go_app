@@ -1,4 +1,5 @@
 import type { BillingDataset } from "@/lib/facturacion-data";
+import { sanitizeText, sanitizeEmail, sanitizePhone } from "./sanitize";
 
 type Direccion = {
   departamento?: string;
@@ -287,11 +288,11 @@ export function buildFacturaFromDataset(dataset: BillingDataset): FacturaElectro
 
   if (dataset.proyecto.tipoCliente === "CONSUMIDOR_FINAL") {
     const receptor: ReceptorConsumidorFinal = {
-      nombre: datos.nombreCompleto || "",
-      dui: datos.dui || "",
-      direccion: datos.direccion || "",
-      correo: datos.contacto?.email || "",
-      telefono: datos.contacto?.telefono || "",
+      nombre: sanitizeText(datos.nombreCompleto || ""),
+      dui: sanitizeText(datos.dui || ""),
+      direccion: sanitizeText(datos.direccion || ""),
+      correo: sanitizeEmail(datos.contacto?.email || ""),
+      telefono: sanitizePhone(datos.contacto?.telefono || ""),
     };
 
     const factura: FacturaConsumidorFinal = {
@@ -309,15 +310,15 @@ export function buildFacturaFromDataset(dataset: BillingDataset): FacturaElectro
   }
 
   const receptorCF: ReceptorCreditoFiscal = {
-    nit: datos.nit || "",
-    nrc: datos.nrc || "",
-    nombre: datos.razonSocial || datos.nombreComercial || "",
+    nit: sanitizeText(datos.nit || ""),
+    nrc: sanitizeText(datos.nrc || ""),
+    nombre: sanitizeText(datos.razonSocial || datos.nombreComercial || ""),
     direccion:
       typeof datos.direccion === "string"
-        ? datos.direccion
-        : datos.direccion?.complemento || "",
-    correo: datos.contacto?.email || "",
-    telefono: datos.contacto?.telefono || "",
+        ? sanitizeText(datos.direccion)
+        : sanitizeText(datos.direccion?.complemento || ""),
+    correo: sanitizeEmail(datos.contacto?.email || ""),
+    telefono: sanitizePhone(datos.contacto?.telefono || ""),
   };
 
   const facturaCF: FacturaCreditoFiscal = {

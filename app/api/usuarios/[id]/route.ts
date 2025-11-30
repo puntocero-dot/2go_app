@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withRateLimit } from "@/lib/api-helpers";
+import { RATE_LIMITS } from "@/lib/rate-limit";
+import { logAuditFromSession } from "@/lib/audit-logger";
 import {
   actualizarUsuarioSchema,
   rolesPermitidos,
@@ -15,10 +18,10 @@ type EstadoArmadorPermitido = (typeof ESTADOS_ARMADOR)[number];
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function PATCH(
+const patchHandler = async (
   request: NextRequest,
   context: RouteContext
-) {
+) => {
   try {
     const session = await getSession();
 
@@ -262,24 +265,20 @@ export async function PATCH(
       };
     }
 
-    // Auditoría de actualización de usuario
-    console.log(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        accion: "ACTUALIZAR_USUARIO",
-        adminId: session.userId,
-        adminEmail: session.email,
-        targetUserId: usuarioId,
-        targetEmail: usuarioActual.email,
-        camposModificados,
+    await logAuditFromSession({
+      session,
+      action: "UPDATE_USER",
+      resource: "usuario",
+      resourceId: usuarioId,
+      changes: {
+        before: camposModificados,
+        after: camposModificados,
+      },
+      metadata: {
         autoModificacion: session.userId === usuarioId,
-        ip:
-          request.headers.get("x-forwarded-for") ||
-          request.headers.get("x-real-ip") ||
-          "unknown",
-        userAgent: request.headers.get("user-agent") || "unknown",
-      })
-    );
+      },
+      request,
+    });
 
     return NextResponse.json({
       usuario: {
@@ -307,4 +306,14 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+};
+
+export const PATCH = withRateLimit(
+  patchHandler,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    return `usuarios-patch:${ip}`;
+  }
+);

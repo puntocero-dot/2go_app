@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { withRateLimitAndValidation } from "@/lib/api-helpers";
+import { RATE_LIMITS } from "@/lib/rate-limit";
+import { logAuditFromSession } from "@/lib/audit-logger";
+import {
+  ActualizarPerfilSchema,
+  ActualizarPerfilInput,
+} from "@/lib/schemas/usuario.schemas";
 
 // GET - Obtener perfil del usuario actual
 export async function GET(request: NextRequest) {
@@ -41,7 +48,10 @@ export async function GET(request: NextRequest) {
 }
 
 // PUT - Actualizar perfil del usuario
-export async function PUT(request: NextRequest) {
+const putHandler = async (
+  data: ActualizarPerfilInput,
+  request: NextRequest
+) => {
   try {
     const session = await getSession();
 
@@ -49,8 +59,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { nombre, telefono, fotoPerfil, password, passwordActual } = body;
+    const { nombre, telefono, fotoPerfil, password, passwordActual } = data;
 
     // Si se quiere cambiar la contraseña, verificar la actual
     if (password) {
@@ -99,6 +108,29 @@ export async function PUT(request: NextRequest) {
         },
       });
 
+      await logAuditFromSession({
+        session,
+        action: "CHANGE_PASSWORD",
+        resource: "usuario",
+        resourceId: session.userId,
+        request,
+      });
+
+      await logAuditFromSession({
+        session,
+        action: "UPDATE_PROFILE",
+        resource: "usuario",
+        resourceId: session.userId,
+        changes: {
+          after: {
+            nombre: usuarioActualizado.nombre,
+            telefono: usuarioActualizado.telefono,
+            fotoPerfil: usuarioActualizado.fotoPerfil,
+          },
+        },
+        request,
+      });
+
       return NextResponse.json(usuarioActualizado);
     }
 
@@ -121,6 +153,21 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    await logAuditFromSession({
+      session,
+      action: "UPDATE_PROFILE",
+      resource: "usuario",
+      resourceId: session.userId,
+      changes: {
+        after: {
+          nombre: usuarioActualizado.nombre,
+          telefono: usuarioActualizado.telefono,
+          fotoPerfil: usuarioActualizado.fotoPerfil,
+        },
+      },
+      request,
+    });
+
     return NextResponse.json(usuarioActualizado);
   } catch (error) {
     console.error("Error actualizando perfil:", error);
@@ -129,4 +176,15 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const PUT = withRateLimitAndValidation(
+  ActualizarPerfilSchema,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    return `perfil:${ip}`;
+  },
+  putHandler
+);

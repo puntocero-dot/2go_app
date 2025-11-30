@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, createSession } from "@/lib/auth";
+import { withRateLimitAndValidation } from "@/lib/api-helpers";
+import { RATE_LIMITS } from "@/lib/rate-limit";
+import { LoginSchema, LoginInput } from "@/lib/schemas/auth.schemas";
 
-export async function POST(request: NextRequest) {
+const loginHandler = async (data: LoginInput, request: NextRequest) => {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = data;
 
     // Validar campos
     if (!email || !password) {
@@ -67,4 +70,15 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const POST = withRateLimitAndValidation(
+  LoginSchema,
+  RATE_LIMITS.AUTH,
+  (request) => {
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    return `auth:${ip}`;
+  },
+  loginHandler
+);

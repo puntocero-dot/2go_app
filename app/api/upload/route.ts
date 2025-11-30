@@ -108,7 +108,7 @@ export const POST = withRateLimit(
 );
 
 // DELETE - Eliminar imagen de Cloudinary
-export async function DELETE(request: NextRequest) {
+const deleteHandler = async (request: NextRequest) => {
   try {
     const session = await getSession();
 
@@ -129,6 +129,22 @@ export async function DELETE(request: NextRequest) {
     // Eliminar de Cloudinary
     const result = await cloudinary.uploader.destroy(publicId);
 
+    await logAuditFromSession({
+      session,
+      action: "DELETE_FILE",
+      resource: "archivo",
+      resourceId: publicId,
+      changes: {
+        before: {
+          publicId,
+        },
+        after: {
+          result,
+        },
+      },
+      request,
+    });
+
     return NextResponse.json({ result });
   } catch (error) {
     console.error("Error eliminando archivo:", error);
@@ -137,4 +153,14 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const DELETE = withRateLimit(
+  deleteHandler,
+  RATE_LIMITS.UPLOAD,
+  (request) => {
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    return `upload-delete:${ip}`;
+  }
+);

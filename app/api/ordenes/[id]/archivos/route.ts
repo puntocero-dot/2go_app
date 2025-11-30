@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { TipoArchivo } from "@prisma/client";
+import { withValidation } from "@/lib/api-helpers";
+import {
+  RegistrarArchivosOrdenSchema,
+  RegistrarArchivosOrdenInput,
+} from "@/lib/schemas/orden.schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(request: NextRequest, context: RouteContext) {
+const registrarArchivosHandler = async (
+  data: RegistrarArchivosOrdenInput,
+  request: NextRequest,
+  context: RouteContext
+) => {
   const { id } = await context.params;
 
   try {
@@ -15,17 +24,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const archivos = (body as any)?.archivos as
-      | { url: string; tipo: TipoArchivo }[]
-      | undefined;
-
-    if (!Array.isArray(archivos) || archivos.length === 0) {
-      return NextResponse.json(
-        { error: "Debes enviar al menos un archivo" },
-        { status: 400 },
-      );
-    }
+    const archivos = data.archivos as { url: string; tipo: TipoArchivo }[];
 
     // Validar orden y permisos
     const orden = await prisma.orden.findUnique({
@@ -104,4 +103,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       { status: 500 },
     );
   }
-}
+};
+
+export const POST = withValidation(
+  RegistrarArchivosOrdenSchema,
+  registrarArchivosHandler,
+);

@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
+import { withValidation } from "@/lib/api-helpers";
+import { AutoAsignarOrdenesSchema, AutoAsignarOrdenesInput } from "@/lib/schemas/orden.schemas";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
-export async function POST(request: NextRequest) {
+const autoAsignarHandler = async (
+  data: AutoAsignarOrdenesInput,
+  request: NextRequest
+) => {
   try {
     const session = await getSession();
 
@@ -11,10 +17,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json().catch(() => null);
-    const ordenIds = Array.isArray(body?.ordenIds)
-      ? body.ordenIds.filter((id: unknown): id is string => typeof id === "string" && id.trim().length > 0)
-      : [];
+    const ordenIds = data.ordenIds
+      .map((id) => (typeof id === "string" ? id.trim() : ""))
+      .filter((id) => id.length > 0);
 
     if (ordenIds.length === 0) {
       return NextResponse.json(
@@ -28,9 +33,7 @@ export async function POST(request: NextRequest) {
     let skippedNotSinAsignar = 0;
     let skippedNoArmador = 0;
 
-    for (const rawId of ordenIds) {
-      const id = rawId.trim();
-
+    for (const id of ordenIds) {
       const orden = await prisma.orden.findUnique({
         where: { id },
       });
@@ -78,6 +81,21 @@ export async function POST(request: NextRequest) {
       assigned += 1;
     }
 
+    await logAuditFromSession({
+      session,
+      action: "BULK_OPERATION",
+      resource: "orden",
+      changes: {
+        after: {
+          processed,
+          assigned,
+          skippedNotSinAsignar,
+          skippedNoArmador,
+        },
+      },
+      request,
+    });
+
     return NextResponse.json({
       summary: {
         processed,
@@ -93,4 +111,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const POST = withValidation(AutoAsignarOrdenesSchema, autoAsignarHandler);

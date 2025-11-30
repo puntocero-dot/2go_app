@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logAuditFromSession } from "@/lib/audit-logger";
 import {
   crearUsuarioSchema,
   rolesPermitidos,
@@ -214,23 +215,21 @@ export async function POST(request: NextRequest) {
       throw new Error("No se pudo recuperar el usuario creado");
     }
 
-    // Auditoría de creación de usuario
-    console.log(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        accion: "CREAR_USUARIO",
-        adminId: session.userId,
-        adminEmail: session.email,
-        targetUserId: usuarioCreado.id,
-        targetEmail: usuarioCreado.email,
-        targetRol: usuarioCreado.rol,
-        ip:
-          request.headers.get("x-forwarded-for") ||
-          request.headers.get("x-real-ip") ||
-          "unknown",
-        userAgent: request.headers.get("user-agent") || "unknown",
-      })
-    );
+    await logAuditFromSession({
+      session,
+      action: "CREATE_USER",
+      resource: "usuario",
+      resourceId: usuarioCreado.id,
+      changes: {
+        after: {
+          nombre: usuarioCreado.nombre,
+          email: usuarioCreado.email,
+          rol: usuarioCreado.rol,
+          activo: usuarioCreado.activo,
+        },
+      },
+      request,
+    });
 
     return NextResponse.json(
       {

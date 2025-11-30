@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -70,6 +71,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
 
     await notificarCambioEstadoOrden(orden.id);
+
+    await logAuditFromSession({
+      session,
+      action: "ASSIGN_ORDER",
+      resource: "orden",
+      resourceId: orden.id,
+      changes: {
+        before: {
+          estado: ordenActual.estado,
+          armadorId: ordenActual.armadorId,
+        },
+        after: {
+          estado: orden.estado,
+          armadorId: orden.armadorId,
+        },
+      },
+      request,
+    });
 
     return NextResponse.json({ orden });
   } catch (error) {

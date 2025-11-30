@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCloudinary } from "@/lib/cloudinary";
+import { withValidation } from "@/lib/api-helpers";
+import { SignArchivoOrdenSchema, SignArchivoOrdenInput } from "@/lib/schemas/orden.schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function POST(request: NextRequest, context: RouteContext) {
+const signArchivoHandler = async (
+  data: SignArchivoOrdenInput,
+  request: NextRequest,
+  context: RouteContext
+) => {
   const { id } = await context.params;
 
   try {
@@ -15,12 +21,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { tipo, contentType, size } = body as {
-      tipo?: string;
-      contentType?: string;
-      size?: number;
-    };
+    const { tipo, contentType, size } = data;
 
     if (!tipo || (tipo !== "FOTO" && tipo !== "VIDEO")) {
       return NextResponse.json(
@@ -107,4 +108,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       { status: 500 },
     );
   }
-}
+};
+
+export const POST = withValidation(SignArchivoOrdenSchema, signArchivoHandler);

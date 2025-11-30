@@ -248,7 +248,12 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Última actualización</p>
                 <p className="text-sm font-medium">
-                  {new Date().toLocaleTimeString("es-ES")}
+                  {new Date().toLocaleTimeString("es-SV", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    timeZone: "America/El_Salvador",
+                  })}
                 </p>
               </div>
             </div>
@@ -450,10 +455,11 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
                       <TableCell>
                         <div className="flex items-center text-muted-foreground">
                           <Calendar className="w-4 h-4 mr-2" />
-                          {orden.createdAt.toLocaleDateString("es-ES", {
+                          {orden.createdAt.toLocaleDateString("es-SV", {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
+                            timeZone: "America/El_Salvador",
                           })}
                         </div>
                       </TableCell>

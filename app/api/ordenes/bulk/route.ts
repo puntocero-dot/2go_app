@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { PrioridadUsuario, Prisma, TamanoMueble } from "@prisma/client";
+import { withRateLimit } from "@/lib/api-helpers";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 const REQUIRED_HEADERS = [
   "codigoReferenciaRetail",
@@ -84,7 +86,7 @@ type BulkResult =
       message: string;
     };
 
-export async function POST(request: NextRequest) {
+const bulkHandler = async (request: NextRequest): Promise<Response> => {
   try {
     const session = await getSession();
 
@@ -158,6 +160,20 @@ export async function POST(request: NextRequest) {
     const successCount = results.filter((r) => r.status === "success").length;
     const errorCount = results.length - successCount;
 
+    await logAuditFromSession({
+      session,
+      action: "BULK_OPERATION",
+      resource: "orden",
+      changes: {
+        after: {
+          processed: results.length,
+          success: successCount,
+          errors: errorCount,
+        },
+      },
+      request,
+    });
+
     return NextResponse.json({
       summary: {
         processed: results.length,
@@ -173,7 +189,21 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const POST = withRateLimit(
+  bulkHandler,
+  {
+    // Límite específico para cargas masivas: por defecto 5 por hora
+    windowMs: 60 * 60 * 1000,
+    maxRequests: parseInt(process.env.RATE_LIMIT_BULK_ORDERS || "5"),
+  },
+  (request) => {
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    return `ordenes-bulk:${ip}`;
+  },
+);
 
 function parseCsv(content: string) {
   const cleaned = content.replace(/^\uFEFF/, "");

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
+import { withValidation } from "@/lib/api-helpers";
+import { ActualizarOrdenApiSchema, ActualizarOrdenApiInput } from "@/lib/schemas/orden.schemas";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -61,10 +64,11 @@ export async function GET(
 }
 
 // PUT - Actualizar orden
-export async function PUT(
+const actualizarOrdenHandler = async (
+  data: ActualizarOrdenApiInput,
   request: NextRequest,
   context: RouteContext
-) {
+) => {
   const { id } = await context.params;
 
   try {
@@ -74,9 +78,8 @@ export async function PUT(
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const body = await request.json();
     const { estado, armadorId, comentario, autoAssignMeta, gps, receptor, csat } =
-      body as any;
+      data as any;
 
     // Obtener orden actual
     const ordenActual = await prisma.orden.findUnique({
@@ -270,6 +273,25 @@ export async function PUT(
       await Promise.all(asyncTasks);
     }
 
+    await logAuditFromSession({
+      session,
+      action: "UPDATE_ORDER",
+      resource: "orden",
+      resourceId: id,
+      changes: {
+        before: {
+          estado: ordenActual.estado,
+          armadorId: ordenActual.armadorId,
+        },
+        after: {
+          estado: orden.estado,
+          armadorId: orden.armadorId,
+        },
+      },
+      metadata: autoAssignMeta ? { autoAssignMeta } : undefined,
+      request,
+    });
+
     return NextResponse.json({ orden });
   } catch (error) {
     console.error("Error actualizando orden:", error);
@@ -283,7 +305,9 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+};
+
+export const PUT = withValidation(ActualizarOrdenApiSchema, actualizarOrdenHandler);
 
 // DELETE - Cancelar orden
 export async function DELETE(
@@ -314,6 +338,19 @@ export async function DELETE(
         where: { id },
       });
 
+      await logAuditFromSession({
+        session,
+        action: "DELETE_ORDER",
+        resource: "orden",
+        resourceId: id,
+        changes: {
+          before: {
+            estado: orden.estado,
+          },
+        },
+        request,
+      });
+
       return NextResponse.json({
         action: "deleted",
         message: "Orden eliminada permanentemente",
@@ -336,6 +373,18 @@ export async function DELETE(
         usuarioId: session.userId,
         comentario: "Orden cancelada por administrador",
       },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: "CANCEL_ORDER",
+      resource: "orden",
+      resourceId: id,
+      changes: {
+        before: { estado: orden.estado },
+        after: { estado: ordenCancelada.estado },
+      },
+      request,
     });
 
     return NextResponse.json({
