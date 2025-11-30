@@ -286,7 +286,7 @@ export function Navbar({ user }: NavbarProps) {
               title="Cerrar sesión"
             >
               <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline ml-1.5 text-xs">Salir</span>
+              <span className="hidden xl:inline ml-1.5 text-xs">Salir</span>
             </EnhancedButton>
 
             {/* Mobile menu button */}
