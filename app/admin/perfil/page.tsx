@@ -77,12 +77,15 @@ export default function PerfilPage() {
       const payload: any = {
         nombre: formData.nombre,
         telefono: formData.telefono,
-        fotoPerfil: formData.fotoPerfil || null,
+        // El backend espera string URL o "" para fotoPerfil, no null
+        fotoPerfil: formData.fotoPerfil || "",
       };
 
       if (formData.password) {
         payload.password = formData.password;
         payload.passwordActual = formData.passwordActual;
+        // El esquema de validación también requiere passwordConfirm cuando se cambia password
+        payload.passwordConfirm = formData.passwordConfirm;
       }
 
       const response = await fetch("/api/usuarios/perfil", {

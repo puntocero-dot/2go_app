@@ -24,6 +24,28 @@ interface PDFContext {
   height: number;
 }
 
+function sanitizePdfText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  let result = "";
+
+  for (const ch of str) {
+    const code = ch.codePointAt(0) ?? 32;
+    if (
+      code === 10 ||
+      code === 13 ||
+      (code >= 32 && code <= 126) ||
+      (code >= 160 && code <= 255)
+    ) {
+      result += ch;
+    } else {
+      result += "?";
+    }
+  }
+
+  return result;
+}
+
 export async function generateBillingPdfEnhanced(dataset: BillingDataset): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -169,14 +191,15 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
 
   let y = startY - 30;
   const emisorInfo = [
-    `Armados 2Go`,
-    `Giro: Servicios de armado de muebles`,
-    `Dirección: San Salvador, El Salvador`,
-    `Teléfono: +503 0000-0000`,
-    `Email: facturacion@armados2go.com`,
+    "Armados 2Go",
+    "Giro: Servicios de armado de muebles",
+    "Dirección: San Salvador, El Salvador",
+    "Teléfono: +503 0000-0000",
+    "Email: facturacion@armados2go.com",
   ];
 
-  emisorInfo.forEach((line) => {
+  emisorInfo.forEach((lineRaw) => {
+    const line = sanitizePdfText(lineRaw);
     page.drawText(line, {
       x: margin,
       y,
@@ -211,12 +234,13 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
   y = startY - 30;
   const datosFacturacion = dataset.proyecto.datosFacturacion as any;
   
-  // Función para truncar texto si es muy largo
+  // Función para truncar texto si es muy largo, sanitizando antes
   const truncateText = (text: string, maxWidth: number, fontSize: number, font: any) => {
-    const textWidth = font.widthOfTextAtSize(text, fontSize);
-    if (textWidth <= maxWidth) return text;
+    const safeText = sanitizePdfText(text);
+    const textWidth = font.widthOfTextAtSize(safeText, fontSize);
+    if (textWidth <= maxWidth) return safeText;
     
-    let truncated = text;
+    let truncated = safeText;
     while (font.widthOfTextAtSize(truncated + "...", fontSize) > maxWidth && truncated.length > 0) {
       truncated = truncated.slice(0, -1);
     }
@@ -228,15 +252,15 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
     const razonSocial = datosFacturacion?.razonSocial || "N/A";
     receptorInfo.push(
       truncateText(`Razón Social: ${razonSocial}`, rightBoxWidth - 15, 8, font),
-      `NIT: ${datosFacturacion?.nit || "N/A"}`,
-      `NRC: ${datosFacturacion?.nrc || "N/A"}`,
+      sanitizePdfText(`NIT: ${datosFacturacion?.nit || "N/A"}`),
+      sanitizePdfText(`NRC: ${datosFacturacion?.nrc || "N/A"}`),
       truncateText(`Giro: ${datosFacturacion?.giro || "N/A"}`, rightBoxWidth - 15, 8, font),
     );
   } else {
     const nombreCompleto = datosFacturacion?.nombreCompleto || dataset.proyecto.nombreComercial;
     receptorInfo.push(
       truncateText(`Nombre: ${nombreCompleto}`, rightBoxWidth - 15, 8, font),
-      `DUI: ${datosFacturacion?.dui || "N/A"}`,
+      sanitizePdfText(`DUI: ${datosFacturacion?.dui || "N/A"}`),
     );
   }
 
@@ -247,7 +271,8 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
     truncateText(`Email: ${contactoEmail}`, rightBoxWidth - 15, 7, font),
   );
 
-  receptorInfo.forEach((line) => {
+  receptorInfo.forEach((lineRaw) => {
+    const line = sanitizePdfText(lineRaw);
     page.drawText(line, {
       x: rightX,
       y,
@@ -275,7 +300,8 @@ function drawOrdersTable(ctx: PDFContext, dataset: BillingDataset) {
     color: COLORS.primary,
   });
 
-  page.drawText(`DETALLE DE FACTURACIÓN - Periodo: ${dataset.periodoLabel}`, {
+  const tituloDetalle = sanitizePdfText(`DETALLE DE FACTURACIÓN - Periodo: ${dataset.periodoLabel}`);
+  page.drawText(tituloDetalle, {
     x: margin,
     y: y,
     size: 11,
@@ -336,7 +362,7 @@ function drawOrdersTable(ctx: PDFContext, dataset: BillingDataset) {
       });
     }
 
-    const values = [
+    const rawValues = [
       orden.codigoReferenciaRetail.substring(0, 12),
       orden.clienteNombre.substring(0, 18),
       formatMoney(orden.resumen.armado),
@@ -346,6 +372,8 @@ function drawOrdersTable(ctx: PDFContext, dataset: BillingDataset) {
       formatMoney(orden.resumen.penalizacion),
       formatMoney(orden.total),
     ];
+
+    const values = rawValues.map((v) => sanitizePdfText(v));
 
     values.forEach((value, i) => {
       const align = i >= 2 ? "right" : "left";
@@ -482,7 +510,7 @@ function drawSummary(ctx: PDFContext, dataset: BillingDataset) {
 
   // Información adicional a la izquierda
   const leftY = ctx.y - 40;
-  page.drawText(`Total de órdenes: ${dataset.ordenes.length}`, {
+  page.drawText(sanitizePdfText(`Total de órdenes: ${dataset.ordenes.length}`), {
     x: margin,
     y: leftY,
     size: 9,
@@ -490,7 +518,7 @@ function drawSummary(ctx: PDFContext, dataset: BillingDataset) {
     color: COLORS.textLight,
   });
 
-  page.drawText(`Proyecto: ${dataset.proyecto.nombreComercial}`, {
+  page.drawText(sanitizePdfText(`Proyecto: ${dataset.proyecto.nombreComercial}`), {
     x: margin,
     y: leftY - 15,
     size: 9,
@@ -528,7 +556,8 @@ function drawFooter(ctx: PDFContext, dataset: BillingDataset) {
   ];
 
   let noteY = 38;
-  notes.forEach((note) => {
+  notes.forEach((noteRaw) => {
+    const note = sanitizePdfText(noteRaw);
     page.drawText(note, {
       x: margin,
       y: noteY,
@@ -540,7 +569,8 @@ function drawFooter(ctx: PDFContext, dataset: BillingDataset) {
   });
 
   // Pie de página
-  const footerText = `Armados 2Go © ${new Date().getFullYear()} | www.armados2go.com | Generado el ${new Date().toLocaleString("es-ES")}`;
+  const footerTextRaw = `Armados 2Go © ${new Date().getFullYear()} | www.armados2go.com | Generado el ${new Date().toLocaleString("es-ES")}`;
+  const footerText = sanitizePdfText(footerTextRaw);
   const footerWidth = font.widthOfTextAtSize(footerText, 7);
   
   page.drawText(footerText, {

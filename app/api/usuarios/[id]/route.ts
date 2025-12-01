@@ -77,7 +77,7 @@ const patchHandler = async (
       );
     }
 
-    const { nombre, email, telefono, rol, estadoArmador, habilidades, activo, password } =
+    const { nombre, email, telefono, rol, estadoArmador, habilidades, activo, password, proyectosIds } =
       parsed.data;
 
     const updateData: Record<string, unknown> = {};
@@ -203,6 +203,27 @@ const patchHandler = async (
         await tx.armador.delete({ where: { usuarioId } });
       }
 
+      if (nuevoRol === "SUPERVISOR") {
+        if (Array.isArray(proyectosIds)) {
+          const proyectosLimpios = proyectosIds
+            .filter((id) => typeof id === "string" && id.trim().length > 0)
+            .map((id) => id.trim());
+
+          await tx.supervisorProyecto.deleteMany({ where: { usuarioId } });
+
+          if (proyectosLimpios.length > 0) {
+            await tx.supervisorProyecto.createMany({
+              data: proyectosLimpios.map((proyectoId) => ({
+                usuarioId,
+                proyectoId,
+              })),
+            });
+          }
+        }
+      } else {
+        await tx.supervisorProyecto.deleteMany({ where: { usuarioId } });
+      }
+
       return usuario;
     });
 
@@ -218,6 +239,13 @@ const patchHandler = async (
                 },
               },
               select: { id: true },
+            },
+          },
+        },
+        supervisorProyectos: {
+          include: {
+            proyecto: {
+              select: { id: true, nombreComercial: true },
             },
           },
         },
@@ -297,6 +325,10 @@ const patchHandler = async (
               ordenesActivas: usuarioConRelacion.armador.ordenes.length,
             }
           : null,
+        proyectos: usuarioConRelacion.supervisorProyectos.map((sp) => ({
+          id: sp.proyecto.id,
+          nombreComercial: sp.proyecto.nombreComercial,
+        })),
       },
     });
   } catch (error) {

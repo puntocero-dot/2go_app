@@ -51,14 +51,20 @@ export default function ConfiguracionFacturacionPage() {
   const cargarUsuario = async () => {
     try {
       const response = await fetch("/api/auth/me");
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data);
-        
-        if (data.rol !== "ADMIN") {
-          router.push("/admin/dashboard");
-        }
+      if (!response.ok) {
+        router.push("/login");
+        return;
       }
+
+      const data = await response.json();
+      const usuario = data?.user ?? data;
+
+      if (!usuario || usuario.rol !== "ADMIN") {
+        router.push("/login");
+        return;
+      }
+
+      setUser(usuario);
     } catch (error) {
       console.error("Error cargando usuario:", error);
     }

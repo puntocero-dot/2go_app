@@ -106,6 +106,8 @@ export const actualizarUsuarioSchema = z
         z.array(habilidadesTextoSchema),
       ])
       .optional(),
+
+    proyectosIds: z.array(z.string().min(1)).optional(),
   })
   .strict();
 

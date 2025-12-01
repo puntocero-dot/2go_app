@@ -1,71 +1,34 @@
-import DOMPurify from "isomorphic-dompurify";
+// Helpers de sanitización seguros para entorno servidor y navegador
+// (sin dependencias en DOM o librerías externas)
+
+const CONTROL_CHARS_REGEX = /[\u0000-\u001F\u007F]/g;
+const TAGS_REGEX = /<\/?[^>]+>/g;
 
 /**
- * Configuración de DOMPurify para diferentes contextos
- */
-const SANITIZE_CONFIG = {
-  // Configuración estricta: solo texto plano
-  STRICT: {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-    KEEP_CONTENT: true,
-  },
-  // Configuración básica: permite formato básico
-  BASIC: {
-    ALLOWED_TAGS: ["b", "i", "em", "strong", "u", "br", "p"],
-    ALLOWED_ATTR: [],
-  },
-  // Configuración para HTML rico (emails, descripciones)
-  RICH: {
-    ALLOWED_TAGS: [
-      "b",
-      "i",
-      "em",
-      "strong",
-      "u",
-      "br",
-      "p",
-      "ul",
-      "ol",
-      "li",
-      "a",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "blockquote",
-      "code",
-      "pre",
-    ],
-    ALLOWED_ATTR: ["href", "title", "target"],
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
-  },
-};
-
-/**
- * Sanitiza texto plano (elimina todo HTML)
+ * Sanitiza texto plano (elimina HTML y caracteres de control)
  */
 export function sanitizeText(input: string | null | undefined): string {
   if (!input) return "";
-  return DOMPurify.sanitize(input, SANITIZE_CONFIG.STRICT);
+  let value = String(input);
+  value = value.replace(TAGS_REGEX, "");
+  value = value.replace(CONTROL_CHARS_REGEX, "");
+  return value.trim();
 }
 
 /**
- * Sanitiza HTML básico (permite formato básico)
+ * Sanitiza HTML básico.
+ * Por simplicidad y seguridad, actualmente elimina todas las etiquetas HTML.
  */
 export function sanitizeHTML(input: string | null | undefined): string {
-  if (!input) return "";
-  return DOMPurify.sanitize(input, SANITIZE_CONFIG.BASIC);
+  return sanitizeText(input);
 }
 
 /**
- * Sanitiza HTML rico (permite más tags para contenido editorial)
+ * Sanitiza HTML rico.
+ * Por simplicidad y seguridad, actualmente elimina todas las etiquetas HTML.
  */
 export function sanitizeRichHTML(input: string | null | undefined): string {
-  if (!input) return "";
-  return DOMPurify.sanitize(input, SANITIZE_CONFIG.RICH);
+  return sanitizeText(input);
 }
 
 /**

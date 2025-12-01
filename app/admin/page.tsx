@@ -180,39 +180,28 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         },
       };
 
-  const [
-    totalProyectosGlobal,
-    totalArmadores,
-    armadoresActivos,
-    proyectos,
-    totalOrdenes,
-    ordenesActivas,
-    ordenesSumatorio,
-    ordenesRecientes,
-  ] = await Promise.all([
-    prisma.proyecto.count(),
-    prisma.armador.count(),
-    prisma.armador.count({ where: { estado: "ACTIVO" } }),
-    prisma.proyecto.findMany({
-      orderBy: { nombreComercial: "asc" },
-      select: {
-        id: true,
-        nombreComercial: true,
-      },
-    }),
-    prisma.orden.count({ where: ordenWhere }),
-    prisma.orden.count({ where: activeWhere }),
-    prisma.orden.aggregate({ where: ordenWhere, _sum: { cobroFinal: true } }),
-    prisma.orden.findMany({
-      where: ordenWhere,
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: {
-        proyecto: { select: { nombreComercial: true } },
-        armador: { include: { usuario: true } },
-      },
-    }),
-  ]);
+  const totalProyectosGlobal = await prisma.proyecto.count();
+  const totalArmadores = await prisma.armador.count();
+  const armadoresActivos = await prisma.armador.count({ where: { estado: "ACTIVO" } });
+  const proyectos = await prisma.proyecto.findMany({
+    orderBy: { nombreComercial: "asc" },
+    select: {
+      id: true,
+      nombreComercial: true,
+    },
+  });
+  const totalOrdenes = await prisma.orden.count({ where: ordenWhere });
+  const ordenesActivas = await prisma.orden.count({ where: activeWhere });
+  const ordenesSumatorio = await prisma.orden.aggregate({ where: ordenWhere, _sum: { cobroFinal: true } });
+  const ordenesRecientes = await prisma.orden.findMany({
+    where: ordenWhere,
+    take: 10,
+    orderBy: { createdAt: "desc" },
+    include: {
+      proyecto: { select: { nombreComercial: true } },
+      armador: { include: { usuario: true } },
+    },
+  });
 
   const totalProyectos =
     proyectoIdFilter === "ALL"

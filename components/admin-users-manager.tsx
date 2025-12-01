@@ -86,6 +86,7 @@ type EditFormState = {
   estadoArmador: EstadoArmadorPermitido;
   habilidades: string;
   nuevaContrasena: string;
+  proyectosIds: string[];
 };
 
 type Props = {
@@ -381,6 +382,7 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
       estadoArmador: usuario.armador ? usuario.armador.estado : "ACTIVO",
       habilidades: usuario.armador ? usuario.armador.habilidades.join(", ") : "",
       nuevaContrasena: "",
+      proyectosIds: usuario.proyectos.map((p) => p.id),
     });
     setEditingError(null);
     setEditingSuccess(null);
@@ -522,6 +524,10 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
             .map((habilidad) => habilidad.trim())
             .filter((habilidad) => habilidad.length > 0);
           payload.habilidades = habilidadesLimpias;
+        }
+
+        if (editingState.rol === "SUPERVISOR") {
+          payload.proyectosIds = editingState.proyectosIds;
         }
 
         const response = await fetch(`/api/usuarios/${editingUser.id}`, {
