@@ -1,15 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { EstadoOrden } from "@prisma/client";
 import { getSession } from "@/lib/auth";
-
-type FiltrosReporte = {
-  desde?: string;
-  hasta?: string;
-  proyectoId?: string;
-  estado?: EstadoOrden;
-  armadorId?: string;
-};
+import { withRateLimit } from "@/lib/api-helpers";
+import { RATE_LIMITS } from "@/lib/rate-limit";
+import { ReporteTiemposPedidoFiltrosSchema } from "@/lib/schemas/reportes.schemas";
+import { logAuditFromSession } from "@/lib/audit-logger";
 
 type TiempoPorEstado = Record<string, number>; // Tiempo en segundos por estado
 
@@ -25,9 +21,8 @@ type ResultadoReporte = {
   tiempoTotal: number; // en segundos
 };
 
-export async function GET(request: Request) {
+const tiemposPedidoHandler = async (request: NextRequest) => {
   try {
-    // Verificar autenticación (solo ADMIN puede ver este reporte)
     const session = await getSession();
     if (!session || session.rol !== "ADMIN") {
       return NextResponse.json(
@@ -36,47 +31,47 @@ export async function GET(request: Request) {
       );
     }
 
-    // Obtener parámetros de consulta
     const { searchParams } = new URL(request.url);
-    const desdeParam = searchParams.get('desde');
-    const hastaParam = searchParams.get('hasta');
-    const proyectoId = searchParams.get('proyectoId') || undefined;
-    const estado = searchParams.get('estado') as EstadoOrden | null;
-    const armadorId = searchParams.get('armadorId') || undefined;
+    const rawFilters = {
+      desde: searchParams.get('desde') || undefined,
+      hasta: searchParams.get('hasta') || undefined,
+      proyectoId: searchParams.get('proyectoId') || undefined,
+      estado: (searchParams.get('estado') || undefined) as any,
+      armadorId: searchParams.get('armadorId') || undefined,
+    };
 
-    // Validar fechas
-    const desde = desdeParam ? new Date(desdeParam) : undefined;
-    const hasta = hastaParam ? new Date(hastaParam) : undefined;
+    const parsed = ReporteTiemposPedidoFiltrosSchema.safeParse(rawFilters);
 
-    const isInvalidDesde = !!desdeParam && (!desde || Number.isNaN(desde.getTime()));
-    const isInvalidHasta = !!hastaParam && (!hasta || Number.isNaN(hasta.getTime()));
-
-    if (isInvalidDesde || isInvalidHasta) {
+    if (!parsed.success) {
+      const detalles = parsed.error.flatten();
       return NextResponse.json(
-        { error: "Formato de fecha inválido. Use YYYY-MM-DD" },
+        { error: "Parámetros de filtro inválidos", detalles },
         { status: 400 },
       );
     }
 
-    // Construir filtros para la consulta
+    const { desde, hasta, proyectoId, estado, armadorId } = parsed.data;
+
+    const desdeDate = desde ? new Date(desde) : undefined;
+    const hastaDate = hasta ? new Date(hasta) : undefined;
+
     const whereClause: any = {
       ...(proyectoId && { proyectoId }),
-      ...(estado && { estado }),
+      ...(estado && { estado: estado as EstadoOrden }),
       ...(armadorId && { armadorId }),
-      ...(desde || hasta
+      ...(desdeDate || hastaDate
         ? {
             OR: [
-              // Filtrar por fechas de creación o fechas de modificación
               {
                 updatedAt: {
-                  ...(desde && { gte: desde }),
-                  ...(hasta && { lte: hasta }),
+                  ...(desdeDate && { gte: desdeDate }),
+                  ...(hastaDate && { lte: hastaDate }),
                 },
               },
               {
                 fechaCreacion: {
-                  ...(desde && { gte: desde }),
-                  ...(hasta && { lte: hasta }),
+                  ...(desdeDate && { gte: desdeDate }),
+                  ...(hastaDate && { lte: hastaDate }),
                 },
               },
             ],
@@ -84,7 +79,6 @@ export async function GET(request: Request) {
         : {}),
     };
 
-    // Obtener las órdenes con sus registros de estado
     const ordenes = await prisma.orden.findMany({
       where: whereClause,
       include: {
@@ -107,7 +101,6 @@ export async function GET(request: Request) {
       orderBy: { fechaCreacion: "desc" },
     });
 
-    // Procesar los datos para calcular los tiempos por estado
     const resultados: ResultadoReporte[] = [];
 
     for (const orden of ordenes as any[]) {
@@ -168,6 +161,19 @@ export async function GET(request: Request) {
       });
     }
 
+    await logAuditFromSession({
+      session,
+      action: 'EXPORT_DATA',
+      resource: 'sistema',
+      resourceId: proyectoId || undefined,
+      metadata: {
+        tipo: 'REPORTE_TIEMPOS_PEDIDO',
+        filtros: parsed.data,
+        totalOrdenes: ordenes.length,
+      },
+      request,
+    });
+
     return NextResponse.json(resultados);
   } catch (error) {
     console.error('Error al generar el reporte de tiempos por pedido:', error);
@@ -176,7 +182,7 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+};
 
 // Función auxiliar para formatear segundos a un string legible
 function formatSeconds(seconds: number): string {
@@ -191,3 +197,13 @@ function formatSeconds(seconds: number): string {
   
   return parts.join(' ');
 }
+
+export const GET = withRateLimit(
+  tiemposPedidoHandler,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    return `reporte-tiempos:${ip}`;
+  }
+);

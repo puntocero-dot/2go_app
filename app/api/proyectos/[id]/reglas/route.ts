@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { withRateLimit, withRateLimitAndValidation } from '@/lib/api-helpers';
+import { RATE_LIMITS } from '@/lib/rate-limit';
+import { ReglaCobroSchema, ReglaCobroInput } from '@/lib/schemas/regla-cobro.schemas';
+import { logAuditFromSession } from '@/lib/audit-logger';
 
 // GET - Obtener regla actual
 export async function GET(
@@ -28,11 +32,11 @@ export async function GET(
   }
 }
 
-// POST - Crear nueva regla
-export async function POST(
+const crearReglaHandler = async (
+  data: ReglaCobroInput,
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -40,10 +44,9 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { 
-      tipoPrincipal, 
-      precioFijoUnitario, 
+    const {
+      tipoPrincipal,
+      precioFijoUnitario,
       rangosVolumen,
       precioVIP,
       precioUrgente,
@@ -53,12 +56,11 @@ export async function POST(
       precioMediano,
       precioPequeno,
       cobrosDistancia,
-      penalizaciones
-    } = body;
+      penalizaciones,
+    } = data;
 
-    // Validar que no exista ya una regla
     const reglaExistente = await prisma.reglaCobro.findUnique({
-      where: { proyectoId: id }
+      where: { proyectoId: id },
     });
 
     if (reglaExistente) {
@@ -68,7 +70,6 @@ export async function POST(
       );
     }
 
-    // Crear regla con transacción para incluir relaciones
     const regla = await prisma.reglaCobro.create({
       data: {
         proyectoId: id,
@@ -82,30 +83,41 @@ export async function POST(
         precioMediano: precioMediano || 0,
         precioPequeno: precioPequeno || 0,
         rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' && rangosVolumen ? {
-          create: rangosVolumen.map((r: any) => ({
+          create: rangosVolumen.map((r) => ({
             desde: r.desde,
             hasta: r.hasta,
-            precio: r.precio
-          }))
+            precio: r.precio,
+          })),
         } : undefined,
         cobrosDistancia: cobrosDistancia && cobrosDistancia.length > 0 ? {
-          create: cobrosDistancia.map((c: any) => ({
+          create: cobrosDistancia.map((c) => ({
             municipio: c.municipio,
-            precio: c.precio
-          }))
+            precio: c.precio,
+          })),
         } : undefined,
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
-          create: penalizaciones.map((p: any) => ({
-            tipo: p.tipo,
-            precio: p.precio ?? 0
-          }))
-        } : undefined
+          create: penalizaciones.map((p) => ({
+            tipo: p.tipo as any,
+            precio: p.precio ?? p.monto ?? 0,
+          })),
+        } : undefined,
       },
       include: {
         rangosVolumen: true,
         cobrosDistancia: true,
-        penalizaciones: true
-      }
+        penalizaciones: true,
+      },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: 'UPDATE_BILLING_CONFIG',
+      resource: 'proyecto',
+      resourceId: id,
+      changes: {
+        after: regla,
+      },
+      request: req,
     });
 
     return NextResponse.json({ regla }, { status: 201 });
@@ -116,13 +128,24 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+};
 
-// PUT - Actualizar regla existente
-export async function PUT(
+export const POST = withRateLimitAndValidation(
+  ReglaCobroSchema,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const url = new URL(request.url);
+    const proyectoId = url.pathname.split('/')[3];
+    return `reglas-create:${proyectoId}`;
+  },
+  crearReglaHandler
+);
+
+const actualizarReglaHandler = async (
+  data: ReglaCobroInput,
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -130,10 +153,9 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { 
-      tipoPrincipal, 
-      precioFijoUnitario, 
+    const {
+      tipoPrincipal,
+      precioFijoUnitario,
       rangosVolumen,
       precioVIP,
       precioUrgente,
@@ -143,23 +165,21 @@ export async function PUT(
       precioMediano,
       precioPequeno,
       cobrosDistancia,
-      penalizaciones
-    } = body;
+      penalizaciones,
+    } = data;
 
-    // Primero eliminar relaciones existentes
     const reglaExistente = await prisma.reglaCobro.findUnique({
-      where: { proyectoId: id }
+      where: { proyectoId: id },
     });
 
     if (reglaExistente) {
       await prisma.$transaction([
         prisma.rangoVolumen.deleteMany({ where: { reglaCobroId: reglaExistente.id } }),
         prisma.cobroDistancia.deleteMany({ where: { reglaCobroId: reglaExistente.id } }),
-        prisma.penalizacion.deleteMany({ where: { reglaCobroId: reglaExistente.id } })
+        prisma.penalizacion.deleteMany({ where: { reglaCobroId: reglaExistente.id } }),
       ]);
     }
 
-    // Actualizar o crear con nuevas relaciones
     const regla = await prisma.reglaCobro.upsert({
       where: { proyectoId: id },
       update: {
@@ -173,24 +193,24 @@ export async function PUT(
         precioMediano: precioMediano || 0,
         precioPequeno: precioPequeno || 0,
         rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' && rangosVolumen ? {
-          create: rangosVolumen.map((r: any) => ({
+          create: rangosVolumen.map((r) => ({
             desde: r.desde,
             hasta: r.hasta,
-            precio: r.precio
-          }))
+            precio: r.precio,
+          })),
         } : undefined,
         cobrosDistancia: cobrosDistancia && cobrosDistancia.length > 0 ? {
-          create: cobrosDistancia.map((c: any) => ({
+          create: cobrosDistancia.map((c) => ({
             municipio: c.municipio,
-            precio: c.precio
-          }))
+            precio: c.precio,
+          })),
         } : undefined,
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
-          create: penalizaciones.map((p: any) => ({
-            tipo: p.tipo,
-            precio: p.precio ?? p.monto ?? 0
-          }))
-        } : undefined
+          create: penalizaciones.map((p) => ({
+            tipo: p.tipo as any,
+            precio: p.precio ?? p.monto ?? 0,
+          })),
+        } : undefined,
       },
       create: {
         proyectoId: id,
@@ -204,30 +224,42 @@ export async function PUT(
         precioMediano: precioMediano || 0,
         precioPequeno: precioPequeno || 0,
         rangosVolumen: tipoPrincipal === 'COBRO_POR_VOLUMEN' && rangosVolumen ? {
-          create: rangosVolumen.map((r: any) => ({
+          create: rangosVolumen.map((r) => ({
             desde: r.desde,
             hasta: r.hasta,
-            precio: r.precio
-          }))
+            precio: r.precio,
+          })),
         } : undefined,
         cobrosDistancia: cobrosDistancia && cobrosDistancia.length > 0 ? {
-          create: cobrosDistancia.map((c: any) => ({
+          create: cobrosDistancia.map((c) => ({
             municipio: c.municipio,
-            precio: c.precio
-          }))
+            precio: c.precio,
+          })),
         } : undefined,
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
-          create: penalizaciones.map((p: any) => ({
-            tipo: p.tipo,
-            precio: p.precio ?? p.monto ?? 0
-          }))
-        } : undefined
+          create: penalizaciones.map((p) => ({
+            tipo: p.tipo as any,
+            precio: p.precio ?? p.monto ?? 0,
+          })),
+        } : undefined,
       },
       include: {
         rangosVolumen: true,
         cobrosDistancia: true,
-        penalizaciones: true
-      }
+        penalizaciones: true,
+      },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: 'UPDATE_BILLING_CONFIG',
+      resource: 'proyecto',
+      resourceId: id,
+      changes: {
+        before: reglaExistente || undefined,
+        after: regla,
+      },
+      request: req,
     });
 
     return NextResponse.json({ regla });
@@ -238,13 +270,23 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+};
 
-// DELETE - Eliminar regla
-export async function DELETE(
+export const PUT = withRateLimitAndValidation(
+  ReglaCobroSchema,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const url = new URL(request.url);
+    const proyectoId = url.pathname.split('/')[3];
+    return `reglas-update:${proyectoId}`;
+  },
+  actualizarReglaHandler
+);
+
+const eliminarReglaHandler = async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -252,8 +294,23 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const reglaExistente = await prisma.reglaCobro.findUnique({
+      where: { proyectoId: id },
+    });
+
     await prisma.reglaCobro.delete({
-      where: { proyectoId: id }
+      where: { proyectoId: id },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: 'UPDATE_BILLING_CONFIG',
+      resource: 'proyecto',
+      resourceId: id,
+      changes: {
+        before: reglaExistente || undefined,
+      },
+      request: req,
     });
 
     return NextResponse.json({ mensaje: 'Regla eliminada' });
@@ -264,4 +321,14 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+};
+
+export const DELETE = withRateLimit(
+  eliminarReglaHandler,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const url = new URL(request.url);
+    const proyectoId = url.pathname.split('/')[3];
+    return `reglas-delete:${proyectoId}`;
+  }
+);

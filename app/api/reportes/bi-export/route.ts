@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { withRateLimit } from '@/lib/api-helpers';
+import { RATE_LIMITS } from '@/lib/rate-limit';
+import { ReporteBIFiltrosSchema } from '@/lib/schemas/reportes.schemas';
+import { logAuditFromSession } from '@/lib/audit-logger';
 
-export async function GET(req: NextRequest) {
+const biExportHandler = async (req: NextRequest) => {
   try {
     const session = await getSession();
     if (!session || !['ADMIN', 'SUPERVISOR'].includes(session.rol)) {
@@ -10,12 +14,32 @@ export async function GET(req: NextRequest) {
     }
 
     const searchParams = req.nextUrl.searchParams;
-    const proyectoId = searchParams.get('proyectoId');
-    const fechaInicio = searchParams.get('fechaInicio');
-    const fechaFin = searchParams.get('fechaFin');
-    const format = searchParams.get('format') || 'csv';
+    const rawFilters = {
+      proyectoId: searchParams.get('proyectoId') || undefined,
+      fechaInicio: searchParams.get('fechaInicio') || undefined,
+      fechaFin: searchParams.get('fechaFin') || undefined,
+      format: (searchParams.get('format') || undefined) as any,
+    };
 
-    // Construir filtros
+    const parsed = ReporteBIFiltrosSchema.safeParse(rawFilters);
+
+    if (!parsed.success) {
+      const detalles = parsed.error.flatten();
+      return NextResponse.json(
+        { error: 'Parámetros de filtro inválidos', detalles },
+        { status: 400 }
+      );
+    }
+
+    const {
+      proyectoId,
+      fechaInicio,
+      fechaFin,
+      format: formatRaw,
+    } = parsed.data;
+
+    const format = formatRaw || 'csv';
+
     const where: any = {};
     if (proyectoId && proyectoId !== 'ALL') {
       where.proyectoId = proyectoId;
@@ -30,7 +54,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Obtener datos
     const ordenes = await prisma.orden.findMany({
       where,
       include: {
@@ -39,6 +62,22 @@ export async function GET(req: NextRequest) {
         usuarioFinal: { select: { nombre: true, municipio: true } }
       },
       orderBy: { fechaCreacion: 'desc' }
+    });
+
+    await logAuditFromSession({
+      session,
+      action: 'EXPORT_DATA',
+      resource: 'sistema',
+      resourceId: proyectoId && proyectoId !== 'ALL' ? proyectoId : undefined,
+      metadata: {
+        tipo: 'BI_EXPORT',
+        format,
+        proyectoId: proyectoId || 'ALL',
+        fechaInicio: fechaInicio || null,
+        fechaFin: fechaFin || null,
+        totalOrdenes: ordenes.length,
+      },
+      request: req,
     });
 
     if (format === 'csv') {
@@ -139,4 +178,14 @@ ${ordenes.length > 50 ? `\n... y ${ordenes.length - 50} órdenes más` : ''}
       { status: 500 }
     );
   }
-}
+};
+
+export const GET = withRateLimit(
+  biExportHandler,
+  RATE_LIMITS.DEFAULT,
+  (request) => {
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    return `bi-export:${ip}`;
+  }
+);

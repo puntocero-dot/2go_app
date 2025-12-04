@@ -8,6 +8,10 @@ import { verifyPassword } from "@/lib/auth";
  */
 export async function POST(request: NextRequest) {
   try {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const { email, password } = await request.json();
 
     console.log("🔍 DEBUG LOGIN - Iniciando...");
