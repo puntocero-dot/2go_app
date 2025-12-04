@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zodSanitizeText } from "../sanitize";
+import { zodSanitizeText, zodSanitizePhone, zodSanitizeURL } from "../sanitize";
 
 // Schema para crear orden (sistema de armado de muebles)
 export const CrearOrdenSchema = z.object({
@@ -15,7 +15,12 @@ export const CrearOrdenSchema = z.object({
 // Schema para actualizar orden
 export const ActualizarOrdenSchema = z.object({
   clienteNombre: z.string().min(2).max(200).transform(zodSanitizeText).optional(),
-  clienteTelefono: z.string().regex(/^\+?[0-9\s\-()]+$/).max(20).optional(),
+  clienteTelefono: z
+    .string()
+    .regex(/^\+?[0-9\s\-()]+$/)
+    .max(20)
+    .transform(zodSanitizePhone)
+    .optional(),
   clienteDireccion: z.string().min(5).max(500).transform(zodSanitizeText).optional(),
   descripcion: z.string().max(1000).transform(zodSanitizeText).optional(),
   prioridad: z.enum(["BAJA", "MEDIA", "ALTA", "URGENTE"]).optional(),
@@ -31,7 +36,7 @@ export const AsignarArmadorSchema = z.object({
 // Schema para cambiar estado
 export const CambiarEstadoOrdenSchema = z.object({
   estado: z.enum(["PENDIENTE", "EN_PROCESO", "COMPLETADA", "CANCELADA"]),
-  notas: z.string().max(1000).optional(),
+  notas: z.string().max(1000).transform(zodSanitizeText).optional(),
 });
 
 // Schema para actualización de orden en API (/api/ordenes/[id])
@@ -85,7 +90,7 @@ export const RegistrarArchivosOrdenSchema = z.object({
   archivos: z
     .array(
       z.object({
-        url: z.string().min(1),
+        url: z.string().min(1).transform(zodSanitizeURL),
         tipo: z.enum(["FOTO", "VIDEO"]),
       })
     )
@@ -94,7 +99,7 @@ export const RegistrarArchivosOrdenSchema = z.object({
 
 export const SignArchivoOrdenSchema = z.object({
   tipo: z.enum(["FOTO", "VIDEO"]),
-  contentType: z.string().max(200).optional().nullable(),
+  contentType: z.string().max(200).transform(zodSanitizeText).optional().nullable(),
   size: z.number().int().min(0).max(25 * 1024 * 1024).optional(),
 });
 

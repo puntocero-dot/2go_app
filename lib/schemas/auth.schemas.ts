@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { zodSanitizeEmail } from "../sanitize";
 
 // Schema para login de usuario
 export const LoginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().transform(zodSanitizeEmail),
   password: z.string().min(1),
 });
 

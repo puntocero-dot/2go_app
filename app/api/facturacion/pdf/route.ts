@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     userId = session.userId;
     userEmail = session.email;
 
-    const rate = checkRateLimit(`billing_pdf:${session.userId}`, {
+    const rate = await checkRateLimit(`billing_pdf:${session.userId}`, {
       windowMs: 5 * 60_000,
       maxRequests: 10,
     });

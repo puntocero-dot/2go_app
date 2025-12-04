@@ -17,12 +17,17 @@ export const ConfiguracionFacturacionSchema = z.object({
 
 // Schema para configuración general
 export const ConfiguracionGeneralSchema = z.object({
-  nombreApp: z.string().min(2).max(100).optional(),
-  descripcion: z.string().max(500).optional(),
-  emailSoporte: z.string().email().max(100).optional(),
-  telefonoSoporte: z.string().regex(/^\+?[0-9\s\-()]+$/).max(20).optional(),
-  horariosAtencion: z.string().max(200).optional(),
-  mensajeBienvenida: z.string().max(500).optional(),
+  nombreApp: z.string().min(2).max(100).transform(zodSanitizeText).optional(),
+  descripcion: z.string().max(500).transform(zodSanitizeText).optional(),
+  emailSoporte: z.string().email().max(100).transform(zodSanitizeEmail).optional(),
+  telefonoSoporte: z
+    .string()
+    .regex(/^\+?[0-9\s\-()]+$/)
+    .max(20)
+    .transform(zodSanitizePhone)
+    .optional(),
+  horariosAtencion: z.string().max(200).transform(zodSanitizeText).optional(),
+  mensajeBienvenida: z.string().max(500).transform(zodSanitizeText).optional(),
 });
 
 // Types inferidos

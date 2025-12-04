@@ -1,3 +1,5 @@
+import { checkRateLimitRedis } from "./rate-limit-redis";
+
 type RateLimitConfig = {
   windowMs: number;
   maxRequests: number;
@@ -58,11 +60,30 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-export function checkRateLimit(
+const HAS_REDIS_RATE_LIMIT =
+  !!process.env.UPSTASH_REDIS_REST_URL &&
+  !!process.env.UPSTASH_REDIS_REST_TOKEN;
+
+export async function checkRateLimit(
   key: string,
   config: RateLimitConfig,
   ip?: string
-): RateLimitResult {
+): Promise<RateLimitResult> {
+  // Si Redis está configurado, usar backend distribuido
+  if (HAS_REDIS_RATE_LIMIT) {
+    const redisResult = await checkRateLimitRedis(key, {
+      windowMs: config.windowMs,
+      maxRequests: config.maxRequests,
+      keyPrefix: "rate_limit",
+    });
+
+    return {
+      ok: redisResult.ok,
+      remaining: redisResult.remaining,
+      resetAt: redisResult.resetAt,
+      retryAfter: redisResult.retryAfter,
+    };
+  }
   // Whitelist bypass
   if (ip && WHITELIST_IPS.includes(ip)) {
     return {

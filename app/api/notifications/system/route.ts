@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limiting
-    const rate = checkRateLimit(`system_notification:${session.userId}`, {
+    const rate = await checkRateLimit(`system_notification:${session.userId}`, {
       windowMs: 5 * 60 * 1000, // 5 minutos
       maxRequests: 3,
     });

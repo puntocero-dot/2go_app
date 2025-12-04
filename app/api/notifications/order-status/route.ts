@@ -67,7 +67,7 @@ export async function POST(
     }
 
     // Rate limiting
-    const rate = checkRateLimit(`notification_send:${session.userId}`, {
+    const rate = await checkRateLimit(`notification_send:${session.userId}`, {
       windowMs: 60 * 1000, // 1 minuto
       maxRequests: 10,
     });

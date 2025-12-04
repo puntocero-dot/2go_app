@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withValidation } from "@/lib/api-helpers";
+import { logAuditFromSession } from "@/lib/audit-logger";
+import {
+  CrearProyectoSchema,
+  CrearProyectoInput,
+} from "@/lib/schemas/proyecto.schemas";
 
 // GET - Listar todos los proyectos
 export async function GET() {
@@ -34,7 +40,10 @@ export async function GET() {
 }
 
 // POST - Crear nuevo proyecto
-export async function POST(request: NextRequest) {
+const crearProyectoHandler = async (
+  data: CrearProyectoInput,
+  request: NextRequest
+) => {
   try {
     const session = await getSession();
 
@@ -42,23 +51,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { nombreComercial, tipoCliente, datosFacturacion } = body;
-
-    if (!nombreComercial || !tipoCliente || !datosFacturacion) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
-      );
-    }
-
     const proyecto = await prisma.proyecto.create({
       data: {
-        nombreComercial,
-        tipoCliente,
-        datosFacturacion,
+        nombreComercial: data.nombreComercial,
+        tipoCliente: data.tipoCliente,
+        datosFacturacion: data.datosFacturacion,
         activo: true,
       },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: "CREATE_PROJECT",
+      resource: "proyecto",
+      resourceId: proyecto.id,
+      changes: {
+        after: {
+          nombreComercial: proyecto.nombreComercial,
+          tipoCliente: proyecto.tipoCliente,
+          activo: proyecto.activo,
+        },
+      },
+      request,
     });
 
     return NextResponse.json({ proyecto }, { status: 201 });
@@ -69,4 +83,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const POST = withValidation(CrearProyectoSchema, crearProyectoHandler);

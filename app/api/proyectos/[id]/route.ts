@@ -150,9 +150,17 @@ async function syncChildCollection<T extends { id?: string }>(options: SyncOptio
     await upsertOne(item);
   }
 }
+
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { withValidation } from "@/lib/api-helpers";
+import { logAuditFromSession } from "@/lib/audit-logger";
+
+import {
+  ActualizarProyectoSchema,
+  ActualizarProyectoInput,
+} from "@/lib/schemas/proyecto.schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -208,10 +216,11 @@ export async function GET(
 }
 
 // PUT - Actualizar proyecto y su regla de cobro
-export async function PUT(
+const actualizarProyectoHandler = async (
+  data: ActualizarProyectoInput,
   request: NextRequest,
   context: RouteContext
-) {
+) => {
   const { id } = await context.params;
 
   try {
@@ -221,7 +230,6 @@ export async function PUT(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
     const {
       nombreComercial,
       tipoCliente,
@@ -233,16 +241,16 @@ export async function PUT(
       contactoTelefono,
       direccion,
       reglaCobro,
-    } = body;
+    } = data;
 
     const proyecto = await prisma.proyecto.update({
       where: { id },
       data: {
-        ...(nombreComercial && { nombreComercial }),
-        ...(tipoCliente && { tipoCliente }),
-        ...(datosFacturacion && { datosFacturacion }),
+        ...(nombreComercial !== undefined && { nombreComercial }),
+        ...(tipoCliente !== undefined && { tipoCliente }),
+        ...(datosFacturacion !== undefined && { datosFacturacion }),
         ...(typeof activo === "boolean" && { activo }),
-        ...(estado && { estado }),
+        ...(estado !== undefined && { estado }),
         ...(descripcion !== undefined && { descripcion }),
         ...(contactoEmail !== undefined && { contactoEmail }),
         ...(contactoTelefono !== undefined && { contactoTelefono }),
@@ -260,7 +268,7 @@ export async function PUT(
     });
 
     if (reglaCobro) {
-      await upsertReglaCobro(id, reglaCobro);
+      await upsertReglaCobro(id, reglaCobro as any);
     }
 
     const proyectoActualizado = await prisma.proyecto.findUnique({
@@ -276,6 +284,21 @@ export async function PUT(
       },
     });
 
+    await logAuditFromSession({
+      session,
+      action: "UPDATE_PROJECT",
+      resource: "proyecto",
+      resourceId: id,
+      changes: {
+        after: {
+          nombreComercial: proyectoActualizado?.nombreComercial,
+          tipoCliente: proyectoActualizado?.tipoCliente,
+          activo: proyectoActualizado?.activo,
+        },
+      },
+      request,
+    });
+
     return NextResponse.json({ proyecto: proyectoActualizado });
   } catch (error) {
     console.error("Error actualizando proyecto:", error);
@@ -284,7 +307,12 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+};
+
+export const PUT = withValidation(
+  ActualizarProyectoSchema,
+  actualizarProyectoHandler
+);
 
 // DELETE - Eliminar proyecto
 export async function DELETE(
@@ -300,8 +328,34 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
+    const proyecto = await prisma.proyecto.findUnique({
+      where: { id },
+    });
+
+    if (!proyecto) {
+      return NextResponse.json(
+        { error: "Proyecto no encontrado" },
+        { status: 404 }
+      );
+    }
+
     await prisma.proyecto.delete({
       where: { id },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: "DELETE_PROJECT",
+      resource: "proyecto",
+      resourceId: id,
+      changes: {
+        before: {
+          nombreComercial: proyecto.nombreComercial,
+          tipoCliente: proyecto.tipoCliente,
+          activo: proyecto.activo,
+        },
+      },
+      request,
     });
 
     return NextResponse.json({ message: "Proyecto eliminado" });

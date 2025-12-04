@@ -14,7 +14,7 @@ export function withRateLimit(
     const key = getKey(request);
     const ip = getClientIp(request);
     
-    const result = checkRateLimit(key, config, ip);
+    const result = await checkRateLimit(key, config, ip);
     
     if (!result.ok) {
       return NextResponse.json(

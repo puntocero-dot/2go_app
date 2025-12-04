@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     userId = session.userId;
     userEmail = session.email;
 
-    const rate = checkRateLimit(`billing_send:${session.userId}`, {
+    const rate = await checkRateLimit(`billing_send:${session.userId}`, {
       windowMs: 15 * 60_000,
       maxRequests: 5,
     });

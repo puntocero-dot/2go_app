@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { v2 as cloudinary } from "cloudinary";
 import { withRateLimit } from "@/lib/api-helpers";
 import { RATE_LIMITS } from "@/lib/rate-limit";
-import { validateImageFile } from "@/lib/schemas/upload.schemas";
+import { UploadMetadataSchema, validateImageFile } from "@/lib/schemas/upload.schemas";
 import { logAuditFromSession } from "@/lib/audit-logger";
 
 // Configurar Cloudinary
@@ -24,7 +24,23 @@ const uploadHandler = async (request: NextRequest) => {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const folder = formData.get("folder") as string || "armados2go";
+
+    const folderRaw = formData.get("folder");
+    const fileName = file?.name;
+
+    const metadataResult = UploadMetadataSchema.safeParse({
+      folder: typeof folderRaw === "string" ? folderRaw : undefined,
+      fileName,
+    });
+
+    if (!metadataResult.success) {
+      return NextResponse.json(
+        { error: "Metadatos de archivo inválidos" },
+        { status: 400 }
+      );
+    }
+
+    const folder = metadataResult.data.folder ?? "armados2go";
 
     if (!file) {
       return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 });

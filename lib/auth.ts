@@ -2,8 +2,20 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 
+const rawSecret = process.env.JWT_SECRET;
+
+if (!rawSecret) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET no está definido en el entorno de producción");
+  } else {
+    console.warn(
+      "JWT_SECRET no está definido. Usando el valor por defecto solo para desarrollo. Asegúrate de definir JWT_SECRET en el entorno."
+    );
+  }
+}
+
 const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "tu-secreto-super-seguro-cambialo-en-produccion"
+  rawSecret || "tu-secreto-super-seguro-cambialo-en-produccion"
 );
 
 export interface SessionPayload {
