@@ -274,12 +274,20 @@ export function Navbar({ user }: NavbarProps) {
                   )}
 
                   {user.rol === "ADMIN" && (
-                    <Link href="/admin/configuracion/facturacion">
-                      <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
-                        <Settings className="w-4 h-4" />
-                        <span>Configuración</span>
-                      </button>
-                    </Link>
+                    <>
+                      <Link href="/admin/configuracion/facturacion">
+                        <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          <span>Config. Facturación</span>
+                        </button>
+                      </Link>
+                      <Link href="/admin/configuracion/geomaps">
+                        <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
+                          <Map className="w-4 h-4" />
+                          <span>Config. Geomaps</span>
+                        </button>
+                      </Link>
+                    </>
                   )}
 
                   <div className="border-t border-gray-700 mt-2 pt-2">

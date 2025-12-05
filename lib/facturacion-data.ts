@@ -57,8 +57,17 @@ export type BillingDataset = {
 export function getDateRange(desde: string, hasta: string): BillingRange | null {
   if (!desde || !hasta) return null;
 
-  const start = new Date(`${desde}T00:00:00.000Z`);
-  const end = new Date(`${hasta}T23:59:59.999Z`);
+  // Interpretar las fechas como días completos en horario local UTC-6 (El Salvador).
+  // Ejemplo: rango 2025-12-01 a 2025-12-04 debe cubrir
+  // 2025-12-01 00:00:00.000 -06:00  hasta  2025-12-04 23:59:59.999 -06:00.
+  // En UTC eso corresponde a:
+  // start = 2025-12-01T06:00:00.000Z
+  // end   = 2025-12-05T05:59:59.999Z
+
+  const start = new Date(`${desde}T06:00:00.000Z`);
+
+  const endBase = new Date(`${hasta}T06:00:00.000Z`);
+  const end = new Date(endBase.getTime() - 1); // un milisegundo antes del siguiente día local
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
   if (start > end) return null;

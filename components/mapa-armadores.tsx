@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import Map from 'react-map-gl';
+import { useState, useCallback, useEffect } from 'react';
+import Map, { Source, Layer } from 'react-map-gl';
 import Marker from 'react-map-gl/dist/esm/components/marker';
 import Popup from 'react-map-gl/dist/esm/components/popup';
 import NavigationControl from 'react-map-gl/dist/esm/components/navigation-control';
@@ -35,8 +35,29 @@ type Props = {
   ordenes: Orden[];
 };
 
+type RutaPoint = {
+  lat: number;
+  lng: number;
+  timestamp: string;
+};
+
+type RutaAnalisis = {
+  totalDistanciaKm: number;
+  maxSpeedKmh: number;
+  paradasLargas: any[];
+  eventosVelocidad: any[];
+  estuvoEnCliente: boolean;
+};
+
+type RutaInfo = {
+  ruta: RutaPoint[];
+  analisis?: RutaAnalisis;
+};
+
 export default function MapaArmadores({ armadores, ordenes }: Props) {
   const [popupInfo, setPopupInfo] = useState<any>(null);
+  const [rutaByArmador, setRutaByArmador] = useState<Record<string, RutaInfo>>({});
+  const [selectedRouteArmadorId, setSelectedRouteArmadorId] = useState<string | null>(null);
   const [viewState, setViewState] = useState({
     longitude: -89.2182, // San Salvador
     latitude: 13.6929,
@@ -69,6 +90,30 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
     );
   }
 
+  useEffect(() => {
+    const loadRutas = async () => {
+      try {
+        const res = await fetch('/api/armadores/mapa');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data?.armadores) return;
+
+        const map: Record<string, RutaInfo> = {};
+        for (const a of data.armadores as any[]) {
+          map[a.id] = {
+            ruta: Array.isArray(a.ruta) ? a.ruta : [],
+            analisis: a.analisis,
+          };
+        }
+        setRutaByArmador(map);
+      } catch (error) {
+        console.error('Error cargando rutas de armadores:', error);
+      }
+    };
+
+    loadRutas();
+  }, []);
+
   const getMarkerColor = (tipo: 'armador' | 'orden', estado: string) => {
     if (tipo === 'armador') {
       return estado === 'ACTIVO' ? '#22c55e' : '#ef4444';
@@ -93,6 +138,32 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
         {/* Controles */}
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
+
+        {selectedRouteArmadorId && rutaByArmador[selectedRouteArmadorId] &&
+          rutaByArmador[selectedRouteArmadorId].ruta.length > 1 && (
+            <Source
+              id="ruta-armador"
+              type="geojson"
+              data={{
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: rutaByArmador[selectedRouteArmadorId].ruta.map((p) => [p.lng, p.lat]),
+                },
+                properties: {},
+              }}
+            >
+              <Layer
+                id="ruta-armador-line"
+                type="line"
+                paint={{
+                  'line-color': '#2563eb',
+                  'line-width': 3,
+                  'line-opacity': 0.8,
+                }}
+              />
+            </Source>
+          )}
 
         {/* Marcadores de Armadores */}
         {armadores.map(armador => (
@@ -162,6 +233,40 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
                 <Badge variant={popupInfo.data.estado === 'ACTIVO' ? 'default' : 'destructive'}>
                   {popupInfo.data.estado}
                 </Badge>
+                {rutaByArmador[popupInfo.data.id] && (
+                  <div className="mt-2 space-y-1 text-xs text-gray-700">
+                    <div>
+                      Distancia total:{' '}
+                      {rutaByArmador[popupInfo.data.id].analisis?.totalDistanciaKm?.toFixed(1) ?? '0.0'} km
+                    </div>
+                    <div>
+                      Velocidad máx:{' '}
+                      {rutaByArmador[popupInfo.data.id].analisis?.maxSpeedKmh?.toFixed(0) ?? '0'} km/h
+                    </div>
+                    <div>
+                      Paradas largas:{' '}
+                      {rutaByArmador[popupInfo.data.id].analisis?.paradasLargas?.length ?? 0}
+                    </div>
+                    <div>
+                      En ubicación de cliente:{' '}
+                      {rutaByArmador[popupInfo.data.id].analisis?.estuvoEnCliente ? 'Sí' : 'No'}
+                    </div>
+                    {rutaByArmador[popupInfo.data.id].ruta.length > 1 && (
+                      <button
+                        className="mt-1 px-2 py-1 rounded bg-blue-600 text-white text-[11px]"
+                        onClick={() =>
+                          setSelectedRouteArmadorId((current) =>
+                            current === popupInfo.data.id ? null : popupInfo.data.id,
+                          )
+                        }
+                      >
+                        {selectedRouteArmadorId === popupInfo.data.id
+                          ? 'Ocultar ruta'
+                          : 'Ver ruta'}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-2 min-w-[250px]">

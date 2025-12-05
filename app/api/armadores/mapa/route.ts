@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getGeomapsConfig } from "@/lib/geomaps-config";
+import { analizarRuta } from "@/lib/geolocation-rules";
 
 // GET - Obtener ubicaciones de todos los armadores activos
 export async function GET() {
@@ -13,6 +15,8 @@ export async function GET() {
 
     // Ventana de tiempo para la ruta (últimas 24 horas)
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const config = await getGeomapsConfig();
 
     const armadores = await prisma.armador.findMany({
       where: {
@@ -39,6 +43,8 @@ export async function GET() {
                 nombre: true,
                 direccionCompleta: true,
                 municipio: true,
+                coordenadasLat: true,
+                coordenadasLng: true,
               },
             },
           },
@@ -72,6 +78,24 @@ export async function GET() {
           },
         });
 
+        const ruta = registrosRuta.map((r) => ({
+          lat: r.latitud as number,
+          lng: r.longitud as number,
+          timestamp: r.timestamp.toISOString(),
+        }));
+
+        const clientes = armador.ordenes
+          .map((orden) => ({
+            lat: orden.usuarioFinal.coordenadasLat,
+            lng: orden.usuarioFinal.coordenadasLng,
+          }))
+          .filter((c) => typeof c.lat === "number" && typeof c.lng === "number") as {
+            lat: number;
+            lng: number;
+          }[];
+
+        const analisis = analizarRuta(ruta, clientes, config);
+
         return {
           id: armador.id,
           nombre: armador.usuario.nombre,
@@ -89,11 +113,8 @@ export async function GET() {
             municipio: orden.usuarioFinal.municipio,
             estado: orden.estado,
           })),
-          ruta: registrosRuta.map((r) => ({
-            lat: r.latitud as number,
-            lng: r.longitud as number,
-            timestamp: r.timestamp.toISOString(),
-          })),
+          ruta,
+          analisis,
         };
       })
     );

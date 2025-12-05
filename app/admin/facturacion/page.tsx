@@ -373,7 +373,6 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                         <TableHead className="font-semibold text-right">Distancia</TableHead>
                         <TableHead className="font-semibold text-right">Penalización</TableHead>
                         <TableHead className="font-semibold text-right">Total</TableHead>
-                        <TableHead className="font-semibold text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -418,17 +417,6 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {formatCurrency(item.total)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end space-x-2">
-                              <EnhancedButton
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </EnhancedButton>
-                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

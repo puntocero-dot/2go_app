@@ -145,12 +145,17 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
   if (fechaInicioFilter || fechaFinFilter) {
     const rango: { gte?: Date; lte?: Date } = {};
     if (fechaInicioFilter) {
-      rango.gte = new Date(`${fechaInicioFilter}T00:00:00.000Z`);
+      rango.gte = new Date(`${fechaInicioFilter}T06:00:00.000Z`);
     }
     if (fechaFinFilter) {
-      rango.lte = new Date(`${fechaFinFilter}T23:59:59.999Z`);
+      const endBase = new Date(`${fechaFinFilter}T06:00:00.000Z`);
+      rango.lte = new Date(endBase.getTime() - 1);
     }
-    ordenWhere.fechaCreacion = rango;
+
+    ordenWhere.OR = [
+      { fechaCreacion: rango },
+      { fechaCompletado: rango },
+    ];
   }
 
   const activeStatuses = [
