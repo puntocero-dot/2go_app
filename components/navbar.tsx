@@ -24,6 +24,7 @@ export function Navbar({ user }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -215,7 +216,6 @@ export function Navbar({ user }: NavbarProps) {
 
           {/* Right side items */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {/* Estado de Loggeo */}
             <div className="hidden sm:block">
               <EstadoLoggeoSelector
                 estadoActual={user.estadoLoggeo || "OFFLINE"}
@@ -223,73 +223,78 @@ export function Navbar({ user }: NavbarProps) {
               />
             </div>
 
-            <ThemeToggle />
-
-            {/* Perfil Link - Solo para ADMIN y SUPERVISOR */}
-            {user.rol !== "ARMADOR" && (
-              <Link href="/admin/perfil">
-                <EnhancedButton
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
-                  title="Mi Perfil"
-                >
-                  <User className="w-4 h-4" />
-                </EnhancedButton>
-              </Link>
-            )}
-
-            {/* Configuración (solo ADMIN) */}
-            {user.rol === "ADMIN" && (
-              <Link href="/admin/configuracion/facturacion">
-                <EnhancedButton
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
-                  title="Configuración"
-                >
-                  <Settings className="w-4 h-4" />
-                </EnhancedButton>
-              </Link>
-            )}
-            
-            {/* User menu - desktop only */}
-            <div className="hidden lg:flex items-center gap-2 px-2">
-              <div className="text-right max-w-[120px]">
-                <div className="text-xs font-medium text-white truncate">{user.nombre}</div>
-                <div className="text-[10px] text-gray-400 capitalize">
-                  {typeof user.rol === "string" ? user.rol.toLowerCase() : ""}
+            <div className="relative hidden sm:flex">
+              <EnhancedButton
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-white/10"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              >
+                <div className="text-right max-w-[120px] hidden lg:block">
+                  <div className="text-xs font-medium text-white truncate">{user.nombre}</div>
+                  <div className="text-[10px] text-gray-400 capitalize">
+                    {typeof user.rol === "string" ? user.rol.toLowerCase() : ""}
+                  </div>
                 </div>
-              </div>
-              {user.fotoPerfil ? (
-                <img
-                  src={user.fotoPerfil}
-                  alt={user.nombre}
-                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/28";
-                  }}
-                />
-              ) : (
-                <div className="w-7 h-7 bg-terracota rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-3.5 h-3.5 text-white" />
+                {user.fotoPerfil ? (
+                  <img
+                    src={user.fotoPerfil}
+                    alt={user.nombre}
+                    className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/28";
+                    }}
+                  />
+                ) : (
+                  <div className="w-7 h-7 bg-terracota rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-3.5 h-3.5 text-white" />
+                  </div>
+                )}
+              </EnhancedButton>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 rounded-md bg-negro-azabache border border-gray-700 shadow-lg z-50 py-2">
+                  <div className="px-3 pb-2 flex items-center justify-between">
+                    <div className="text-xs text-gray-300">
+                      <div className="font-medium truncate max-w-[140px]">{user.nombre}</div>
+                      <div className="text-[10px] text-gray-400 capitalize">
+                        {typeof user.rol === "string" ? user.rol.toLowerCase() : ""}
+                      </div>
+                    </div>
+                    <ThemeToggle />
+                  </div>
+
+                  {user.rol !== "ARMADOR" && (
+                    <Link href="/admin/perfil">
+                      <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        <span>Mi Perfil</span>
+                      </button>
+                    </Link>
+                  )}
+
+                  {user.rol === "ADMIN" && (
+                    <Link href="/admin/configuracion/facturacion">
+                      <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        <span>Configuración</span>
+                      </button>
+                    </Link>
+                  )}
+
+                  <div className="border-t border-gray-700 mt-2 pt-2">
+                    <button
+                      className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Cerrar sesión</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Logout button - visible on all screen sizes */}
-            <EnhancedButton 
-              variant="outline" 
-              size="sm"
-              onClick={handleLogout}
-              className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 flex-shrink-0 px-2 sm:px-3"
-              title="Cerrar sesión"
-            >
-              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden xl:inline ml-1.5 text-xs">Salir</span>
-            </EnhancedButton>
-
-            {/* Mobile menu button */}
             <EnhancedButton
               variant="ghost"
               size="icon"

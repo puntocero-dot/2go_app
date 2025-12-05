@@ -7,7 +7,12 @@ export const CrearOrdenSchema = z.object({
   muebleId: z.string().uuid(),
   usuarioFinalId: z.string().uuid(),
   proyectoId: z.string().uuid(),
-  fechaSolicitadaCliente: z.string().datetime().optional().or(z.literal("")),
+  // Acepta fechas en formato YYYY-MM-DD (input type="date") o cadena vacía
+  fechaSolicitadaCliente: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal("")),
   autoAsignar: z.boolean().optional().default(false),
   prioridad: z.enum(["VIP", "URGENTE", "MEDIA", "NORMAL"]).optional().default("NORMAL"),
 });

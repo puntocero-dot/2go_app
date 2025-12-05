@@ -43,13 +43,18 @@ async function getBIDashboardData(filters: any) {
   }
   
   if (filters.fechaInicio || filters.fechaFin) {
-    where.fechaCreacion = {};
-    if (filters.fechaInicio) {
-      where.fechaCreacion.gte = new Date(`${filters.fechaInicio}T00:00:00.000Z`);
+    const rangoFechas: any = {};
+    if (typeof filters.fechaInicio === "string" && filters.fechaInicio) {
+      rangoFechas.gte = new Date(`${filters.fechaInicio}T00:00:00.000Z`);
     }
-    if (filters.fechaFin) {
-      where.fechaCreacion.lte = new Date(`${filters.fechaFin}T23:59:59.999Z`);
+    if (typeof filters.fechaFin === "string" && filters.fechaFin) {
+      rangoFechas.lte = new Date(`${filters.fechaFin}T23:59:59.999Z`);
     }
+
+    where.OR = [
+      { fechaCreacion: rangoFechas },
+      { fechaCompletado: rangoFechas },
+    ];
   }
 
   // Datos básicos
@@ -106,14 +111,17 @@ async function getBIDashboardData(filters: any) {
   const tendenciaData = Array.from({ length: 30 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (29 - i));
-    const dayOrdenes = ordenes.filter(o => 
-      o.fechaCreacion.toDateString() === date.toDateString()
-    );
+
+    const dayOrdenes = ordenes.filter((o) => {
+      const refDate = (o.fechaCompletado ?? o.fechaCreacion) as Date;
+      return refDate.toDateString() === date.toDateString();
+    });
+
     return {
       name: date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
       total: dayOrdenes.length,
-      completadas: dayOrdenes.filter(o => o.estado === 'ARMADO_COMPLETADO').length,
-      pendientes: dayOrdenes.filter(o => !['ARMADO_COMPLETADO', 'CANCELADA'].includes(o.estado)).length
+      completadas: dayOrdenes.filter((o) => o.estado === 'ARMADO_COMPLETADO').length,
+      pendientes: dayOrdenes.filter((o) => !['ARMADO_COMPLETADO', 'CANCELADA'].includes(o.estado)).length,
     };
   });
 

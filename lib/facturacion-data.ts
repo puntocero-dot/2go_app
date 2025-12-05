@@ -116,6 +116,198 @@ export async function getBillingDataset(input: {
   const range = getDateRange(input.desde, input.hasta);
   if (!range) return null;
 
+  // Caso especial: todos los proyectos
+  if (input.proyectoId === "ALL") {
+    const proyectos = await prisma.proyecto.findMany({
+      where: { activo: true },
+      include: {
+        reglaCobro: {
+          include: {
+            rangosVolumen: true,
+            cobrosDistancia: true,
+            penalizaciones: true,
+          },
+        },
+      },
+    });
+
+    if (proyectos.length === 0) {
+      return null;
+    }
+
+    const proyectoIds = proyectos.map((p) => p.id);
+
+    const ordenesRaw = await prisma.orden.findMany({
+      where: {
+        proyectoId: { in: proyectoIds },
+        estado: "ARMADO_COMPLETADO",
+        fechaCompletado: {
+          gte: range.start,
+          lte: range.end,
+        },
+      },
+      orderBy: { fechaCompletado: "asc" },
+      include: {
+        usuarioFinal: true,
+        mueble: true,
+        penalizacionesAplicadas: true,
+      },
+    });
+
+    const ordenesValidas = ordenesRaw.filter(
+      (orden) => orden.usuarioFinal && orden.mueble,
+    );
+
+    if (ordenesValidas.length === 0) {
+      return null;
+    }
+
+    if (ordenesValidas.length !== ordenesRaw.length) {
+      console.warn(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          tipo: "FACTURACION_ORDENES_INCOMPLETAS_ALL",
+          proyectoId: "ALL",
+          desde: input.desde,
+          hasta: input.hasta,
+          totalOrdenes: ordenesRaw.length,
+          ordenesValidas: ordenesValidas.length,
+        }),
+      );
+    }
+
+    const proyectosById = new Map(proyectos.map((p) => [p.id, p]));
+
+    // Cantidad de órdenes por proyecto en el periodo
+    const countsByProject = new Map<string, number>();
+    for (const orden of ordenesValidas) {
+      countsByProject.set(
+        orden.proyectoId,
+        (countsByProject.get(orden.proyectoId) ?? 0) + 1,
+      );
+    }
+
+    // Preparar reglas de cobro por proyecto (incluyendo lógica de volumen)
+    const reglasParaCalculoPorProyecto = new Map<string, any>();
+
+    for (const proyecto of proyectos) {
+      const base = proyecto.reglaCobro
+        ? {
+            ...proyecto.reglaCobro,
+            rangosVolumen: proyecto.reglaCobro.rangosVolumen,
+            cobrosDistancia: proyecto.reglaCobro.cobrosDistancia,
+            penalizaciones: proyecto.reglaCobro.penalizaciones,
+          }
+        : null;
+
+      let reglaCalculo = base;
+      const cantidadPeriodo = countsByProject.get(proyecto.id) ?? 0;
+
+      if (
+        base &&
+        base.tipoPrincipal === "COBRO_POR_VOLUMEN" &&
+        cantidadPeriodo > 0 &&
+        base.rangosVolumen.length > 0
+      ) {
+        const rango = base.rangosVolumen.find((r) => {
+          const withinDesde = cantidadPeriodo >= r.desde;
+          const withinHasta = r.hasta == null || cantidadPeriodo <= r.hasta;
+          return withinDesde && withinHasta;
+        });
+
+        if (rango) {
+          reglaCalculo = {
+            ...base,
+            tipoPrincipal: "COBRO_FIJO_UNITARIO",
+            precioFijoUnitario: rango.precio,
+          };
+        }
+      }
+
+      reglasParaCalculoPorProyecto.set(proyecto.id, reglaCalculo);
+    }
+
+    const ordenes: BillingOrderRow[] = ordenesValidas.map((orden) => {
+      const proyecto = proyectosById.get(orden.proyectoId)!;
+      const reglaCobro = reglasParaCalculoPorProyecto.get(orden.proyectoId) ?? null;
+
+      const calculo = calcularCobroOrden({
+        orden,
+        usuarioFinal: orden.usuarioFinal!,
+        mueble: orden.mueble!,
+        reglaCobro,
+        penalizacionesAplicadas: orden.penalizacionesAplicadas,
+      });
+
+      const resumen = summarizeConcepts(calculo.conceptos);
+
+      return {
+        id: orden.id,
+        codigoReferenciaRetail: orden.codigoReferenciaRetail,
+        fechaCompletado: orden.fechaCompletado,
+        estado: orden.estado,
+        clienteNombre: orden.usuarioFinal!.nombre,
+        municipio: orden.usuarioFinal!.municipio,
+        proyectoNombre: proyecto.nombreComercial,
+        conceptos: calculo.conceptos,
+        resumen,
+        total: calculo.total,
+      };
+    });
+
+    const totalsByConcept = ordenes.reduce<
+      ConceptSummary & { totalFacturado: number }
+    >(
+      (acc, orden) => {
+        acc.armado += orden.resumen.armado;
+        acc.tamano += orden.resumen.tamano;
+        acc.distancia += orden.resumen.distancia;
+        acc.penalizacion += orden.resumen.penalizacion;
+        acc.prioridad += orden.resumen.prioridad;
+        acc.totalFacturado += orden.total;
+        return acc;
+      },
+      {
+        armado: 0,
+        tamano: 0,
+        distancia: 0,
+        penalizacion: 0,
+        prioridad: 0,
+        totalFacturado: 0,
+      },
+    );
+
+    const periodoLabel = `${range.start.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })} - ${range.end.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })}`;
+
+    const dataset: BillingDataset = {
+      proyecto: {
+        id: "ALL",
+        nombreComercial: "Todos los proyectos",
+        tipoCliente: proyectos[0].tipoCliente,
+        datosFacturacion: null,
+      },
+      range,
+      periodoLabel,
+      ordenes,
+      totalsByConcept,
+    };
+
+    billingDatasetCache.set(cacheKey, {
+      dataset,
+      expiresAt: now + BILLING_CACHE_TTL_MS,
+    });
+
+    return dataset;
+  }
+
   const proyecto = await prisma.proyecto.findFirst({
     where: { id: input.proyectoId, activo: true },
     include: {

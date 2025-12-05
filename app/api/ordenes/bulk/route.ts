@@ -367,18 +367,6 @@ async function processRow(data: BulkRow, userId: string) {
     throw new Error(`Proyecto "${data.proyecto}" no existe`);
   }
 
-  const existingOrder = await prisma.orden.findFirst({
-    where: {
-      codigoReferenciaRetail: data.codigoReferenciaRetail,
-    },
-  });
-
-  if (existingOrder) {
-    throw new Error(
-      `La orden con código ${data.codigoReferenciaRetail} ya existe`
-    );
-  }
-
   const prioridadOrden = data.prioridad ?? "NORMAL";
   const prioridadCliente = data.clientePrioridad ?? prioridadOrden;
 
@@ -409,17 +397,13 @@ async function processRow(data: BulkRow, userId: string) {
   const existingSimilarOrder = await prisma.orden.findFirst({
     where: {
       proyectoId: proyecto.id,
-      usuarioFinalId: cliente.id,
-      muebleId: mueble.id,
-      ...(fechaSolicitada
-        ? { fechaSolicitadaCliente: fechaSolicitada }
-        : {}),
+      codigoReferenciaRetail: data.codigoReferenciaRetail,
     },
   });
 
   if (existingSimilarOrder) {
     throw new Error(
-      `Ya existe una orden para este cliente y mueble en el proyecto "${data.proyecto}" (código ${existingSimilarOrder.codigoReferenciaRetail}).`,
+      `Ya existe una orden con el código ${data.codigoReferenciaRetail} en el proyecto "${data.proyecto}".`,
     );
   }
 

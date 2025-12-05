@@ -45,13 +45,18 @@ const biExportHandler = async (req: NextRequest) => {
       where.proyectoId = proyectoId;
     }
     if (fechaInicio || fechaFin) {
-      where.fechaCreacion = {};
+      const rangoFechas: any = {};
       if (fechaInicio) {
-        where.fechaCreacion.gte = new Date(`${fechaInicio}T00:00:00.000Z`);
+        rangoFechas.gte = new Date(`${fechaInicio}T00:00:00.000Z`);
       }
       if (fechaFin) {
-        where.fechaCreacion.lte = new Date(`${fechaFin}T23:59:59.999Z`);
+        rangoFechas.lte = new Date(`${fechaFin}T23:59:59.999Z`);
       }
+
+      where.OR = [
+        { fechaCreacion: rangoFechas },
+        { fechaCompletado: rangoFechas },
+      ];
     }
 
     const ordenes = await prisma.orden.findMany({

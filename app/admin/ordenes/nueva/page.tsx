@@ -166,7 +166,8 @@ export default function NuevaOrdenPage() {
           proyectoId: formData.proyectoId,
           muebleId,
           usuarioFinalId,
-          fechaSolicitadaCliente: formData.fechaSolicitadaCliente || null,
+          // Siempre enviar string: '' o 'YYYY-MM-DD' del input type="date"
+          fechaSolicitadaCliente: formData.fechaSolicitadaCliente || "",
           autoAsignar: formData.autoAsignar,
           prioridad: formData.prioridadOrden,
         }),
