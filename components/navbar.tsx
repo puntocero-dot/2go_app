@@ -356,18 +356,6 @@ export function Navbar({ user }: NavbarProps) {
                       Proyectos
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/armadores" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/armadores") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Armadores
-                    </EnhancedButton>
-                  </Link>
                   <Link href="/admin/mapa" className="block">
                     <EnhancedButton 
                       variant="ghost" 
@@ -452,11 +440,11 @@ export function Navbar({ user }: NavbarProps) {
               )}
 
               {/* Enlaces comunes para todos */}
-              <div className="border-t border-gray-700 mt-2 pt-2">
+              <div className="border-t border-gray-700 mt-2 pt-2 space-y-1">
                 {user.rol !== "ARMADOR" && (
                   <Link href="/admin/perfil" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
+                    <EnhancedButton
+                      variant="ghost"
                       className={cn(
                         "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
                         isActive("/admin/perfil") && "text-white bg-white/10"
@@ -469,19 +457,41 @@ export function Navbar({ user }: NavbarProps) {
                 )}
 
                 {user.rol === "ADMIN" && (
-                  <Link href="/admin/configuracion/facturacion" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/configuracion/facturacion") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Configuración
-                    </EnhancedButton>
-                  </Link>
+                  <>
+                    <Link href="/admin/configuracion/facturacion" className="block">
+                      <EnhancedButton
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                          isActive("/admin/configuracion/facturacion") && "text-white bg-white/10"
+                        )}
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Config. Facturación
+                      </EnhancedButton>
+                    </Link>
+                    <Link href="/admin/configuracion/geomaps" className="block">
+                      <EnhancedButton
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                          isActive("/admin/configuracion/geomaps") && "text-white bg-white/10"
+                        )}
+                      >
+                        <Map className="w-4 h-4 mr-2" />
+                        Config. Geomaps
+                      </EnhancedButton>
+                    </Link>
+                  </>
                 )}
+
+                <button
+                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Cerrar sesión</span>
+                </button>
 
                 {/* Selector de estado en móvil */}
                 <div className="px-3 py-2">
