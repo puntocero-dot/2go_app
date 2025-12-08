@@ -64,16 +64,21 @@ export default function RutasPage() {
 
   const cargarTurnos = async (armadorId: string) => {
     setLoadingTurnos(true);
+    setTurnos([]);
+    setTurnoSeleccionado(null);
     try {
       const response = await fetch(`/api/armadores/${armadorId}/turnos?limit=20`);
       if (response.ok) {
         const data = await response.json();
+        console.log("Turnos recibidos:", data);
         setTurnos(data.turnos || []);
 
         // Seleccionar el primer turno automáticamente
         if (data.turnos && data.turnos.length > 0) {
           setTurnoSeleccionado(data.turnos[0].id);
         }
+      } else {
+        console.error("Error en respuesta:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Error cargando turnos:", error);
@@ -142,13 +147,26 @@ export default function RutasPage() {
                   className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={!armadorSeleccionado || loadingTurnos}
                 >
-                  <option value="">-- Seleccione un turno --</option>
+                  <option value="">
+                    {loadingTurnos
+                      ? "Cargando turnos..."
+                      : !armadorSeleccionado
+                      ? "-- Primero seleccione un armador --"
+                      : turnos.length === 0
+                      ? "-- No hay turnos disponibles --"
+                      : "-- Seleccione un turno --"}
+                  </option>
                   {turnos.map((turno) => (
                     <option key={turno.id} value={turno.id}>
                       {new Date(turno.inicioTurno).toLocaleString()} - {turno.estado}
                     </option>
                   ))}
                 </select>
+                {armadorSeleccionado && !loadingTurnos && turnos.length === 0 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    Este armador no tiene turnos registrados aún.
+                  </p>
+                )}
               </div>
             </div>
 

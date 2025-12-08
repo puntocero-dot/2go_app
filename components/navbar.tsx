@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route } from "lucide-react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2 } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
@@ -110,17 +110,17 @@ export function Navbar({ user }: NavbarProps) {
                       Órdenes
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/proyectos">
+                  <Link href="/admin/administracion">
                     <EnhancedButton 
                       variant="ghost" 
                       size="sm"
                       className={cn(
                         "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/proyectos") && "text-white bg-white/10"
+                        isActive("/admin/administracion") && "text-white bg-white/10"
                       )}
                     >
-                      <Package className="w-4 h-4 mr-2" />
-                      Proyectos
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Administración
                     </EnhancedButton>
                   </Link>
                   <Link href="/admin/mapa">
@@ -134,19 +134,6 @@ export function Navbar({ user }: NavbarProps) {
                     >
                       <Map className="w-4 h-4 mr-2" />
                       Mapa
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/usuarios">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      size="sm"
-                      className={cn(
-                        "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/usuarios") && "text-white bg-white/10"
-                      )}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Usuarios
                     </EnhancedButton>
                   </Link>
                   <Link href="/admin/reportes/bi-dashboard">
@@ -396,16 +383,16 @@ export function Navbar({ user }: NavbarProps) {
                       Órdenes
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/proyectos" className="block">
+                  <Link href="/admin/administracion" className="block">
                     <EnhancedButton 
                       variant="ghost" 
                       className={cn(
                         "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/proyectos") && "text-white bg-white/10"
+                        isActive("/admin/administracion") && "text-white bg-white/10"
                       )}
                     >
-                      <Package className="w-4 h-4 mr-2" />
-                      Proyectos
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Administración
                     </EnhancedButton>
                   </Link>
                   <Link href="/admin/mapa" className="block">
@@ -418,18 +405,6 @@ export function Navbar({ user }: NavbarProps) {
                     >
                       <Map className="w-4 h-4 mr-2" />
                       Mapa
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/usuarios" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/usuarios") && "text-white bg-white/10"
-                      )}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Usuarios
                     </EnhancedButton>
                   </Link>
                   <Link href="/admin/reportes/bi-dashboard" className="block">
