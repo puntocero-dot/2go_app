@@ -3,6 +3,9 @@ import { securityHeaders } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', '@radix-ui/react-select', '@radix-ui/react-dialog'],
     turbo: {

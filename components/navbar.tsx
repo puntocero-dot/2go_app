@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign } from "lucide-react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
@@ -110,17 +110,43 @@ export function Navbar({ user }: NavbarProps) {
                       Órdenes
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/administracion">
+                  <Link href="/admin/proyectos">
                     <EnhancedButton 
                       variant="ghost" 
                       size="sm"
                       className={cn(
                         "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/administracion") && "text-white bg-white/10"
+                        isActive("/admin/proyectos") && "text-white bg-white/10"
                       )}
                     >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Administración
+                      <Package className="w-4 h-4 mr-2" />
+                      Proyectos
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/mapa">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/mapa") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      Mapa
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/usuarios">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/usuarios") && "text-white bg-white/10"
+                      )}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Usuarios
                     </EnhancedButton>
                   </Link>
                   <Link href="/admin/reportes/bi-dashboard">
@@ -136,17 +162,30 @@ export function Navbar({ user }: NavbarProps) {
                       BI Dashboard
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/mapa">
+                  <Link href="/admin/reportes/tiempos-pedido">
                     <EnhancedButton 
                       variant="ghost" 
                       size="sm"
                       className={cn(
                         "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/mapa") && "text-white bg-white/10"
+                        isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
                       )}
                     >
-                      <Map className="w-4 h-4 mr-2" />
-                      Mapa
+                      <Clock className="w-4 h-4 mr-2" />
+                      Tiempos
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/rutas">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/rutas") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Route className="w-4 h-4 mr-2" />
+                      Rutas
                     </EnhancedButton>
                   </Link>
                 </>
@@ -191,6 +230,19 @@ export function Navbar({ user }: NavbarProps) {
                     >
                       <Map className="w-4 h-4 mr-2" />
                       Mapa
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/reportes/tiempos-pedido">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Tiempos
                     </EnhancedButton>
                   </Link>
                 </>
@@ -378,6 +430,42 @@ export function Navbar({ user }: NavbarProps) {
                     >
                       <User className="w-4 h-4 mr-2" />
                       Usuarios
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/reportes/bi-dashboard" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
+                      )}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      BI Dashboard
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/reportes/tiempos-pedido" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Tiempos
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/rutas" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/rutas") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Route className="w-4 h-4 mr-2" />
+                      Rutas
                     </EnhancedButton>
                   </Link>
                 </>

@@ -54,7 +54,8 @@ export default function RutasPage() {
       const response = await fetch("/api/armadores");
       if (response.ok) {
         const data = await response.json();
-        setArmadores(data);
+        const lista = Array.isArray(data) ? data : data.armadores || [];
+        setArmadores(lista);
       }
     } catch (error) {
       console.error("Error cargando armadores:", error);
@@ -68,7 +69,7 @@ export default function RutasPage() {
       if (response.ok) {
         const data = await response.json();
         setTurnos(data.turnos || []);
-        
+
         // Seleccionar el primer turno automáticamente
         if (data.turnos && data.turnos.length > 0) {
           setTurnoSeleccionado(data.turnos[0].id);
@@ -126,7 +127,7 @@ export default function RutasPage() {
                   <option value="">-- Seleccione un armador --</option>
                   {armadores.map((armador) => (
                     <option key={armador.id} value={armador.id}>
-                      {armador.usuario.nombre}
+                      {armador.nombre}
                     </option>
                   ))}
                 </select>

@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    // Buscar la orden con el armador asignado
+    // Buscar la orden con el armador asignado y su turno más reciente
     const orden = await prisma.orden.findUnique({
       where: { id },
       include: {
@@ -54,22 +54,37 @@ export async function GET(
       return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
     }
 
+    const destino =
+      orden.usuarioFinal?.coordenadasLat != null &&
+      orden.usuarioFinal?.coordenadasLng != null
+        ? {
+            lat: orden.usuarioFinal.coordenadasLat,
+            lng: orden.usuarioFinal.coordenadasLng,
+          }
+        : null;
+
+    const respuestaBase = {
+      ordenId: id,
+      ruta: [] as Array<{
+        lat: number;
+        lng: number;
+        timestamp: Date;
+        tipo: string;
+      }>,
+      destino,
+      turnoId: null as string | null,
+      inicioTurno: null as Date | null,
+      finTurno: null as Date | null,
+    };
+
     // Si no hay armador asignado o no tiene turnos, retornar vacío
-    if (!orden.armador || !orden.armador.turnos || orden.armador.turnos.length === 0) {
-      return NextResponse.json({
-        ordenId: id,
-        ruta: [],
-        destino: orden.usuarioFinal?.coordenadasLat && orden.usuarioFinal?.coordenadasLng
-          ? {
-              lat: orden.usuarioFinal.coordenadasLat,
-              lng: orden.usuarioFinal.coordenadasLng,
-            }
-          : null,
-      });
+    if (!orden.armador || !Array.isArray(orden.armador.turnos) || orden.armador.turnos.length === 0) {
+      return NextResponse.json(respuestaBase);
     }
 
     const turno = orden.armador.turnos[0];
-    const ruta = turno.rutaPuntos.map((punto) => ({
+    const puntos = Array.isArray(turno.rutaPuntos) ? turno.rutaPuntos : [];
+    const ruta = puntos.map((punto) => ({
       lat: punto.latitud,
       lng: punto.longitud,
       timestamp: punto.timestamp,
@@ -77,14 +92,8 @@ export async function GET(
     }));
 
     return NextResponse.json({
-      ordenId: id,
+      ...respuestaBase,
       ruta,
-      destino: orden.usuarioFinal?.coordenadasLat && orden.usuarioFinal?.coordenadasLng
-        ? {
-            lat: orden.usuarioFinal.coordenadasLat,
-            lng: orden.usuarioFinal.coordenadasLng,
-          }
-        : null,
       turnoId: turno.id,
       inicioTurno: turno.inicioTurno,
       finTurno: turno.finTurno,

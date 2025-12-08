@@ -48,7 +48,21 @@ export async function middleware(request: NextRequest) {
     return invalidateSession();
   }
 
-  if (pathname.startsWith("/admin") && session.rol !== "ADMIN") {
+  if (pathname.startsWith("/admin")) {
+    if (session.rol === "ADMIN") {
+      return NextResponse.next();
+    }
+
+    const supervisorAllowed =
+      session.rol === "SUPERVISOR" &&
+      (pathname.startsWith("/admin/ordenes") ||
+        pathname.startsWith("/admin/mapa") ||
+        pathname.startsWith("/admin/reportes/tiempos-pedido"));
+
+    if (supervisorAllowed) {
+      return NextResponse.next();
+    }
+
     return NextResponse.redirect(new URL("/", request.url));
   }
   if (pathname.startsWith("/supervisor") && session.rol !== "SUPERVISOR") {

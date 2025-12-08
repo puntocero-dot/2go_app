@@ -1170,6 +1170,46 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
                 </div>
               ) : null}
 
+              {editingState.rol === "SUPERVISOR" ? (
+                <div className="space-y-4 rounded-md border border-blue-200 bg-blue-50 p-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-proyectos">Proyectos asignados</Label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3 bg-white">
+                      {proyectos.map((proyecto) => (
+                        <label
+                          key={proyecto.id}
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={editingState.proyectosIds.includes(proyecto.id)}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setEditingState((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      proyectosIds: isChecked
+                                        ? [...prev.proyectosIds, proyecto.id]
+                                        : prev.proyectosIds.filter((id) => id !== proyecto.id),
+                                    }
+                                  : prev
+                              );
+                            }}
+                            disabled={isEditing}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">{proyecto.nombreComercial}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {editFieldErrors.proyectosIds && (
+                      <p className="text-xs text-red-600">{editFieldErrors.proyectosIds}</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
               {editingError ? (
                 <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   {editingError}
