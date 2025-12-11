@@ -9,10 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Loader2, MapPin, Settings } from "lucide-react";
 
 interface GeomapsConfig {
-  stopDurationMin: number;
-  stopRadiusMeters: number;
-  speedingKmh: number;
-  clienteRadiusMeters: number;
+  duracionMinimaParada: number;
+  radioParada: number;
+  umbralVelocidadExcesiva: number;
+  radioProximidadCliente: number;
+  intervaloActualizacionGPS: number;
 }
 
 export default function GeomapsConfigPage() {
@@ -138,13 +139,14 @@ export default function GeomapsConfigPage() {
               <div className="border rounded-lg p-6 bg-background space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="stopDurationMin">Duración de parada larga (minutos)</Label>
+                    <Label htmlFor="duracionMinimaParada">Duración de parada larga (minutos)</Label>
                     <input
-                      id="stopDurationMin"
+                      id="duracionMinimaParada"
                       type="number"
                       min={1}
-                      value={formData.stopDurationMin}
-                      onChange={(e) => handleInputChange("stopDurationMin", e.target.value)}
+                      max={60}
+                      value={formData.duracionMinimaParada}
+                      onChange={(e) => handleInputChange("duracionMinimaParada", e.target.value)}
                       className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
@@ -154,13 +156,14 @@ export default function GeomapsConfigPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="stopRadiusMeters">Radio de parada (metros)</Label>
+                    <Label htmlFor="radioParada">Radio de parada (metros)</Label>
                     <input
-                      id="stopRadiusMeters"
+                      id="radioParada"
                       type="number"
-                      min={1}
-                      value={formData.stopRadiusMeters}
-                      onChange={(e) => handleInputChange("stopRadiusMeters", e.target.value)}
+                      min={10}
+                      max={500}
+                      value={formData.radioParada}
+                      onChange={(e) => handleInputChange("radioParada", e.target.value)}
                       className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
@@ -170,13 +173,14 @@ export default function GeomapsConfigPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="speedingKmh">Umbral de velocidad alta (km/h)</Label>
+                    <Label htmlFor="umbralVelocidadExcesiva">Umbral de velocidad alta (km/h)</Label>
                     <input
-                      id="speedingKmh"
+                      id="umbralVelocidadExcesiva"
                       type="number"
-                      min={1}
-                      value={formData.speedingKmh}
-                      onChange={(e) => handleInputChange("speedingKmh", e.target.value)}
+                      min={40}
+                      max={150}
+                      value={formData.umbralVelocidadExcesiva}
+                      onChange={(e) => handleInputChange("umbralVelocidadExcesiva", e.target.value)}
                       className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
@@ -186,18 +190,36 @@ export default function GeomapsConfigPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="clienteRadiusMeters">Radio de cliente (metros)</Label>
+                    <Label htmlFor="radioProximidadCliente">Radio de cliente (metros)</Label>
                     <input
-                      id="clienteRadiusMeters"
+                      id="radioProximidadCliente"
                       type="number"
-                      min={1}
-                      value={formData.clienteRadiusMeters}
-                      onChange={(e) => handleInputChange("clienteRadiusMeters", e.target.value)}
+                      min={20}
+                      max={500}
+                      value={formData.radioProximidadCliente}
+                      onChange={(e) => handleInputChange("radioProximidadCliente", e.target.value)}
                       className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Radio para considerar que el armador estuvo en la ubicación del cliente.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="intervaloActualizacionGPS">Intervalo de actualización GPS (minutos)</Label>
+                    <input
+                      id="intervaloActualizacionGPS"
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={formData.intervaloActualizacionGPS}
+                      onChange={(e) => handleInputChange("intervaloActualizacionGPS", e.target.value)}
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Frecuencia con la que el armador envía su ubicación GPS.
                     </p>
                   </div>
                 </div>

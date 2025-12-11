@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getGeomapsConfig } from "@/lib/geomaps-config";
-import { analizarRuta } from "@/lib/geolocation-rules";
+import { analizarRuta } from "@/lib/geomaps-helpers";
 
 // GET - Obtener ubicaciones de todos los armadores activos
 export async function GET() {
@@ -15,8 +14,6 @@ export async function GET() {
 
     // Ventana de tiempo para la ruta (últimas 24 horas)
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const config = await getGeomapsConfig();
 
     const armadores = await prisma.armador.findMany({
       where: {
@@ -78,23 +75,32 @@ export async function GET() {
           },
         });
 
+        const puntosRuta = registrosRuta.map((r) => ({
+          latitud: r.latitud as number,
+          longitud: r.longitud as number,
+          timestamp: r.timestamp,
+        }));
+
+        const ordenesConClientes = armador.ordenes
+          .filter(
+            (orden) =>
+              typeof orden.usuarioFinal.coordenadasLat === "number" &&
+              typeof orden.usuarioFinal.coordenadasLng === "number"
+          )
+          .map((orden) => ({
+            id: orden.id,
+            clienteNombre: orden.usuarioFinal.nombre,
+            clienteLat: orden.usuarioFinal.coordenadasLat as number,
+            clienteLng: orden.usuarioFinal.coordenadasLng as number,
+          }));
+
+        const analisis = await analizarRuta(puntosRuta, ordenesConClientes);
+
         const ruta = registrosRuta.map((r) => ({
           lat: r.latitud as number,
           lng: r.longitud as number,
           timestamp: r.timestamp.toISOString(),
         }));
-
-        const clientes = armador.ordenes
-          .map((orden) => ({
-            lat: orden.usuarioFinal.coordenadasLat,
-            lng: orden.usuarioFinal.coordenadasLng,
-          }))
-          .filter((c) => typeof c.lat === "number" && typeof c.lng === "number") as {
-            lat: number;
-            lng: number;
-          }[];
-
-        const analisis = analizarRuta(ruta, clientes, config);
 
         return {
           id: armador.id,

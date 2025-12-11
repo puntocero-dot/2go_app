@@ -25,6 +25,7 @@ export type AuditAction =
   // Configuración
   | "UPDATE_BILLING_CONFIG"
   | "UPDATE_SYSTEM_CONFIG"
+  | "UPDATE_GEOMAPS_CONFIG"
   // Proyectos
   | "CREATE_PROJECT"
   | "UPDATE_PROJECT"

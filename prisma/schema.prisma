@@ -479,3 +479,16 @@ model AuditLog {
   @@index([status])
   @@map("audit_logs")
 }
+
+model ConfiguracionGeomaps {
+  id                        String   @id @default(uuid())
+  duracionMinimaParada      Int      @default(5)    // Minutos para considerar una parada
+  radioParada               Int      @default(50)   // Metros de radio para detectar parada
+  umbralVelocidadExcesiva   Int      @default(80)   // km/h para alertar velocidad excesiva
+  radioProximidadCliente    Int      @default(100)  // Metros para considerar que llegó al cliente
+  intervaloActualizacionGPS Int      @default(2)    // Minutos entre actualizaciones GPS
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("configuracion_geomaps")
+}
