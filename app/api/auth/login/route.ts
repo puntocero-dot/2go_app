@@ -91,6 +91,56 @@ const loginHandler = async (data: LoginInput, request: NextRequest) => {
       rol: usuario.rol,
     });
 
+    // Si es ARMADOR, iniciar turno automáticamente
+    let turnoId = null;
+    if (usuario.rol === "ARMADOR") {
+      try {
+        // Buscar el registro de armador
+        const armador = await prisma.armador.findUnique({
+          where: { usuarioId: usuario.id },
+          include: {
+            turnos: {
+              where: { estado: "ACTIVO" },
+              orderBy: { inicioTurno: "desc" },
+              take: 1,
+            },
+          },
+        });
+
+        if (armador) {
+          // Si ya tiene un turno activo, reutilizarlo
+          if (armador.turnos.length > 0) {
+            turnoId = armador.turnos[0].id;
+          } else {
+            // Finalizar cualquier turno antiguo que quedó abierto
+            await prisma.turno.updateMany({
+              where: {
+                armadorId: armador.id,
+                estado: "ACTIVO",
+              },
+              data: {
+                estado: "FINALIZADO",
+                finTurno: new Date(),
+              },
+            });
+
+            // Crear nuevo turno
+            const nuevoTurno = await prisma.turno.create({
+              data: {
+                armadorId: armador.id,
+                estado: "ACTIVO",
+                inicioTurno: new Date(),
+              },
+            });
+            turnoId = nuevoTurno.id;
+          }
+        }
+      } catch (error) {
+        console.error("Error creando turno automático:", error);
+        // No fallar el login si hay error en el turno
+      }
+    }
+
     await logAuditFromSession({
       session: {
         userId: usuario.id,
@@ -100,7 +150,7 @@ const loginHandler = async (data: LoginInput, request: NextRequest) => {
       action: "LOGIN",
       resource: "auth",
       resourceId: usuario.id,
-      metadata: { email },
+      metadata: { email, turnoId },
       request,
     });
 
@@ -112,6 +162,7 @@ const loginHandler = async (data: LoginInput, request: NextRequest) => {
         nombre: usuario.nombre,
         rol: usuario.rol,
       },
+      turnoId,
     });
   } catch (error) {
     console.error("Error en login:", error);

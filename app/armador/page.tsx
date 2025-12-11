@@ -62,9 +62,16 @@ export default async function ArmadorDashboard() {
     redirect("/login");
   }
 
-  // Buscar el armador asociado
+  // Buscar el armador asociado y su turno activo
   const armador = await prisma.armador.findUnique({
     where: { usuarioId: usuario.id },
+    include: {
+      turnos: {
+        where: { estado: "ACTIVO" },
+        orderBy: { inicioTurno: "desc" },
+        take: 1,
+      },
+    },
   });
 
   if (!armador) {
@@ -132,6 +139,32 @@ export default async function ArmadorDashboard() {
       
       <main className="container mx-auto px-4 py-8">
         <ArmadorGpsTracker />
+        
+        {/* Indicador de Turno Activo */}
+        {armador.turnos.length > 0 && (
+          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-800">
+                  Turno Activo
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  Iniciado: {format(new Date(armador.turnos[0].inicioTurno), "HH:mm", { locale: es })} • 
+                  Tu ubicación GPS está siendo registrada
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Badge className="bg-green-600 hover:bg-green-700">
+                  🟢 En línea
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-deep-navy">Mis Órdenes</h1>
           <p className="text-gray-600 mt-2">
