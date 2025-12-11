@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2 } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -25,11 +25,29 @@ export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   };
+
+  // Cerrar menú de usuario al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   const handleCambioEstado = async (nuevoEstado: string) => {
     try {
@@ -262,7 +280,7 @@ export function Navbar({ user }: NavbarProps) {
               />
             </div>
 
-            <div className="relative hidden sm:flex">
+            <div className="relative hidden sm:flex" ref={userMenuRef}>
               <EnhancedButton
                 variant="ghost"
                 size="sm"
@@ -292,7 +310,7 @@ export function Navbar({ user }: NavbarProps) {
               </EnhancedButton>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-md bg-negro-azabache border border-gray-700 shadow-lg z-50 py-2">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-md bg-negro-azabache border border-gray-700 shadow-lg z-50 py-2">
                   <div className="px-3 pb-2 flex items-center justify-between">
                     <div className="text-xs text-gray-300">
                       <div className="font-medium truncate max-w-[140px]">{user.nombre}</div>
@@ -304,7 +322,7 @@ export function Navbar({ user }: NavbarProps) {
                   </div>
 
                   {user.rol !== "ARMADOR" && (
-                    <Link href="/admin/perfil">
+                    <Link href="/admin/perfil" onClick={() => setUserMenuOpen(false)}>
                       <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
                         <User className="w-4 h-4" />
                         <span>Mi Perfil</span>
@@ -314,13 +332,13 @@ export function Navbar({ user }: NavbarProps) {
 
                   {user.rol === "ADMIN" && (
                     <>
-                      <Link href="/admin/configuracion/facturacion">
+                      <Link href="/admin/configuracion/facturacion" onClick={() => setUserMenuOpen(false)}>
                         <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
                           <Settings className="w-4 h-4" />
                           <span>Config. Facturación</span>
                         </button>
                       </Link>
-                      <Link href="/admin/configuracion/geomaps">
+                      <Link href="/admin/configuracion/geomaps" onClick={() => setUserMenuOpen(false)}>
                         <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
                           <Map className="w-4 h-4" />
                           <span>Config. Geomaps</span>
@@ -332,7 +350,10 @@ export function Navbar({ user }: NavbarProps) {
                   <div className="border-t border-gray-700 mt-2 pt-2">
                     <button
                       className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
-                      onClick={handleLogout}
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleLogout();
+                      }}
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Cerrar sesión</span>
@@ -505,7 +526,7 @@ export function Navbar({ user }: NavbarProps) {
               {/* Enlaces comunes para todos */}
               <div className="border-t border-gray-700 mt-2 pt-2 space-y-1">
                 {user.rol !== "ARMADOR" && (
-                  <Link href="/admin/perfil" className="block">
+                  <Link href="/admin/perfil" className="block" onClick={() => setMobileMenuOpen(false)}>
                     <EnhancedButton
                       variant="ghost"
                       className={cn(
@@ -521,7 +542,7 @@ export function Navbar({ user }: NavbarProps) {
 
                 {user.rol === "ADMIN" && (
                   <>
-                    <Link href="/admin/configuracion/facturacion" className="block">
+                    <Link href="/admin/configuracion/facturacion" className="block" onClick={() => setMobileMenuOpen(false)}>
                       <EnhancedButton
                         variant="ghost"
                         className={cn(
@@ -533,7 +554,7 @@ export function Navbar({ user }: NavbarProps) {
                         Config. Facturación
                       </EnhancedButton>
                     </Link>
-                    <Link href="/admin/configuracion/geomaps" className="block">
+                    <Link href="/admin/configuracion/geomaps" className="block" onClick={() => setMobileMenuOpen(false)}>
                       <EnhancedButton
                         variant="ghost"
                         className={cn(
@@ -549,8 +570,11 @@ export function Navbar({ user }: NavbarProps) {
                 )}
 
                 <button
-                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
-                  onClick={handleLogout}
+                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 rounded-md"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Cerrar sesión</span>
