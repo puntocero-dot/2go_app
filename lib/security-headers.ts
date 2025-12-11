@@ -21,12 +21,13 @@ export const securityHeaders = {
   // Content Security Policy
   "Content-Security-Policy": `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com https://vercel.live;
-    script-src-elem 'self' 'unsafe-inline' https://api.mapbox.com https://vercel.live;
-    style-src 'self' 'unsafe-inline' https://api.mapbox.com;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com https://vercel.live https://*.mapbox.com;
+    script-src-elem 'self' 'unsafe-inline' https://api.mapbox.com https://vercel.live https://*.mapbox.com;
+    style-src 'self' 'unsafe-inline' https://api.mapbox.com https://*.mapbox.com;
     img-src 'self' data: https: blob:;
-    font-src 'self' data:;
-    connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://res.cloudinary.com https://api.cloudinary.com;
+    font-src 'self' data: https://api.mapbox.com https://*.mapbox.com;
+    connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://res.cloudinary.com https://api.cloudinary.com https://*.tiles.mapbox.com https://*.mapbox.com;
+    worker-src 'self' blob: data: https://api.mapbox.com https://*.mapbox.com https://vercel.live;
     frame-src 'self' https://vercel.live;
     object-src 'none';
     base-uri 'self';
