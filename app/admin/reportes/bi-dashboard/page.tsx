@@ -45,17 +45,12 @@ async function getBIDashboardData(filters: any) {
   if (filters.fechaInicio || filters.fechaFin) {
     const rangoFechas: any = {};
     if (typeof filters.fechaInicio === "string" && filters.fechaInicio) {
-      rangoFechas.gte = new Date(`${filters.fechaInicio}T06:00:00.000Z`);
+      rangoFechas.gte = new Date(`${filters.fechaInicio}T00:00:00.000Z`);
     }
     if (typeof filters.fechaFin === "string" && filters.fechaFin) {
-      const endBase = new Date(`${filters.fechaFin}T06:00:00.000Z`);
-      rangoFechas.lte = new Date(endBase.getTime() - 1);
+      rangoFechas.lte = new Date(`${filters.fechaFin}T23:59:59.999Z`);
     }
-
-    where.OR = [
-      { fechaCreacion: rangoFechas },
-      { fechaCompletado: rangoFechas },
-    ];
+    where.fechaCreacion = rangoFechas;
   }
 
   // Datos básicos
@@ -96,7 +91,7 @@ async function getBIDashboardData(filters: any) {
         const diff = orden.fechaCompletado!.getTime() - orden.fechaCreacion.getTime();
         return sum + (diff / (1000 * 60 * 60)); // convertir a horas
       }, 0) / ordenesConTiempo.length
-    : 18.5; // valor por defecto si no hay datos
+    : 0;
   
   // Tiempos por estado (calculados dinámicamente)
   const tiemposPorEstado = [

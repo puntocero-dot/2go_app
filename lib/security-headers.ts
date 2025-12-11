@@ -21,7 +21,8 @@ export const securityHeaders = {
   // Content Security Policy
   "Content-Security-Policy": `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com https://vercel.live;
+    script-src-elem 'self' https://api.mapbox.com https://vercel.live;
     style-src 'self' 'unsafe-inline' https://api.mapbox.com;
     img-src 'self' data: https: blob:;
     font-src 'self' data:;

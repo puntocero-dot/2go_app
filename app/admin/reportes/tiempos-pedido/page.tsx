@@ -169,6 +169,39 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
   const fechaFinFilter =
     typeof currentSearchParams?.fechaFin === "string" ? currentSearchParams.fechaFin : "";
 
+  if (!fechaInicioFilter || !fechaFinFilter) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <Navbar
+          user={{
+            nombre: usuario?.nombre || "",
+            email: usuario?.email || "",
+            rol: session?.rol as any,
+            estadoLoggeo: usuario?.estadoLoggeo ?? undefined,
+          }}
+        />
+        <div className="max-w-5xl mx-auto px-4 py-10">
+          <EnhancedCard className="p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-6 h-6 text-yellow-500" />
+              <div>
+                <h2 className="text-lg font-semibold">Selecciona un rango de fechas</h2>
+                <p className="text-sm text-muted-foreground">
+                  Debes elegir fecha inicio y fecha fin para generar el reporte de tiempos.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 flex-wrap">
+              <Link href="/admin/reportes/tiempos-pedido">
+                <EnhancedButton variant="default">Volver a filtros</EnhancedButton>
+              </Link>
+            </div>
+          </EnhancedCard>
+        </div>
+      </div>
+    );
+  }
+
   // Build where clause
   const where: any = {};
   if (proyectoIdFilter !== "ALL") {
@@ -204,13 +237,22 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
     }),
   ]);
 
+  const fechaFinLimite = fechaFinFilter
+    ? new Date(`${fechaFinFilter}T23:59:59.999Z`)
+    : new Date();
+
   // Process report data
   const reportRows: ReportRow[] = ordenes.map((orden) => {
-    const tiempoTotalSegundos = orden.fechaCompletado
-      ? Math.floor(
-          (orden.fechaCompletado.getTime() - orden.fechaCreacion.getTime()) / 1000
-        )
-      : Math.floor((new Date().getTime() - orden.fechaCreacion.getTime()) / 1000);
+    const endDate = orden.fechaCompletado
+      ? orden.fechaCompletado
+      : fechaFinLimite < new Date()
+      ? fechaFinLimite
+      : new Date();
+
+    const tiempoTotalSegundos = Math.max(
+      0,
+      Math.floor((endDate.getTime() - orden.fechaCreacion.getTime()) / 1000)
+    );
 
     return {
       ordenId: orden.id,
@@ -226,13 +268,12 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
 
   // Calculate statistics
   const totalOrdenes = reportRows.length;
-  const ordenesCompletadas = reportRows.filter(r => r.fechaCompletado).length;
-  const tiempoPromedioSegundos = totalOrdenes > 0 
-    ? reportRows.reduce((sum, r) => sum + r.tiempoTotalSegundos, 0) / totalOrdenes 
+  const completadasRows = reportRows.filter(r => r.fechaCompletado);
+  const ordenesCompletadas = completadasRows.length;
+  const tiempoPromedioSegundos = ordenesCompletadas > 0
+    ? completadasRows.reduce((sum, r) => sum + r.tiempoTotalSegundos, 0) / ordenesCompletadas
     : 0;
-  const tiempoPromedioCompletadasSegundos = ordenesCompletadas > 0
-    ? reportRows.filter(r => r.fechaCompletado).reduce((sum, r) => sum + r.tiempoTotalSegundos, 0) / ordenesCompletadas
-    : 0;
+  const tiempoPromedioCompletadasSegundos = tiempoPromedioSegundos;
 
   const hasData = reportRows.length > 0;
 

@@ -87,7 +87,9 @@ export async function GET() {
 
     // Formatear turnos activos
     const turnosFormateados = await Promise.all(
-      turnosActivos.map(async (turno) => {
+      turnosActivos
+        .filter((t) => t.armador) // evitar nulos
+        .map(async (turno) => {
         const ultimoPunto = turno.rutaPuntos[0];
         const totalPuntosRuta = await prisma.rutaPunto.count({
           where: { turnoId: turno.id },

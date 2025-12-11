@@ -25,7 +25,10 @@ export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [workforceOpen, setWorkforceOpen] = useState(false);
+  const [workforceDesktopOpen, setWorkforceDesktopOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -48,6 +51,23 @@ export function Navbar({ user }: NavbarProps) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [userMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutsideMobile = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false);
+        setWorkforceOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutsideMobile);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideMobile);
+    };
+  }, [mobileMenuOpen]);
 
   const handleCambioEstado = async (nuevoEstado: string) => {
     try {
@@ -141,71 +161,64 @@ export function Navbar({ user }: NavbarProps) {
                       Administración
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/mapa">
+                  <div className="relative">
                     <EnhancedButton 
                       variant="ghost" 
                       size="sm"
                       className={cn(
                         "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/mapa") && "text-white bg-white/10"
+                        workforceDesktopOpen && "text-white bg-white/10"
                       )}
+                      onClick={() => setWorkforceDesktopOpen((prev) => !prev)}
                     >
-                      <Map className="w-4 h-4 mr-2" />
-                      Mapa
+                      <Users className="w-4 h-4 mr-2" />
+                      WorkForce
                     </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/reportes/bi-dashboard">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      size="sm"
-                      className={cn(
-                        "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
-                      )}
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      BI Dashboard
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/reportes/tiempos-pedido">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      size="sm"
-                      className={cn(
-                        "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Clock className="w-4 h-4 mr-2" />
-                      Tiempos
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/rutas">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      size="sm"
-                      className={cn(
-                        "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/rutas") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Route className="w-4 h-4 mr-2" />
-                      Rutas
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/turnos">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      size="sm"
-                      className={cn(
-                        "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/turnos") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Timer className="w-4 h-4 mr-2" />
-                      Turnos
-                    </EnhancedButton>
-                  </Link>
+                    {workforceDesktopOpen && (
+                      <div className="absolute left-0 mt-2 w-56 rounded-md bg-negro-azabache border border-gray-700 shadow-lg z-40 py-2">
+                        <Link href="/admin/reportes/bi-dashboard" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            isActive("/admin/reportes/bi-dashboard") && "bg-white/10 text-white"
+                          )}>
+                            <BarChart3 className="w-4 h-4" /> BI Dashboard
+                          </button>
+                        </Link>
+                        <Link href="/admin/turnos" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            isActive("/admin/turnos") && "bg-white/10 text-white"
+                          )}>
+                            <Timer className="w-4 h-4" /> Turnos
+                          </button>
+                        </Link>
+                        <Link href="/admin/mapa" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            isActive("/admin/mapa") && "bg-white/10 text-white"
+                          )}>
+                            <Map className="w-4 h-4" /> Mapa
+                          </button>
+                        </Link>
+                        <Link href="/admin/reportes/tiempos-pedido" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            isActive("/admin/reportes/tiempos-pedido") && "bg-white/10 text-white"
+                          )}>
+                            <Clock className="w-4 h-4" /> Tiempos
+                          </button>
+                        </Link>
+                        <Link href="/admin/rutas" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            isActive("/admin/rutas") && "bg-white/10 text-white"
+                          )}>
+                            <Route className="w-4 h-4" /> Rutas
+                          </button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -389,7 +402,21 @@ export function Navbar({ user }: NavbarProps) {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-700 fade-in">
+          <div className="md:hidden border-t border-gray-700 fade-in" ref={mobileMenuRef}>
+            <div className="flex items-center justify-between px-2 pt-3 pb-1">
+              <span className="text-sm text-gray-300">Menú</span>
+              <EnhancedButton
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/10"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setWorkforceOpen(false);
+                }}
+              >
+                <X className="w-5 h-5" />
+              </EnhancedButton>
+            </div>
             <div className="px-2 pt-2 pb-3 space-y-1">
               {user.rol === "ADMIN" && (
                 <>
@@ -429,66 +456,86 @@ export function Navbar({ user }: NavbarProps) {
                       Administración
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/mapa" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
+                  <div className="w-full">
+                    <EnhancedButton
+                      variant="ghost"
                       className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/mapa") && "text-white bg-white/10"
+                        "w-full justify-between text-gray-300 hover:text-white hover:bg-white/10",
+                        workforceOpen && "text-white bg-white/10"
                       )}
+                      onClick={() => setWorkforceOpen((prev) => !prev)}
                     >
-                      <Map className="w-4 h-4 mr-2" />
-                      Mapa
+                      <span className="flex items-center">
+                        <Users className="w-4 h-4 mr-2" />
+                        WorkForce
+                      </span>
+                      <span className="text-xs">{workforceOpen ? "−" : "+"}</span>
                     </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/reportes/bi-dashboard" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
-                      )}
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      BI Dashboard
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/reportes/tiempos-pedido" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Clock className="w-4 h-4 mr-2" />
-                      Tiempos
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/rutas" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/rutas") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Route className="w-4 h-4 mr-2" />
-                      Rutas
-                    </EnhancedButton>
-                  </Link>
-                  <Link href="/admin/turnos" className="block">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/turnos") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Timer className="w-4 h-4 mr-2" />
-                      Turnos
-                    </EnhancedButton>
-                  </Link>
+                    {workforceOpen && (
+                      <div className="ml-4 mt-1 space-y-1">
+                        <Link href="/admin/reportes/bi-dashboard" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton 
+                            variant="ghost" 
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
+                            )}
+                          >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            BI Dashboard
+                          </EnhancedButton>
+                        </Link>
+                        <Link href="/admin/turnos" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton 
+                            variant="ghost" 
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/turnos") && "text-white bg-white/10"
+                            )}
+                          >
+                            <Timer className="w-4 h-4 mr-2" />
+                            Turnos
+                          </EnhancedButton>
+                        </Link>
+                        <Link href="/admin/mapa" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton 
+                            variant="ghost" 
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/mapa") && "text-white bg-white/10"
+                            )}
+                          >
+                            <Map className="w-4 h-4 mr-2" />
+                            Mapa
+                          </EnhancedButton>
+                        </Link>
+                        <Link href="/admin/reportes/tiempos-pedido" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton 
+                            variant="ghost" 
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
+                            )}
+                          >
+                            <Clock className="w-4 h-4 mr-2" />
+                            Tiempos
+                          </EnhancedButton>
+                        </Link>
+                        <Link href="/admin/rutas" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton 
+                            variant="ghost" 
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/rutas") && "text-white bg-white/10"
+                            )}
+                          >
+                            <Route className="w-4 h-4 mr-2" />
+                            Rutas
+                          </EnhancedButton>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
