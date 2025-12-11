@@ -42,6 +42,7 @@ async function getBIDashboardData(filters: any) {
     where.proyectoId = filters.proyectoId;
   }
   
+  // Rango de fechas: considerar creación o completado dentro del rango
   if (filters.fechaInicio || filters.fechaFin) {
     const rangoFechas: any = {};
     if (typeof filters.fechaInicio === "string" && filters.fechaInicio) {
@@ -50,7 +51,10 @@ async function getBIDashboardData(filters: any) {
     if (typeof filters.fechaFin === "string" && filters.fechaFin) {
       rangoFechas.lte = new Date(`${filters.fechaFin}T23:59:59.999Z`);
     }
-    where.fechaCreacion = rangoFechas;
+    where.OR = [
+      { fechaCreacion: rangoFechas },
+      { fechaCompletado: rangoFechas },
+    ];
   }
 
   // Datos básicos
@@ -84,23 +88,26 @@ async function getBIDashboardData(filters: any) {
   const ordenesEnProceso = ordenes.filter(o => ['ASIGNADO', 'EN_RUTA', 'ARMADO_INICIADO'].includes(o.estado)).length;
   const completionRate = totalOrdenes > 0 ? (ordenesCompletadas / totalOrdenes) * 100 : 0;
   
-  // Calcular tiempo promedio de entrega (en horas)
-  const ordenesConTiempo = ordenes.filter(o => o.fechaCompletado);
-  const tiempoPromedioHoras = ordenesConTiempo.length > 0
-    ? ordenesConTiempo.reduce((sum, orden) => {
+  // Calcular tiempo promedio de entrega (en horas) SOLO para completadas dentro del rango
+  const fechaInicio = filters.fechaInicio ? new Date(`${filters.fechaInicio}T00:00:00.000Z`) : null;
+  const fechaFin = filters.fechaFin ? new Date(`${filters.fechaFin}T23:59:59.999Z`) : null;
+  const completadasEnRango = ordenes.filter(o => {
+    if (!o.fechaCompletado) return false;
+    if (fechaInicio && o.fechaCompletado < fechaInicio) return false;
+    if (fechaFin && o.fechaCompletado > fechaFin) return false;
+    return true;
+  });
+  const tiempoPromedioHoras = completadasEnRango.length > 0
+    ? completadasEnRango.reduce((sum, orden) => {
         const diff = orden.fechaCompletado!.getTime() - orden.fechaCreacion.getTime();
         return sum + (diff / (1000 * 60 * 60)); // convertir a horas
-      }, 0) / ordenesConTiempo.length
+      }, 0) / completadasEnRango.length
     : 0;
-  
-  // Tiempos por estado (calculados dinámicamente)
+  const tiempoPromedioHorasRedondeado = parseFloat(tiempoPromedioHoras.toFixed(2));
+
+  // Tiempos por estado (solo completadas para evitar promedios irreales)
   const tiemposPorEstado = [
-    { name: 'Sin Asignar', value: tiempoPromedioHoras * 0.13 },
-    { name: 'Asignado', value: tiempoPromedioHoras * 0.23 },
-    { name: 'En Ruta', value: tiempoPromedioHoras * 0.44 },
-    { name: 'Armado Iniciado', value: tiempoPromedioHoras * 0.66 },
-    { name: 'Armado Finalizado', value: tiempoPromedioHoras * 0.91 },
-    { name: 'Completado', value: tiempoPromedioHoras }
+    { name: 'Completado', value: tiempoPromedioHorasRedondeado },
   ];
 
   // Tendencia últimos 30 días
@@ -193,7 +200,7 @@ async function getBIDashboardData(filters: any) {
       },
       {
         label: "Tiempo Promedio Entrega",
-        value: tiempoPromedioHoras * 3600, // convertir a segundos
+        value: tiempoPromedioHorasRedondeado * 3600, // en segundos para formateo de tiempo
         change: -8.3,
         icon: "Clock",
         color: 'warning' as const,

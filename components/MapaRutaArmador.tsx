@@ -20,7 +20,10 @@ interface MapaRutaArmadorProps {
   className?: string;
 }
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+const MAPBOX_TOKEN =
+  process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ||
+  process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
+  "";
 
 // Estilo de la línea de ruta (azul con bordes como Google Maps)
 const routeLayerStyle: LayerProps = {
