@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2 } from "lucide-react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2, Timer } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
@@ -191,6 +191,19 @@ export function Navbar({ user }: NavbarProps) {
                     >
                       <Route className="w-4 h-4 mr-2" />
                       Rutas
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/turnos">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/turnos") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Timer className="w-4 h-4 mr-2" />
+                      Turnos
                     </EnhancedButton>
                   </Link>
                 </>
@@ -462,6 +475,18 @@ export function Navbar({ user }: NavbarProps) {
                     >
                       <Route className="w-4 h-4 mr-2" />
                       Rutas
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/admin/turnos" className="block">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/admin/turnos") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Timer className="w-4 h-4 mr-2" />
+                      Turnos
                     </EnhancedButton>
                   </Link>
                 </>
