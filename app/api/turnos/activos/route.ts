@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { turnoService } from "@/lib/services";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function GET() {
   try {
@@ -10,6 +12,42 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
+    // Usar Service Layer si el feature flag está habilitado
+    const useServiceLayer = isFeatureEnabled('SERVICE_LAYER', session.userId, session.rol);
+    
+    if (useServiceLayer) {
+      const turnosActivos = await turnoService.obtenerTurnosActivos();
+      
+      // Obtener armadores sin turno
+      const todosArmadores = await prisma.armador.findMany({
+        where: { estado: "ACTIVO" },
+        include: {
+          usuario: { select: { nombre: true, telefono: true, estadoLoggeo: true } },
+          turnos: { where: { estado: "ACTIVO" }, select: { id: true } },
+        },
+      });
+      
+      const armadoresSinTurno = todosArmadores
+        .filter((a) => a.turnos.length === 0)
+        .map((a) => ({
+          id: a.id,
+          nombre: a.usuario.nombre,
+          telefono: a.usuario.telefono,
+          estadoLoggeo: a.usuario.estadoLoggeo,
+        }));
+      
+      return NextResponse.json({
+        turnosActivos,
+        armadoresSinTurno,
+        resumen: {
+          totalTurnosActivos: turnosActivos.length,
+          totalArmadoresActivos: todosArmadores.length,
+          armadoresSinTurno: armadoresSinTurno.length,
+        },
+      });
+    }
+
+    // Lógica original (sin Service Layer)
     // Obtener todos los turnos activos con información del armador
     const turnosActivos = await prisma.turno.findMany({
       where: {

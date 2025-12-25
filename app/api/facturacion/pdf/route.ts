@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getBillingDataset } from "@/lib/facturacion-data";
 import { generateBillingPdfEnhanced } from "@/lib/facturacion-pdf-enhanced";
+import { generateBillingPdfV2 } from "@/lib/pdf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getBillingSecurityHeaders } from "@/lib/security-headers";
 import { billingFiltersSchema } from "@/lib/schemas/facturacion.schema";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 function slugifyProjectName(name: string): string {
   return name
@@ -79,7 +81,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const pdfBytes = await generateBillingPdfEnhanced(dataset);
+    // Usar PDF V2 si el feature flag está habilitado
+    const usePdfV2 = isFeatureEnabled('PDF_V2', session.userId, session.rol);
+    const pdfBytes = usePdfV2
+      ? await generateBillingPdfV2(dataset)
+      : await generateBillingPdfEnhanced(dataset);
     const pdfArrayBuffer = (pdfBytes.buffer as ArrayBuffer).slice(
       pdfBytes.byteOffset,
       pdfBytes.byteOffset + pdfBytes.byteLength,
