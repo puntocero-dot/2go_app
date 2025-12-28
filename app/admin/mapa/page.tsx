@@ -18,7 +18,18 @@ type Usuario = {
   rol: "ADMIN" | "SUPERVISOR" | "ARMADOR";
 };
 
-async function getMapData() {
+async function getMapData(userId: string, rol: string) {
+  // Si es SUPERVISOR, obtener solo sus proyectos asignados
+  let proyectoIds: string[] | null = null;
+  
+  if (rol === 'SUPERVISOR') {
+    const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+      where: { usuarioId: userId },
+      select: { proyectoId: true }
+    });
+    proyectoIds = supervisorProyectos.map(sp => sp.proyectoId);
+  }
+
   // Armadores con ubicación activa
   const armadores = await prisma.armador.findMany({
     where: {
@@ -36,8 +47,9 @@ async function getMapData() {
     }
   });
 
-  // Proyectos disponibles para filtros
+  // Proyectos disponibles para filtros (filtrados por rol)
   const proyectos = await prisma.proyecto.findMany({
+    where: proyectoIds ? { id: { in: proyectoIds } } : undefined,
     select: {
       id: true,
       nombreComercial: true
@@ -47,12 +59,13 @@ async function getMapData() {
     }
   });
 
-  // Órdenes activas con ubicación del cliente
+  // Órdenes activas con ubicación del cliente (filtradas por proyecto si es supervisor)
   const ordenes = await prisma.orden.findMany({
     where: {
       estado: {
         in: ['ASIGNADO', 'EN_RUTA', 'ARMADO_INICIADO']
-      }
+      },
+      ...(proyectoIds ? { proyectoId: { in: proyectoIds } } : {})
     },
     include: {
       usuarioFinal: {
@@ -100,7 +113,7 @@ export default async function MapaPage() {
     redirect("/login");
   }
 
-  const { armadores, ordenes, proyectos } = await getMapData();
+  const { armadores, ordenes, proyectos } = await getMapData(session.userId, session.rol);
 
   return (
     <div className="min-h-screen bg-gray-50">

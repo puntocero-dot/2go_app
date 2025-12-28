@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 
 export function ArmadorGpsTracker() {
+  const trackingEnabled = useFeatureFlag('TRACKING_AUTO');
+
   useEffect(() => {
+    // Si el feature flag está deshabilitado, no iniciar tracking
+    if (!trackingEnabled) {
+      return;
+    }
+
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
       return;
     }
@@ -142,7 +150,7 @@ export function ArmadorGpsTracker() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, []);
+  }, [trackingEnabled]);
 
   return null;
 }

@@ -263,19 +263,6 @@ export function Navbar({ user }: NavbarProps) {
                       Mapa
                     </EnhancedButton>
                   </Link>
-                  <Link href="/admin/reportes/tiempos-pedido">
-                    <EnhancedButton 
-                      variant="ghost" 
-                      size="sm"
-                      className={cn(
-                        "text-gray-300 hover:text-white hover:bg-white/10",
-                        isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
-                      )}
-                    >
-                      <Clock className="w-4 h-4 mr-2" />
-                      Tiempos
-                    </EnhancedButton>
-                  </Link>
                 </>
               )}
 

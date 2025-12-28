@@ -143,7 +143,7 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
   const session = await getSession();
   const currentSearchParams = await searchParams;
 
-  if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+  if (!session || session.rol !== "ADMIN") {
     redirect("/login");
   }
 
