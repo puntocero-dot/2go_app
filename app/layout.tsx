@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { RegisterServiceWorker } from "./register-sw";
+import { OnlineStatusIndicator } from "@/components/online-status-indicator";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -49,6 +50,7 @@ export default function RootLayout({
         <RegisterServiceWorker />
         {children}
         <Toaster />
+        <OnlineStatusIndicator />
       </body>
     </html>
   );
