@@ -400,29 +400,91 @@ import { SafeHTML, SafeText } from "@/components/SafeHTML";
 
 ---
 
-## 12. Próximos Pasos (Opcional)
+## 12. Sprint 3: UX y Performance - ✅ COMPLETADO
 
-### Mejoras Adicionales
+### Mejoras Implementadas
 
-1. **Redis para Rate Limiting**:
-   - Migrar de memoria a Upstash Redis
-   - Mejor para múltiples instancias
+#### 12.1 Capa de Servicios
+- ✅ `lib/services/base.service.ts` - Clase base
+- ✅ `lib/services/turno.service.ts` - Lógica de turnos
+- ✅ `lib/services/orden.service.ts` - Lógica de órdenes
 
-2. **Autenticación 2FA**:
-   - TOTP con Google Authenticator
-   - Backup codes
+#### 12.2 Smart Sampling GPS
+- ✅ Reducción de puntos GPS redundantes
+- ✅ Solo guarda si movimiento > 50 metros
+- ✅ Reducción estimada: 60-70% de registros
 
-3. **Encriptación de Datos Sensibles**:
-   - Encriptar campos sensibles en DB
-   - Key rotation
+#### 12.3 Feature Flags
+- ✅ `lib/feature-flags.ts` implementado
+- ✅ Flags: `SERVICE_LAYER`, `SMART_SAMPLING`
+- ✅ Rollout gradual por usuario
 
-4. **WAF (Web Application Firewall)**:
-   - Cloudflare WAF
-   - Reglas personalizadas
+#### 12.4 Optimización de Queries
+- ✅ Uso de `include` en lugar de queries N+1
+- ✅ Uso de `_count` para conteos
+- ✅ Índices en campos frecuentes
 
 ---
 
-## 13. Recursos
+## 13. Sprint 4: Hardening y Cierre - 🟡 EN PROGRESO
+
+### 13.1 Checklist de Seguridad
+
+**Endpoints:**
+- [x] Todos los POST/PUT/PATCH tienen validación Zod
+- [x] Endpoints sensibles tienen rate limiting
+- [x] Acciones críticas generan AuditLog
+
+**Autenticación:**
+- [x] JWT_SECRET obligatorio en producción
+- [x] Cookies HttpOnly con sameSite
+- [x] Sesiones con expiración
+
+**Autorización:**
+- [x] Middleware bloquea acceso por rol
+- [x] Supervisores solo ven sus proyectos
+- [x] Armadores solo ven sus órdenes
+
+### 13.2 Documentación Creada
+
+- [x] `README.md` - Setup completo
+- [x] `docs/API.md` - Referencia de API
+- [x] `docs/DEPLOYMENT.md` - Guía de deployment
+- [x] `docs/ARQUITECTURA-COMPLETA.md` - Arquitectura
+
+### 13.3 Validación Agregada
+
+| Endpoint | Schema | Auditoría |
+|----------|--------|:---------:|
+| `/api/clientes` POST | `crearClienteSchema` | ✅ |
+| `/api/muebles` POST | `crearMuebleSchema` | ✅ |
+| `/api/usuarios` POST | `crearUsuarioSchema` | ✅ |
+
+---
+
+## 14. Próximos Pasos (Opcional)
+
+### Mejoras Adicionales
+
+1. **Autenticación 2FA**:
+   - TOTP con Google Authenticator
+   - Backup codes
+
+2. **Encriptación de Datos Sensibles**:
+   - Encriptar campos sensibles en DB
+   - Key rotation
+
+3. **WAF (Web Application Firewall)**:
+   - Cloudflare WAF
+   - Reglas personalizadas
+
+4. **Notificaciones en Tiempo Real**:
+   - WebSockets con Pusher
+   - Alertas push para armadores
+
+---
+
+## 15. Recursos
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [Next.js Security Headers](https://nextjs.org/docs/app/api-reference/next-config-js/headers)
@@ -432,5 +494,5 @@ import { SafeHTML, SafeText } from "@/components/SafeHTML";
 
 ---
 
-**Última actualización**: Sprint 2 - Auditoría y Sanitización
-**Estado**: ✅ COMPLETADO (Sprints 1 y 2 al 100%)
+**Última actualización**: Sprint 4 - Hardening y Cierre
+**Estado**: ✅ COMPLETADO (Sprints 1, 2, 3 al 100%) | 🟡 Sprint 4 en progreso

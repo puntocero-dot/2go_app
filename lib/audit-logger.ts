@@ -34,6 +34,10 @@ export type AuditAction =
   | "CREATE_FURNITURE"
   | "UPDATE_FURNITURE"
   | "DELETE_FURNITURE"
+  // Clientes
+  | "CREATE_CLIENT"
+  | "UPDATE_CLIENT"
+  | "DELETE_CLIENT"
   // Uploads
   | "UPLOAD_FILE"
   | "DELETE_FILE"
@@ -52,6 +56,7 @@ export type AuditResource =
   | "armador"
   | "proyecto"
   | "mueble"
+  | "cliente"
   | "configuracion"
   | "archivo"
   | "auth"

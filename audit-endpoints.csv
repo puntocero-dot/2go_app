@@ -5,15 +5,17 @@ route,file,methods,hasAuth,hasValidation,hasRateLimit,hasAuditLog,hasSecurityHea
 /api/armadores/ubicacion,app/api/armadores/ubicacion/route.ts,POST,true,false,false,false,false
 /api/auditoria,app/api/auditoria/route.ts,GET,true,false,false,false,false
 /api/auth/login,app/api/auth/login/route.ts,POST,false,true,true,true,false
-/api/auth/logout,app/api/auth/logout/route.ts,GET|POST,false,false,false,false,false
+/api/auth/logout,app/api/auth/logout/route.ts,GET|POST,true,false,false,true,false
 /api/auth/me,app/api/auth/me/route.ts,GET,true,false,false,false,false
-/api/clientes,app/api/clientes/route.ts,GET|POST,true,false,false,false,false
+/api/clientes,app/api/clientes/route.ts,GET|POST,true,false,false,true,false
 /api/configuracion/facturacion,app/api/configuracion/facturacion/route.ts,GET|PUT,true,true,false,true,false
+/api/configuracion/geomaps,app/api/configuracion/geomaps/route.ts,GET|PUT,true,false,false,true,false
 /api/debug/login-test,app/api/debug/login-test/route.ts,POST,false,false,false,false,false
 /api/facturacion/export,app/api/facturacion/export/route.ts,GET,true,false,true,false,true
 /api/facturacion/pdf,app/api/facturacion/pdf/route.ts,GET,true,false,true,false,true
 /api/facturacion/send,app/api/facturacion/send/route.ts,POST,true,false,true,false,true
-/api/muebles,app/api/muebles/route.ts,GET|POST,true,false,false,false,false
+/api/feature-flags,app/api/feature-flags/route.ts,GET,true,false,false,false,false
+/api/muebles,app/api/muebles/route.ts,GET|POST,true,false,false,true,false
 /api/notifications/order-status,app/api/notifications/order-status/route.ts,GET|POST,true,false,true,false,false
 /api/notifications/system,app/api/notifications/system/route.ts,GET|POST,true,false,true,false,false
 /api/ordenes,app/api/ordenes/route.ts,GET|POST,true,true,false,true,false
@@ -30,6 +32,7 @@ route,file,methods,hasAuth,hasValidation,hasRateLimit,hasAuditLog,hasSecurityHea
 /api/proyectos/[id],app/api/proyectos/[id]/route.ts,DELETE|GET|PUT,true,true,false,true,false
 /api/proyectos/[id]/reglas,app/api/proyectos/[id]/reglas/route.ts,DELETE|GET|POST|PUT,true,true,true,true,false
 /api/reportes/bi-export,app/api/reportes/bi-export/route.ts,GET,true,false,true,true,false
+/api/reportes/productividad,app/api/reportes/productividad/route.ts,GET,true,false,false,false,false
 /api/reportes/tiempos-pedido,app/api/reportes/tiempos-pedido/route.ts,GET,true,false,true,true,false
 /api/seguimiento/[id],app/api/seguimiento/[id]/route.ts,GET,false,false,false,false,false
 /api/test-db,app/api/test-db/route.ts,GET,true,false,false,false,false
@@ -37,6 +40,7 @@ route,file,methods,hasAuth,hasValidation,hasRateLimit,hasAuditLog,hasSecurityHea
 /api/turnos/[id]/ruta,app/api/turnos/[id]/ruta/route.ts,GET,true,false,false,false,false
 /api/turnos/[id]/ubicacion,app/api/turnos/[id]/ubicacion/route.ts,POST,true,true,true,false,false
 /api/turnos/activo,app/api/turnos/activo/route.ts,GET,true,false,false,false,false
+/api/turnos/activos,app/api/turnos/activos/route.ts,GET,true,false,false,false,false
 /api/turnos/iniciar,app/api/turnos/iniciar/route.ts,POST,true,true,true,true,false
 /api/upload,app/api/upload/route.ts,DELETE|POST,true,false,true,true,false
 /api/usuarios,app/api/usuarios/route.ts,GET|POST,true,false,false,true,false

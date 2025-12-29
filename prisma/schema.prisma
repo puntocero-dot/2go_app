@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Usuario {
@@ -22,7 +23,8 @@ model Usuario {
   armador             Armador?
   registrosEstado     RegistroEstado[]
   supervisorProyectos SupervisorProyecto[]
-  notificacionesSistemaEnviadas NotificacionSistema[]
+  notificacionesSistemaEnviadas NotificacionSistema[] @relation("NotificacionesSistemaEnviadas")
+  notificaciones      NotificacionUsuario[] @relation("NotificacionesUsuario")
 
   @@index([email])
   @@map("usuarios")
@@ -356,9 +358,27 @@ model NotificacionSistema {
   totalEnviados     Int                   @default(0)
   totalErrores      Int                   @default(0)
   fechaEnvio        DateTime              @default(now())
-  enviadoPor        Usuario               @relation(fields: [enviadoPorId], references: [id], onDelete: Cascade)
+  enviadoPor        Usuario               @relation("NotificacionesSistemaEnviadas", fields: [enviadoPorId], references: [id], onDelete: Cascade)
   
   @@map("notificaciones_sistema")
+}
+
+// Notificaciones internas para usuarios del sistema (Admin, Supervisor, Armador)
+model NotificacionUsuario {
+  id          String   @id @default(cuid())
+  usuarioId   String
+  tipo        String   // ORDEN_ASIGNADA, ORDEN_TOMADA, ORDEN_COMPLETADA, ALERTA_PARADA, etc.
+  titulo      String
+  mensaje     String
+  datos       Json?    // Datos adicionales (ordenId, armadorId, etc.)
+  leida       Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  usuario     Usuario  @relation("NotificacionesUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  @@index([usuarioId, leida])
+  @@index([createdAt(sort: Desc)])
+  @@map("notificaciones_usuario")
 }
 
 enum RolUsuario {

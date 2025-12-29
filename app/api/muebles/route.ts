@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logAuditFromSession } from "@/lib/audit-logger";
+import { crearMuebleSchema } from "@/lib/schemas/mueble.schemas";
 
 // GET - Listar muebles
 export async function GET(request: NextRequest) {
@@ -14,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const proyectoId = searchParams.get("proyectoId");
 
-    const where: any = {};
+    const where: Record<string, string> = {};
     if (proyectoId) where.proyectoId = proyectoId;
 
     const muebles = await prisma.mueble.findMany({
@@ -48,23 +50,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { nombre, tamano, descripcion, proyectoId } = body;
+    const rawBody = await request.json();
+    const parsed = crearMuebleSchema.safeParse(rawBody);
 
-    if (!nombre || !tamano || !proyectoId) {
+    if (!parsed.success) {
+      const detalles = parsed.error.flatten();
       return NextResponse.json(
-        { error: "Faltan campos requeridos" },
+        { error: "Datos inválidos", detalles },
         { status: 400 }
       );
     }
+
+    const { nombre, tamano, descripcion, proyectoId } = parsed.data;
 
     const mueble = await prisma.mueble.create({
       data: {
         nombre,
         tamano,
-        descripcion,
+        descripcion: descripcion || null,
         proyectoId,
       },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: "CREATE_FURNITURE",
+      resource: "mueble",
+      resourceId: mueble.id,
+      changes: {
+        after: {
+          nombre: mueble.nombre,
+          tamano: mueble.tamano,
+          proyectoId: mueble.proyectoId,
+        },
+      },
+      request,
     });
 
     return NextResponse.json({ mueble }, { status: 201 });

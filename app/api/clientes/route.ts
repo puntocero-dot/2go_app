@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logAuditFromSession } from "@/lib/audit-logger";
+import { crearClienteSchema } from "@/lib/schemas/cliente.schemas";
 
 // GET - Listar clientes
 export async function GET(request: NextRequest) {
@@ -14,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const proyectoId = searchParams.get("proyectoId");
 
-    const where: any = {};
+    const where: Record<string, string> = {};
     if (proyectoId) where.proyectoId = proyectoId;
 
     const clientes = await prisma.usuarioFinal.findMany({
@@ -48,7 +50,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const body = await request.json();
+    const rawBody = await request.json();
+    const parsed = crearClienteSchema.safeParse(rawBody);
+
+    if (!parsed.success) {
+      const detalles = parsed.error.flatten();
+      return NextResponse.json(
+        { error: "Datos inválidos", detalles },
+        { status: 400 }
+      );
+    }
+
     const {
       nombre,
       telefono,
@@ -58,14 +70,7 @@ export async function POST(request: NextRequest) {
       departamento,
       proyectoId,
       prioridad,
-    } = body;
-
-    if (!nombre || !telefono || !direccionCompleta || !municipio || !departamento || !proyectoId) {
-      return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const cliente = await prisma.usuarioFinal.create({
       data: {
@@ -76,8 +81,23 @@ export async function POST(request: NextRequest) {
         municipio,
         departamento,
         proyectoId,
-        prioridad: prioridad || "NORMAL",
+        prioridad,
       },
+    });
+
+    await logAuditFromSession({
+      session,
+      action: "CREATE_CLIENT",
+      resource: "cliente",
+      resourceId: cliente.id,
+      changes: {
+        after: {
+          nombre: cliente.nombre,
+          telefono: cliente.telefono,
+          proyectoId: cliente.proyectoId,
+        },
+      },
+      request,
     });
 
     return NextResponse.json({ cliente }, { status: 201 });
