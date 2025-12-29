@@ -169,35 +169,132 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
   const fechaFinFilter =
     typeof currentSearchParams?.fechaFin === "string" ? currentSearchParams.fechaFin : "";
 
+  // Get proyectos for filter even without dates
+  const proyectos = await prisma.proyecto.findMany({
+    orderBy: { nombreComercial: "asc" },
+    select: { id: true, nombreComercial: true },
+  });
+
   if (!fechaInicioFilter || !fechaFinFilter) {
+    // Set default dates (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const defaultFechaInicio = thirtyDaysAgo.toISOString().split("T")[0];
+    const defaultFechaFin = today.toISOString().split("T")[0];
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-        <Navbar
-          user={{
-            nombre: usuario?.nombre || "",
-            email: usuario?.email || "",
-            rol: session?.rol as any,
-            estadoLoggeo: usuario?.estadoLoggeo ?? undefined,
-          }}
-        />
-        <div className="max-w-5xl mx-auto px-4 py-10">
-          <EnhancedCard className="p-6 flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-6 h-6 text-yellow-500" />
+        <Navbar user={usuario} />
+        <main className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gradient mb-2">
+              Reporte de Tiempos de Pedido
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Analiza los tiempos de procesamiento y entrega de órdenes.
+            </p>
+          </div>
+
+          {/* Filtros */}
+          <EnhancedCard hover className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center mb-6">
+              <Filter className="w-5 h-5 mr-2 text-primary" />
+              <h3 className="text-lg font-semibold">Selecciona los filtros para generar el reporte</h3>
+            </div>
+            <form className="grid gap-6 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]" method="get">
               <div>
-                <h2 className="text-lg font-semibold">Selecciona un rango de fechas</h2>
-                <p className="text-sm text-muted-foreground">
-                  Debes elegir fecha inicio y fecha fin para generar el reporte de tiempos.
-                </p>
+                <Label htmlFor="proyectoId" className="text-sm font-medium">Proyecto</Label>
+                <select
+                  id="proyectoId"
+                  name="proyectoId"
+                  defaultValue={proyectoIdFilter}
+                  className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                >
+                  <option value="ALL">Todos los proyectos</option>
+                  {proyectos.map((proyecto) => (
+                    <option key={proyecto.id} value={proyecto.id}>
+                      {proyecto.nombreComercial}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="estado" className="text-sm font-medium">Estado</Label>
+                <select
+                  id="estado"
+                  name="estado"
+                  defaultValue={estadoFilter}
+                  className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm uppercase focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                >
+                  {ESTADOS_ORDEN.map((estado) => (
+                    <option key={estado.value} value={estado.value}>
+                      {estado.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="fechaInicio" className="text-sm font-medium">
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Fecha inicio *
+                </Label>
+                <input
+                  type="date"
+                  id="fechaInicio"
+                  name="fechaInicio"
+                  defaultValue={defaultFechaInicio}
+                  required
+                  className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="fechaFin" className="text-sm font-medium">
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Fecha fin *
+                </Label>
+                <input
+                  type="date"
+                  id="fechaFin"
+                  name="fechaFin"
+                  defaultValue={defaultFechaFin}
+                  required
+                  className="w-full mt-1 rounded-lg border border-input bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                />
+              </div>
+
+              <div className="md:col-span-full flex items-center flex-wrap gap-3 pt-2">
+                <EnhancedButton
+                  type="submit"
+                  className="min-w-[180px]"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Generar Reporte
+                </EnhancedButton>
+              </div>
+            </form>
+          </EnhancedCard>
+
+          {/* Info card */}
+          <EnhancedCard className="p-6 bg-blue-50 border-blue-200">
+            <div className="flex items-start gap-3">
+              <Timer className="w-6 h-6 text-blue-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-blue-900">¿Qué incluye este reporte?</h3>
+                <ul className="mt-2 text-sm text-blue-800 space-y-1">
+                  <li>• Tiempo total desde creación hasta completado de cada orden</li>
+                  <li>• Estadísticas de órdenes completadas vs en proceso</li>
+                  <li>• Tiempo promedio de procesamiento</li>
+                  <li>• Detalle por proyecto y armador asignado</li>
+                </ul>
               </div>
             </div>
-            <div className="flex gap-3 flex-wrap">
-              <Link href="/admin/reportes/tiempos-pedido">
-                <EnhancedButton variant="default">Volver a filtros</EnhancedButton>
-              </Link>
-            </div>
           </EnhancedCard>
-        </div>
+        </main>
       </div>
     );
   }
@@ -221,21 +318,15 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
   }
 
   // Get data
-  const [proyectos, ordenes] = await Promise.all([
-    prisma.proyecto.findMany({
-      orderBy: { nombreComercial: "asc" },
-      select: { id: true, nombreComercial: true },
-    }),
-    prisma.orden.findMany({
-      where,
-      orderBy: { fechaCreacion: "desc" },
-      take: 100,
-      include: {
-        proyecto: { select: { nombreComercial: true } },
-        armador: { include: { usuario: { select: { nombre: true } } } },
-      },
-    }),
-  ]);
+  const ordenes = await prisma.orden.findMany({
+    where,
+    orderBy: { fechaCreacion: "desc" },
+    take: 100,
+    include: {
+      proyecto: { select: { nombreComercial: true } },
+      armador: { include: { usuario: { select: { nombre: true } } } },
+    },
+  });
 
   const fechaFinLimite = fechaFinFilter
     ? new Date(`${fechaFinFilter}T23:59:59.999Z`)

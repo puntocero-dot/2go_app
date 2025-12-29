@@ -79,8 +79,9 @@ export default function TurnosActivosPage() {
       const response = await fetch("/api/armadores");
       if (response.ok) {
         const data = await response.json();
+        const armadoresList = data.armadores || data || [];
         setArmadores(
-          data.map((a: any) => ({
+          armadoresList.map((a: any) => ({
             id: a.id,
             nombre: a.usuario?.nombre || a.nombre || "Sin nombre",
           }))
