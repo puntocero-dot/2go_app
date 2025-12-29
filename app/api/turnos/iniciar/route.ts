@@ -66,15 +66,21 @@ const handler = async (
       },
     });
 
-    // Actualizar ubicación actual del armador
-    await prisma.armador.update({
-      where: { id: armador.id },
-      data: {
-        ubicacionActualLat: latitud,
-        ubicacionActualLng: longitud,
-        ultimaActualizacionGPS: new Date(),
-      },
-    });
+    // Actualizar ubicación actual del armador y estado del usuario a ACTIVO
+    await prisma.$transaction([
+      prisma.armador.update({
+        where: { id: armador.id },
+        data: {
+          ubicacionActualLat: latitud,
+          ubicacionActualLng: longitud,
+          ultimaActualizacionGPS: new Date(),
+        },
+      }),
+      prisma.usuario.update({
+        where: { id: session.userId },
+        data: { estadoLoggeo: "ACTIVO" },
+      }),
+    ]);
 
     // Auditar inicio de turno
     await logAuditFromSession({

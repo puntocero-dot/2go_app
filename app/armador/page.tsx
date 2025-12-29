@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArmadorTomarOrdenButton } from "@/components/armador-tomar-orden-button";
 import { cn, formatearFecha } from "@/lib/utils";
 import { EstadoBadge } from "@/lib/orden-helpers";
 
@@ -91,8 +90,8 @@ export default async function ArmadorDashboard() {
     );
   }
 
-  // Obtener órdenes del armador y órdenes disponibles
-  const [misOrdenes, ordenesActivas, ordenesCompletadas, ordenesDisponibles] =
+  // Obtener órdenes del armador
+  const [misOrdenes, ordenesActivas, ordenesCompletadas] =
     await Promise.all([
       prisma.orden.findMany({
         where: { armadorId: armador.id },
@@ -118,18 +117,6 @@ export default async function ArmadorDashboard() {
           armadorId: armador.id,
           estado: "ARMADO_COMPLETADO",
         },
-      }),
-      prisma.orden.findMany({
-        where: {
-          estado: "SIN_ASIGNAR",
-          armadorId: null,
-        },
-        orderBy: { fechaCreacion: "asc" },
-        include: {
-          proyecto: true,
-          usuarioFinal: true,
-        },
-        take: 50,
       }),
     ]);
 
@@ -399,52 +386,6 @@ export default async function ArmadorDashboard() {
           </CardContent>
         </Card>
 
-        {/* Órdenes disponibles para tomar */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Órdenes disponibles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Proyecto</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Municipio</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Acción</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ordenesDisponibles.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No hay órdenes disponibles para tomar en este momento
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  ordenesDisponibles.map((orden) => (
-                    <TableRow key={orden.id}>
-                      <TableCell className="font-medium">
-                        {orden.proyecto.nombreComercial}
-                      </TableCell>
-                      <TableCell>{orden.usuarioFinal.nombre}</TableCell>
-                      <TableCell>{orden.usuarioFinal.municipio}</TableCell>
-                      <TableCell>
-                        {new Date(
-                          orden.fechaSolicitadaCliente ?? orden.fechaCreacion,
-                        ).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <ArmadorTomarOrdenButton ordenId={orden.id} />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );

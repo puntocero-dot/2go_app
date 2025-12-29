@@ -45,6 +45,10 @@ export type AuditAction =
   | "LOGIN"
   | "LOGOUT"
   | "FAILED_LOGIN"
+  // Horarios
+  | "CREATE_SCHEDULE"
+  | "UPDATE_SCHEDULE"
+  | "DELETE_SCHEDULE"
   // Otros
   | "BULK_OPERATION"
   | "EXPORT_DATA";
@@ -60,7 +64,8 @@ export type AuditResource =
   | "configuracion"
   | "archivo"
   | "auth"
-  | "sistema";
+  | "sistema"
+  | "horario_programado";
 
 export interface LogAuditParams {
   userId: string;

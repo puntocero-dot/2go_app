@@ -45,9 +45,35 @@ model Armador {
   usuario                Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   ordenes                Orden[]
   turnos                 Turno[]
+  horariosProgramados    HorarioProgramado[]
 
   @@index([estado])
   @@map("armadores")
+}
+
+model HorarioProgramado {
+  id              String    @id @default(uuid())
+  armadorId       String
+  fecha           DateTime  @db.Date
+  horaInicio      String    // Formato "HH:mm"
+  horaFin         String    // Formato "HH:mm"
+  tipoTurno       TipoTurno @default(NORMAL)
+  notas           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  armador         Armador   @relation(fields: [armadorId], references: [id], onDelete: Cascade)
+
+  @@unique([armadorId, fecha])
+  @@index([fecha])
+  @@index([armadorId])
+  @@map("horarios_programados")
+}
+
+enum TipoTurno {
+  NORMAL
+  EXTRA
+  MEDIO_TIEMPO
+  DESCANSO
 }
 
 model Proyecto {

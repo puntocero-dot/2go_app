@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma, EstadoOrden } from "@prisma/client";
+import { getBillingDataset } from "@/lib/facturacion-data";
 
 // Forzar renderizado dinámico para evitar errores con cookies
 export const dynamic = 'force-dynamic';
@@ -197,7 +198,18 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
   });
   const totalOrdenes = await prisma.orden.count({ where: ordenWhere });
   const ordenesActivas = await prisma.orden.count({ where: activeWhere });
-  const ordenesSumatorio = await prisma.orden.aggregate({ where: ordenWhere, _sum: { cobroFinal: true } });
+  
+  // Calcular total facturado usando el sistema de facturación real
+  let totalFacturadoCalculado = 0;
+  if (fechaInicioFilter && fechaFinFilter) {
+    const billingData = await getBillingDataset({
+      proyectoId: proyectoIdFilter,
+      desde: fechaInicioFilter,
+      hasta: fechaFinFilter,
+    });
+    totalFacturadoCalculado = billingData?.totalsByConcept.totalFacturado ?? 0;
+  }
+  
   const ordenesRecientes = await prisma.orden.findMany({
     where: ordenWhere,
     take: 10,
@@ -215,7 +227,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
       ? 1
       : 0;
 
-  const totalFacturado = ordenesSumatorio._sum.cobroFinal ?? 0;
+  const totalFacturado = totalFacturadoCalculado;
 
   const getEstadoBadge = (estado: string) => {
     const estadoConfig = ESTADOS_ORDEN.find(e => e.value === estado);

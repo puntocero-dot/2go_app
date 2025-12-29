@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Clock, MapPin, Users, AlertCircle } from "lucide-react";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { Loader2, Clock, MapPin, Users, AlertCircle, Calendar, Activity } from "lucide-react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { TurnosCalendario } from "@/components/turnos-calendario";
 
 interface TurnoActivo {
   id: string;
@@ -52,6 +54,8 @@ export default function TurnosActivosPage() {
   const [armadoresSinTurno, setArmadoresSinTurno] = useState<ArmadorSinTurno[]>([]);
   const [resumen, setResumen] = useState<Resumen | null>(null);
   const [popupInfo, setPopupInfo] = useState<TurnoActivo | null>(null);
+  const [viewMode, setViewMode] = useState<"realtime" | "calendar">("realtime");
+  const [armadores, setArmadores] = useState<{ id: string; nombre: string }[]>([]);
   const [viewState, setViewState] = useState({
     longitude: -89.2182,
     latitude: 13.6929,
@@ -63,11 +67,29 @@ export default function TurnosActivosPage() {
   useEffect(() => {
     cargarUsuario();
     cargarTurnos();
+    cargarArmadores();
 
     // Actualizar cada 30 segundos
     const interval = setInterval(cargarTurnos, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const cargarArmadores = async () => {
+    try {
+      const response = await fetch("/api/armadores");
+      if (response.ok) {
+        const data = await response.json();
+        setArmadores(
+          data.map((a: any) => ({
+            id: a.id,
+            nombre: a.usuario?.nombre || a.nombre || "Sin nombre",
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error cargando armadores:", error);
+    }
+  };
 
   const cargarUsuario = async () => {
     try {
@@ -125,16 +147,46 @@ export default function TurnosActivosPage() {
     <>
       {user && <Navbar user={user} />}
       <div className="container mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-deep-navy flex items-center gap-2">
-            <Clock className="w-8 h-8" />
-            Turnos Activos
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Monitoreo en tiempo real de armadores trabajando
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-deep-navy flex items-center gap-2">
+              <Clock className="w-8 h-8" />
+              Gestión de Turnos
+            </h1>
+            <p className="text-gray-600 mt-2">
+              {viewMode === "realtime"
+                ? "Monitoreo en tiempo real de armadores trabajando"
+                : "Horarios programados vs conexiones reales"}
+            </p>
+          </div>
+
+          {/* Toggle de vista */}
+          <div className="flex gap-2">
+            <EnhancedButton
+              variant={viewMode === "realtime" ? "default" : "outline"}
+              onClick={() => setViewMode("realtime")}
+            >
+              <Activity className="w-4 h-4 mr-2" />
+              Tiempo Real
+            </EnhancedButton>
+            <EnhancedButton
+              variant={viewMode === "calendar" ? "default" : "outline"}
+              onClick={() => setViewMode("calendar")}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Calendario
+            </EnhancedButton>
+          </div>
         </div>
 
+        {/* Vista de Calendario */}
+        {viewMode === "calendar" && (
+          <TurnosCalendario armadores={armadores} />
+        )}
+
+        {/* Vista de Tiempo Real */}
+        {viewMode === "realtime" && (
+          <>
         {/* Resumen */}
         {resumen && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -349,6 +401,8 @@ export default function TurnosActivosPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+          </>
         )}
       </div>
     </>

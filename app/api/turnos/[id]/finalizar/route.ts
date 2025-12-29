@@ -69,6 +69,12 @@ const handler = async (
       },
     });
 
+    // Actualizar estado del usuario a OFFLINE
+    await prisma.usuario.update({
+      where: { id: session.userId },
+      data: { estadoLoggeo: "OFFLINE" },
+    });
+
     // Auditar finalización de turno
     await logAuditFromSession({
       session,

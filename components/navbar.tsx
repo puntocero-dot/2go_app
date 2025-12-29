@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2, Timer } from "lucide-react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2, Timer, Calendar } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
@@ -216,6 +216,14 @@ export function Navbar({ user }: NavbarProps) {
                             <Route className="w-4 h-4" /> Rutas
                           </button>
                         </Link>
+                        <Link href="/admin/reportes" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            isActive("/admin/reportes") && !isActive("/admin/reportes/bi-dashboard") && !isActive("/admin/reportes/tiempos-pedido") && "bg-white/10 text-white"
+                          )}>
+                            <FileText className="w-4 h-4" /> Reportes Pivot
+                          </button>
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -267,19 +275,34 @@ export function Navbar({ user }: NavbarProps) {
               )}
 
               {user.rol === "ARMADOR" && (
-                <Link href="/armador">
-                  <EnhancedButton 
-                    variant="ghost" 
-                    size="sm"
-                    className={cn(
-                      "text-gray-300 hover:text-white hover:bg-white/10",
-                      isActive("/armador") && "text-white bg-white/10"
-                    )}
-                  >
-                    <Home className="w-4 h-4 mr-2" />
-                    Mis Órdenes
-                  </EnhancedButton>
-                </Link>
+                <>
+                  <Link href="/armador">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/armador") && !isActive("/armador/calendario") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Mis Órdenes
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/armador/calendario">
+                    <EnhancedButton 
+                      variant="ghost" 
+                      size="sm"
+                      className={cn(
+                        "text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/armador/calendario") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Calendario
+                    </EnhancedButton>
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -520,6 +543,18 @@ export function Navbar({ user }: NavbarProps) {
                             Rutas
                           </EnhancedButton>
                         </Link>
+                        <Link href="/admin/reportes" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton 
+                            variant="ghost" 
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/reportes") && !isActive("/admin/reportes/bi-dashboard") && !isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
+                            )}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Reportes Pivot
+                          </EnhancedButton>
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -568,18 +603,32 @@ export function Navbar({ user }: NavbarProps) {
               )}
 
               {user.rol === "ARMADOR" && (
-                <Link href="/armador" className="block">
-                  <EnhancedButton 
-                    variant="ghost" 
-                    className={cn(
-                      "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                      isActive("/armador") && "text-white bg-white/10"
-                    )}
-                  >
-                    <Home className="w-4 h-4 mr-2" />
-                    Mis Órdenes
-                  </EnhancedButton>
-                </Link>
+                <>
+                  <Link href="/armador" className="block" onClick={() => setMobileMenuOpen(false)}>
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/armador") && !isActive("/armador/calendario") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Mis Órdenes
+                    </EnhancedButton>
+                  </Link>
+                  <Link href="/armador/calendario" className="block" onClick={() => setMobileMenuOpen(false)}>
+                    <EnhancedButton 
+                      variant="ghost" 
+                      className={cn(
+                        "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                        isActive("/armador/calendario") && "text-white bg-white/10"
+                      )}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Calendario
+                    </EnhancedButton>
+                  </Link>
+                </>
               )}
 
               {/* Enlaces comunes para todos */}

@@ -20,6 +20,29 @@ const handler = async (
 
     const { estadoLoggeo } = data;
 
+    // Si cambia a OFFLINE, finalizar turno activo si existe
+    if (estadoLoggeo === "OFFLINE") {
+      const armador = await prisma.armador.findUnique({
+        where: { usuarioId: session.userId },
+      });
+
+      if (armador) {
+        const turnoActivo = await prisma.turno.findFirst({
+          where: { armadorId: armador.id, estado: "ACTIVO" },
+        });
+
+        if (turnoActivo) {
+          await prisma.turno.update({
+            where: { id: turnoActivo.id },
+            data: {
+              estado: "FINALIZADO",
+              finTurno: new Date(),
+            },
+          });
+        }
+      }
+    }
+
     const usuario = await prisma.usuario.update({
       where: { id: session.userId },
       data: {
