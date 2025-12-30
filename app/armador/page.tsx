@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { isToday, isTomorrow, format } from "date-fns";
+import { isToday, isTomorrow, format, subHours } from "date-fns";
 import { es } from "date-fns/locale";
+import { toZonedTime, format as formatTz } from "date-fns-tz";
 import { Clock, User, MapPin, ChevronRight, Inbox } from "lucide-react";
 
 import { getSession } from "@/lib/auth";
@@ -139,7 +140,7 @@ export default async function ArmadorDashboard() {
                   Turno Activo
                 </p>
                 <p className="text-xs text-green-700 mt-1">
-                  Iniciado: {format(new Date(armador.turnos[0].inicioTurno), "HH:mm", { locale: es })} • 
+                  Iniciado: {formatTz(toZonedTime(new Date(armador.turnos[0].inicioTurno), "America/El_Salvador"), "HH:mm", { locale: es })} • 
                   Tu ubicación GPS está siendo registrada
                 </p>
               </div>

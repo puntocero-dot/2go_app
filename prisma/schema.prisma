@@ -74,6 +74,9 @@ enum TipoTurno {
   EXTRA
   MEDIO_TIEMPO
   DESCANSO
+  INCAPACIDAD
+  VACACIONES
+  AUSENCIA
 }
 
 model Proyecto {

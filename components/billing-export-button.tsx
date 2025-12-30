@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
-import { Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, FileJson } from 'lucide-react';
 
 interface BillingExportButtonProps {
   proyectoId: string;
@@ -15,16 +15,19 @@ export function BillingExportButton({ proyectoId, desde, hasta, disabled }: Bill
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleExport = async (format: 'csv' | 'pdf') => {
+  const handleExport = async (format: 'csv' | 'pdf' | 'json') => {
     setLoading(true);
     setIsOpen(false);
 
     try {
-      const endpoint = format === 'csv' ? '/api/facturacion/export' : '/api/facturacion/pdf';
+      let endpoint = '/api/facturacion/export';
+      if (format === 'pdf') endpoint = '/api/facturacion/pdf';
+      
       const params = new URLSearchParams({
         proyectoId,
         desde,
         hasta,
+        format: format, // csv o json
       });
 
       const response = await fetch(`${endpoint}?${params.toString()}`);
@@ -100,6 +103,14 @@ export function BillingExportButton({ proyectoId, desde, hasta, disabled }: Bill
               >
                 <FileText className="w-4 h-4 mr-3 text-red-600" />
                 Exportar como PDF
+              </button>
+              <button
+                onClick={() => handleExport('json')}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                role="menuitem"
+              >
+                <FileJson className="w-4 h-4 mr-3 text-blue-600" />
+                Factura Digital (JSON)
               </button>
             </div>
           </div>

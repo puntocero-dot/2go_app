@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const exportFormat = searchParams.get("format") || "csv";
     const rawFilters = {
       proyectoId: searchParams.get("proyectoId") ?? "",
       desde: searchParams.get("desde") ?? "",
@@ -121,8 +122,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const csvContent = "\uFEFF" + lines.join("\n");
-
     const projectSlug = dataset.proyecto.nombreComercial
       .toLowerCase()
       .normalize("NFD")
@@ -130,6 +129,91 @@ export async function GET(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
+    const securityHeaders = getBillingSecurityHeaders();
+
+    // Si el formato es JSON, generar factura digital
+    if (exportFormat === "json") {
+      const facturaDigital = {
+        version: "1.0",
+        tipoDocumento: "FACTURA_ELECTRONICA",
+        fechaEmision: new Date().toISOString(),
+        periodo: {
+          desde,
+          hasta,
+        },
+        emisor: {
+          nombre: "Armados 2Go",
+          nit: "", // Configurar en producción
+          nrc: "", // Configurar en producción
+          direccion: "El Salvador",
+        },
+        receptor: {
+          nombre: dataset.proyecto.nombreComercial,
+          proyectoId: dataset.proyecto.id,
+        },
+        resumen: {
+          totalOrdenes: dataset.ordenes.length,
+          subtotal: totalFacturado,
+          iva: 0, // Configurar según régimen fiscal
+          total: totalFacturado,
+          moneda: "USD",
+        },
+        detalleConceptos: {
+          armado: dataset.totalsByConcept.armado,
+          tamano: dataset.totalsByConcept.tamano,
+          distancia: dataset.totalsByConcept.distancia,
+          penalizacion: dataset.totalsByConcept.penalizacion,
+          prioridad: dataset.totalsByConcept.prioridad,
+        },
+        items: dataset.ordenes.map((orden) => ({
+          codigoOrden: orden.codigoReferenciaRetail,
+          cliente: orden.clienteNombre,
+          municipio: orden.municipio,
+          fechaArmado: orden.fechaCompletado?.toISOString().slice(0, 10) || null,
+          estado: orden.estado,
+          conceptos: orden.conceptos.map((c) => ({
+            tipo: c.tipo,
+            descripcion: c.descripcion,
+            monto: c.monto,
+          })),
+          total: orden.total,
+        })),
+      };
+
+      const filename = `factura_digital_${projectSlug || "proyecto"}_${desde}_a_${hasta}.json`;
+
+      console.log(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          accion: "FACTURACION_EXPORT_JSON",
+          usuarioId: userId,
+          usuarioEmail: userEmail,
+          proyectoId,
+          desde,
+          hasta,
+          totalOrdenes: dataset.ordenes.length,
+          totalFacturado,
+          durationMs: Date.now() - startedAt,
+          ip:
+            request.headers.get("x-forwarded-for") ||
+            request.headers.get("x-real-ip") ||
+            "unknown",
+          userAgent: request.headers.get("user-agent") || "unknown",
+        }),
+      );
+
+      return new NextResponse(JSON.stringify(facturaDigital, null, 2), {
+        status: 200,
+        headers: {
+          ...securityHeaders,
+          "Content-Type": "application/json; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    // Formato CSV por defecto
+    const csvContent = "\uFEFF" + lines.join("\n");
     const filename = `facturacion_${projectSlug || "proyecto"}_${desde}_a_${hasta}.csv`;
 
     console.log(
@@ -151,8 +235,6 @@ export async function GET(request: NextRequest) {
         userAgent: request.headers.get("user-agent") || "unknown",
       }),
     );
-
-    const securityHeaders = getBillingSecurityHeaders();
 
     return new NextResponse(csvContent, {
       status: 200,

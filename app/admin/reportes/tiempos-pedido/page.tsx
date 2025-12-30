@@ -53,22 +53,32 @@ type ReportRow = {
   armador: string | null;
   estadoActual: EstadoOrden;
   fechaCreacion: Date;
+  fechaAsignacion: Date | null;
   fechaCompletado: Date | null;
-  tiempoTotalSegundos: number;
+  tiempoCreacionAsignacion: number; // segundos desde creación hasta asignación
+  tiempoAsignacionFinalizado: number; // segundos desde asignación hasta finalizado
+  tiempoTotalSegundos: number; // segundos desde creación hasta finalizado
 };
 
 function formatSecondsToLabel(seconds: number): string {
   const total = Math.floor(seconds);
-  const hours = Math.floor(total / 3600);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
   const minutes = Math.floor((total % 3600) / 60);
-  const secs = total % 60;
   const parts: string[] = [];
 
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+  // Si es mayor a 24 horas, mostrar en días
+  if (days > 0) {
+    parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+  } else if (hours > 0) {
+    parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+  } else {
+    parts.push(`${minutes}m`);
+  }
 
-  return parts.join(" ");
+  return parts.length > 0 ? parts.join(" ") : "0m";
 }
 
 function formatSecondsToHours(seconds: number): string {
@@ -340,10 +350,22 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
       ? fechaFinLimite
       : new Date();
 
+    // Tiempo total: desde creación hasta finalizado
     const tiempoTotalSegundos = Math.max(
       0,
       Math.floor((endDate.getTime() - orden.fechaCreacion.getTime()) / 1000)
     );
+
+    // Tiempo desde creación hasta asignación
+    const fechaAsignacion = orden.fechaAsignacion || null;
+    const tiempoCreacionAsignacion = fechaAsignacion
+      ? Math.max(0, Math.floor((fechaAsignacion.getTime() - orden.fechaCreacion.getTime()) / 1000))
+      : 0;
+
+    // Tiempo desde asignación hasta finalizado
+    const tiempoAsignacionFinalizado = fechaAsignacion && orden.fechaCompletado
+      ? Math.max(0, Math.floor((orden.fechaCompletado.getTime() - fechaAsignacion.getTime()) / 1000))
+      : 0;
 
     return {
       ordenId: orden.id,
@@ -352,7 +374,10 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
       armador: orden.armador?.usuario.nombre ?? null,
       estadoActual: orden.estado,
       fechaCreacion: orden.fechaCreacion,
+      fechaAsignacion,
       fechaCompletado: orden.fechaCompletado,
+      tiempoCreacionAsignacion,
+      tiempoAsignacionFinalizado,
       tiempoTotalSegundos,
     };
   });
@@ -543,7 +568,9 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
                         <TableHead className="font-semibold">Armador</TableHead>
                         <TableHead className="font-semibold">Estado</TableHead>
                         <TableHead className="font-semibold">Fecha Creación</TableHead>
-                        <TableHead className="font-semibold">Tiempo Total</TableHead>
+                        <TableHead className="font-semibold text-center">Creación → Asignación</TableHead>
+                        <TableHead className="font-semibold text-center">Asignación → Finalizado</TableHead>
+                        <TableHead className="font-semibold text-center">Tiempo Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -596,17 +623,32 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-2 text-muted-foreground" />
-                              <div>
-                                <div className="font-medium">
-                                  {formatSecondsToLabel(row.tiempoTotalSegundos)}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {formatSecondsToHours(row.tiempoTotalSegundos)}h
-                                </div>
+                          <TableCell className="text-center">
+                            {row.fechaAsignacion ? (
+                              <div className="text-sm font-medium text-blue-600">
+                                {formatSecondsToLabel(row.tiempoCreacionAsignacion)}
                               </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">Sin asignar</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {row.fechaAsignacion && row.fechaCompletado ? (
+                              <div className="text-sm font-medium text-purple-600">
+                                {formatSecondsToLabel(row.tiempoAsignacionFinalizado)}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">
+                                {!row.fechaAsignacion ? "—" : "En proceso"}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="font-medium text-green-600">
+                              {formatSecondsToLabel(row.tiempoTotalSegundos)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatSecondsToHours(row.tiempoTotalSegundos)}h
                             </div>
                           </TableCell>
                         </TableRow>

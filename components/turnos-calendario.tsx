@@ -15,7 +15,9 @@ import {
   Plus,
   Calendar,
   Users,
+  Upload,
 } from "lucide-react";
+import { HorariosCargaMasiva } from "@/components/horarios-carga-masiva";
 import {
   format,
   startOfMonth,
@@ -29,6 +31,10 @@ import {
   getDay,
   startOfWeek,
   endOfWeek,
+  addWeeks,
+  subWeeks,
+  isWeekend,
+  isSameWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -196,17 +202,40 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
   const days = getDaysInMonth();
   const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-  // Calcular estadísticas del mes
-  const stats = {
-    diasProgramados: new Set(horariosProgramados.map((h) => h.fecha.split("T")[0])).size,
-    diasTrabajados: new Set(turnosReales.map((t) => t.fecha.split("T")[0])).size,
-    horasProgramadas: horariosProgramados.reduce((acc, h) => {
-      const [hi, mi] = h.horaInicio.split(":").map(Number);
-      const [hf, mf] = h.horaFin.split(":").map(Number);
-      return acc + (hf * 60 + mf - hi * 60 - mi) / 60;
-    }, 0),
-    horasTrabajadas: turnosReales.reduce((acc, t) => acc + t.duracionMinutos / 60, 0),
+  // Calcular estadísticas - si hay día seleccionado, mostrar del día; si no, del mes
+  const getStats = () => {
+    let filteredProgramados = horariosProgramados;
+    let filteredReales = turnosReales;
+
+    // Filtrar por armador seleccionado
+    if (selectedArmador !== "ALL") {
+      filteredProgramados = filteredProgramados.filter(h => h.armadorId === selectedArmador);
+      filteredReales = filteredReales.filter(t => t.armadorId === selectedArmador);
+    }
+
+    // Si hay día seleccionado, filtrar por ese día
+    if (selectedDate) {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      filteredProgramados = filteredProgramados.filter(h => h.fecha.startsWith(dateStr));
+      filteredReales = filteredReales.filter(t => t.fecha.startsWith(dateStr));
+    }
+
+    return {
+      diasProgramados: new Set(filteredProgramados.map((h) => h.fecha.split("T")[0])).size,
+      diasTrabajados: new Set(filteredReales.map((t) => t.fecha.split("T")[0])).size,
+      horasProgramadas: filteredProgramados.reduce((acc, h) => {
+        const [hi, mi] = h.horaInicio.split(":").map(Number);
+        const [hf, mf] = h.horaFin.split(":").map(Number);
+        return acc + (hf * 60 + mf - hi * 60 - mi) / 60;
+      }, 0),
+      horasTrabajadas: filteredReales.reduce((acc, t) => acc + t.duracionMinutos / 60, 0),
+    };
   };
+
+  const stats = getStats();
+  const statsLabel = selectedDate 
+    ? format(selectedDate, "d 'de' MMMM", { locale: es })
+    : format(currentMonth, "MMMM yyyy", { locale: es });
 
   return (
     <div className="space-y-6">
@@ -253,52 +282,65 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
         </div>
       </div>
 
-      {/* Estadísticas del mes */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.diasProgramados}</p>
-                <p className="text-xs text-muted-foreground">Días programados</p>
+      {/* Estadísticas - del día seleccionado o del mes */}
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Estadísticas de: <span className="font-medium text-foreground">{statsLabel}</span>
+          {selectedDate && (
+            <button 
+              onClick={() => setSelectedDate(null)} 
+              className="ml-2 text-blue-600 hover:underline text-xs"
+            >
+              (ver mes completo)
+            </button>
+          )}
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.diasProgramados}</p>
+                  <p className="text-xs text-muted-foreground">Días programados</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.diasTrabajados}</p>
-                <p className="text-xs text-muted-foreground">Días trabajados</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.diasTrabajados}</p>
+                  <p className="text-xs text-muted-foreground">Días trabajados</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-purple-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.horasProgramadas.toFixed(1)}h</p>
-                <p className="text-xs text-muted-foreground">Horas programadas</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-purple-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.horasProgramadas.toFixed(1)}h</p>
+                  <p className="text-xs text-muted-foreground">Horas programadas</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-orange-600" />
-              <div>
-                <p className="text-2xl font-bold">{stats.horasTrabajadas.toFixed(1)}h</p>
-                <p className="text-xs text-muted-foreground">Horas trabajadas</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-orange-600" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.horasTrabajadas.toFixed(1)}h</p>
+                  <p className="text-xs text-muted-foreground">Horas trabajadas</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Leyenda */}
@@ -518,6 +560,163 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Vista Semanal tipo Excel - Solo cuando hay armador seleccionado */}
+      {selectedArmador !== "ALL" && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Vista Semanal - {armadores.find(a => a.id === selectedArmador)?.nombre}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <EnhancedButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedDate(subWeeks(selectedDate || new Date(), 1))}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </EnhancedButton>
+                <span className="text-sm font-medium min-w-[180px] text-center">
+                  Semana del {format(startOfWeek(selectedDate || new Date(), { weekStartsOn: 1 }), "d MMM", { locale: es })} al {format(endOfWeek(selectedDate || new Date(), { weekStartsOn: 1 }), "d MMM yyyy", { locale: es })}
+                </span>
+                <EnhancedButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedDate(addWeeks(selectedDate || new Date(), 1))}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </EnhancedButton>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border px-2 py-1 text-left font-semibold">Tipo</th>
+                    <th className="border px-2 py-1 text-left font-semibold">Fecha</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-blue-50">Horario Prog.</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-blue-50">Lunch P.</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-blue-50">Break P.</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-blue-50">Total Hrs P.</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-green-50">Horario Trab.</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-green-50">Lunch</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-green-50">Break</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-green-50">Total Hrs Trab.</th>
+                    <th className="border px-2 py-1 text-center font-semibold bg-orange-50">Hrs Extras</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const weekStart = startOfWeek(selectedDate || new Date(), { weekStartsOn: 1 });
+                    const weekEnd = endOfWeek(selectedDate || new Date(), { weekStartsOn: 1 });
+                    const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+                    
+                    let totalHorasProg = 0;
+                    let totalHorasTrab = 0;
+                    let totalHorasExtras = 0;
+
+                    const rows = weekDays.map((day) => {
+                      const dateStr = format(day, "yyyy-MM-dd");
+                      const prog = horariosProgramados.find(
+                        h => h.fecha.startsWith(dateStr) && h.armadorId === selectedArmador
+                      );
+                      const real = turnosReales.find(
+                        t => t.fecha.startsWith(dateStr) && t.armadorId === selectedArmador
+                      );
+
+                      // Calcular horas programadas
+                      let horasProg = 0;
+                      if (prog) {
+                        const [hi, mi] = prog.horaInicio.split(":").map(Number);
+                        const [hf, mf] = prog.horaFin.split(":").map(Number);
+                        horasProg = (hf * 60 + mf - hi * 60 - mi) / 60;
+                      }
+
+                      // Horas trabajadas
+                      const horasTrab = real ? real.duracionMinutos / 60 : 0;
+
+                      // Horas extras (si trabajó más de lo programado, o si trabajó sin programar)
+                      const horasExtras = Math.max(0, horasTrab - horasProg);
+
+                      totalHorasProg += horasProg;
+                      totalHorasTrab += horasTrab;
+                      totalHorasExtras += horasExtras;
+
+                      const getTipo = () => {
+                        if (isWeekend(day)) return { label: "Fin de semana", color: "text-gray-500" };
+                        if (prog?.tipoTurno === "DESCANSO") return { label: "Descanso", color: "text-purple-600" };
+                        return { label: "Hábil", color: "text-gray-900" };
+                      };
+
+                      const tipo = getTipo();
+
+                      return (
+                        <tr key={dateStr} className={isWeekend(day) ? "bg-gray-50" : ""}>
+                          <td className={`border px-2 py-1 ${tipo.color}`}>{tipo.label}</td>
+                          <td className="border px-2 py-1">{format(day, "dd/MM/yyyy")}</td>
+                          <td className="border px-2 py-1 text-center bg-blue-50/50">
+                            {prog ? `${prog.horaInicio} - ${prog.horaFin}` : "-"}
+                          </td>
+                          <td className="border px-2 py-1 text-center bg-blue-50/50">1:00</td>
+                          <td className="border px-2 py-1 text-center bg-blue-50/50">0:15</td>
+                          <td className="border px-2 py-1 text-center font-medium bg-blue-50/50">
+                            {horasProg > 0 ? horasProg.toFixed(1) : "-"}
+                          </td>
+                          <td className="border px-2 py-1 text-center bg-green-50/50">
+                            {real ? `${real.horaInicio} - ${real.horaFin || "..."}` : "-"}
+                          </td>
+                          <td className="border px-2 py-1 text-center bg-green-50/50">
+                            {real ? "1:00" : "-"}
+                          </td>
+                          <td className="border px-2 py-1 text-center bg-green-50/50">
+                            {real ? "0:15" : "-"}
+                          </td>
+                          <td className="border px-2 py-1 text-center font-medium bg-green-50/50">
+                            {horasTrab > 0 ? horasTrab.toFixed(1) : "-"}
+                          </td>
+                          <td className={`border px-2 py-1 text-center font-medium bg-orange-50/50 ${horasExtras > 0 ? "text-orange-600" : ""}`}>
+                            {horasExtras > 0 ? horasExtras.toFixed(2) : "-"}
+                          </td>
+                        </tr>
+                      );
+                    });
+
+                    return (
+                      <>
+                        {rows}
+                        <tr className="bg-gray-200 font-bold">
+                          <td colSpan={5} className="border px-2 py-1 text-right">Total semana:</td>
+                          <td className="border px-2 py-1 text-center bg-blue-100">{totalHorasProg.toFixed(1)}</td>
+                          <td colSpan={3} className="border px-2 py-1"></td>
+                          <td className="border px-2 py-1 text-center bg-green-100">{totalHorasTrab.toFixed(1)}</td>
+                          <td className="border px-2 py-1 text-center bg-orange-100">{totalHorasExtras.toFixed(2)}</td>
+                        </tr>
+                      </>
+                    );
+                  })()}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Leyenda de la tabla */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs space-y-1">
+              <p><strong>Tipo:</strong> Si es día hábil, feriado, o fin de semana</p>
+              <p><strong>Horario Prog.:</strong> Horario programado inicio y fin</p>
+              <p><strong>Lunch P. / Break P.:</strong> Hora de comida y descanso programados (teóricos)</p>
+              <p><strong>Total Hrs P.:</strong> Total de horas programadas (hora fin - hora inicio - lunch)</p>
+              <p><strong>Horario Trab.:</strong> Horario real trabajado</p>
+              <p><strong>Hrs Extras:</strong> Horas trabajadas menos horas programadas. Si es mayor a 44h semanales se pagan doble.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Carga Masiva de Horarios */}
+      <HorariosCargaMasiva armadores={armadores} />
 
       {/* Modal para agregar horario */}
       {showAddModal && (
