@@ -10,11 +10,16 @@
     "type-check": "tsc --noEmit",
     "pre-commit": "node scripts/pre-commit-check.js",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "seed": "tsx scripts/seed.ts",
     "create-superadmin": "tsx scripts/create-superadmin.ts",
     "create-superadmin-prd": "tsx scripts/create-superadmin-prd.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate:dev": "node scripts/safe-migrate.js dev",
+    "db:migrate:deploy": "node scripts/safe-migrate.js deploy",
+    "db:migrate:status": "node scripts/safe-migrate.js status",
+    "db:push": "node scripts/safe-migrate.js push",
+    "db:studio": "prisma studio"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seed.ts"
