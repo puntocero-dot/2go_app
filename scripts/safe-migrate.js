@@ -13,10 +13,24 @@
 
 const { execSync } = require('child_process');
 
-// Patrones que identifican bases de datos de producción
-const PRODUCTION_DB_PATTERNS = [
-  'supabase.com',
-  'pooler.supabase.com',
+// ============================================
+// CONFIGURACIÓN DE BASES DE DATOS
+// ============================================
+
+// Base de datos de DESARROLLO (Supabase DEV) - PERMITIDO migrate dev
+const DEV_DATABASE_PATTERNS = [
+  'owbudzbildgfhriabsts', // Supabase DEV project ID
+  'us-west-2',            // Región de DEV
+];
+
+// Base de datos de PRODUCCIÓN (Supabase PRD) - BLOQUEADO migrate dev
+const PROD_DATABASE_PATTERNS = [
+  'fgpfycmdehoowsyrmbrh', // Supabase PRD project ID
+  'us-east-1',            // Región de PRD
+];
+
+// Patrones genéricos que indican producción (si no es DEV explícito)
+const PRODUCTION_CLOUD_PATTERNS = [
   'neon.tech',
   'planetscale.com',
   'railway.app',
@@ -24,7 +38,6 @@ const PRODUCTION_DB_PATTERNS = [
   'aws.amazon.com',
   'azure.com',
   'cloud.google.com',
-  // Agrega aquí otros patrones de tu infraestructura de producción
 ];
 
 // Palabras clave que indican producción
@@ -32,7 +45,6 @@ const PRODUCTION_KEYWORDS = [
   'prod',
   'production',
   'live',
-  'main',
 ];
 
 function getDatabaseUrl() {
@@ -42,26 +54,67 @@ function getDatabaseUrl() {
 function isProductionDatabase(url) {
   const urlLower = url.toLowerCase();
   
-  // Verificar patrones de proveedores cloud
-  for (const pattern of PRODUCTION_DB_PATTERNS) {
+  // PRIMERO: Verificar si es la base de datos de DESARROLLO (permitida)
+  for (const pattern of DEV_DATABASE_PATTERNS) {
+    if (urlLower.includes(pattern.toLowerCase())) {
+      return false; // Es DEV, NO es producción
+    }
+  }
+  
+  // SEGUNDO: Verificar si es la base de datos de PRODUCCIÓN (bloqueada)
+  for (const pattern of PROD_DATABASE_PATTERNS) {
+    if (urlLower.includes(pattern.toLowerCase())) {
+      return true; // Es PRD
+    }
+  }
+  
+  // TERCERO: Verificar otros proveedores cloud (probablemente producción)
+  for (const pattern of PRODUCTION_CLOUD_PATTERNS) {
     if (urlLower.includes(pattern.toLowerCase())) {
       return true;
     }
   }
   
-  // Verificar palabras clave de producción en la URL
+  // CUARTO: Verificar palabras clave de producción
   for (const keyword of PRODUCTION_KEYWORDS) {
     if (urlLower.includes(keyword)) {
       return true;
     }
   }
   
-  // Si no es localhost o 127.0.0.1, probablemente es producción
+  // QUINTO: localhost siempre es desarrollo
   const isLocal = urlLower.includes('localhost') || 
                   urlLower.includes('127.0.0.1') ||
                   urlLower.includes('host.docker.internal');
   
-  return !isLocal;
+  if (isLocal) {
+    return false;
+  }
+  
+  // Por defecto, si no reconocemos la URL, asumimos producción (seguro)
+  return true;
+}
+
+function getEnvironmentName(url) {
+  const urlLower = url.toLowerCase();
+  
+  for (const pattern of DEV_DATABASE_PATTERNS) {
+    if (urlLower.includes(pattern.toLowerCase())) {
+      return '🟢 DESARROLLO (Supabase DEV)';
+    }
+  }
+  
+  for (const pattern of PROD_DATABASE_PATTERNS) {
+    if (urlLower.includes(pattern.toLowerCase())) {
+      return '🔴 PRODUCCIÓN (Supabase PRD)';
+    }
+  }
+  
+  if (urlLower.includes('localhost') || urlLower.includes('127.0.0.1')) {
+    return '🟢 DESARROLLO (localhost)';
+  }
+  
+  return '⚠️  DESCONOCIDO (tratado como producción)';
 }
 
 function printError(message) {
@@ -112,11 +165,13 @@ function main() {
   const isProduction = isProductionDatabase(databaseUrl);
   const maskedUrl = maskDatabaseUrl(databaseUrl);
   
+  const envName = getEnvironmentName(databaseUrl);
+  
   console.log('\n' + '─'.repeat(70));
   console.log('🔒 PRISMA SAFE MIGRATE');
   console.log('─'.repeat(70));
   printInfo(`Database: ${maskedUrl}`);
-  printInfo(`Entorno detectado: ${isProduction ? '🔴 PRODUCCIÓN' : '🟢 DESARROLLO'}`);
+  printInfo(`Entorno: ${envName}`);
   console.log('─'.repeat(70));
   
   if (!command) {

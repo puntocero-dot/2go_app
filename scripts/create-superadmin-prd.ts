@@ -1,15 +1,21 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../lib/auth";
 
-// Para usar en producción, primero actualiza el DATABASE_URL en .env.local
-// o pasa la URL como variable de entorno
+// URL de producción hardcodeada para evitar problemas con .env
+const PROD_DATABASE_URL = "postgresql://postgres.fgpfycmdehoowsyrmbrh:Santi2301r%24@aws-1-us-east-1.pooler.supabase.com:5432/postgres";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: PROD_DATABASE_URL,
+    },
+  },
+});
 
 async function createSuperAdminProduction() {
   try {
     console.log("🔧 Creando Super Admin en Producción...");
-    console.log("📍 Base de datos:", process.env.DATABASE_URL?.split('@')[1]?.split('?')[0]);
+    console.log("📍 Base de datos: aws-1-us-east-1.pooler.supabase.com (PRD)");
 
     // Verificar si ya existe
     const existingSuperAdmin = await prisma.usuario.findUnique({
