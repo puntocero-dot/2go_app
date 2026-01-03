@@ -3,9 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl solo se usa para migraciones locales, no es necesario en producción
+  // Si DIRECT_URL no está definido, Prisma usará DATABASE_URL para todo
 }
 
 model Usuario {
