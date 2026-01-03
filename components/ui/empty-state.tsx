@@ -68,7 +68,7 @@ export function EmptyState({
 }
 
 // Predefined empty states for common use cases
-export function EmptyOrders({ onCreate }: { onCreate?: () => void }) {
+export function EmptyOrders({ href }: { href?: string }) {
   return (
     <EmptyState
       icon={
@@ -79,17 +79,17 @@ export function EmptyOrders({ onCreate }: { onCreate?: () => void }) {
       title="No hay órdenes"
       description="No se encontraron órdenes con los filtros seleccionados."
       action={
-        onCreate && {
+        href ? {
           label: "Crear Orden",
-          onClick: onCreate,
+          href: href,
           variant: "default"
-        }
+        } : undefined
       }
     />
   );
 }
 
-export function EmptyProjects({ onCreate }: { onCreate?: () => void }) {
+export function EmptyProjects({ href }: { href?: string }) {
   return (
     <EmptyState
       icon={
@@ -100,17 +100,17 @@ export function EmptyProjects({ onCreate }: { onCreate?: () => void }) {
       title="No hay proyectos"
       description="Comienza creando tu primer proyecto para gestionar órdenes."
       action={
-        onCreate && {
+        href ? {
           label: "Crear Proyecto",
-          onClick: onCreate,
+          href: href,
           variant: "default"
-        }
+        } : undefined
       }
     />
   );
 }
 
-export function EmptyUsers({ onCreate }: { onCreate?: () => void }) {
+export function EmptyUsers({ href }: { href?: string }) {
   return (
     <EmptyState
       icon={
@@ -121,11 +121,11 @@ export function EmptyUsers({ onCreate }: { onCreate?: () => void }) {
       title="No hay usuarios"
       description="No se encontraron usuarios registrados."
       action={
-        onCreate && {
+        href ? {
           label: "Crear Usuario",
-          onClick: onCreate,
+          href: href,
           variant: "default"
-        }
+        } : undefined
       }
     />
   );

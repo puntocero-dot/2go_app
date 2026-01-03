@@ -270,11 +270,7 @@ export default async function ProyectosPage() {
               </div>
             </EnhancedCard>
           ) : (
-            <EmptyProjects 
-              onCreate={() => {
-                window.location.href = "/admin/proyectos/crear";
-              }}
-            />
+            <EmptyProjects href="/admin/proyectos/crear" />
           )}
         </section>
       </main>

@@ -530,12 +530,7 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
               />
             </EnhancedCard>
           ) : (
-            <EmptyOrders 
-              onCreate={() => {
-                // Redirigir a crear orden
-                window.location.href = "/admin/ordenes/crear";
-              }}
-            />
+            <EmptyOrders href="/admin/ordenes/crear" />
           )}
         </section>
       </main>
