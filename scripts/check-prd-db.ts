@@ -36,6 +36,14 @@ async function checkDatabase() {
     console.log(`   - Órdenes: ${ordenes}`);
     console.log(`   - Armadores: ${armadores}`);
     
+    // Verificar tabla audit_logs
+    try {
+      const auditLogs = await prisma.auditLog.count();
+      console.log(`   - AuditLogs: ${auditLogs} ✅`);
+    } catch (e: any) {
+      console.log(`   - AuditLogs: ❌ ERROR - ${e.message}`);
+    }
+    
   } catch (error) {
     console.error("❌ Error:", error);
   } finally {
