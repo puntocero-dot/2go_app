@@ -15,8 +15,7 @@ model Usuario {
   nombre              String
   telefono            String?
   rol                 RolUsuario
-  activo              Boolean          
-      @default(true)
+  activo              Boolean              @default(true)
   fotoPerfil          String?
   estadoLoggeo        EstadoLoggeo         @default(OFFLINE)
   createdAt           DateTime             @default(now())
