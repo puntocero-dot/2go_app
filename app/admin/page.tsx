@@ -201,14 +201,21 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
   
   // Calcular total facturado usando el sistema de facturación real
   let totalFacturadoCalculado = 0;
-  if (fechaInicioFilter && fechaFinFilter) {
-    const billingData = await getBillingDataset({
-      proyectoId: proyectoIdFilter,
-      desde: fechaInicioFilter,
-      hasta: fechaFinFilter,
-    });
-    totalFacturadoCalculado = billingData?.totalsByConcept.totalFacturado ?? 0;
-  }
+  
+  // Si hay filtros de fecha, usar esos; si no, usar el mes actual
+  const hoy = new Date();
+  const primerDiaMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
+  const ultimoDiaMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate()}`;
+  
+  const desdeParaFacturacion = fechaInicioFilter || primerDiaMes;
+  const hastaParaFacturacion = fechaFinFilter || ultimoDiaMes;
+  
+  const billingData = await getBillingDataset({
+    proyectoId: proyectoIdFilter,
+    desde: desdeParaFacturacion,
+    hasta: hastaParaFacturacion,
+  });
+  totalFacturadoCalculado = billingData?.totalsByConcept.totalFacturado ?? 0;
   
   const ordenesRecientes = await prisma.orden.findMany({
     where: ordenWhere,
@@ -397,7 +404,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
           <KPICard
             title="Total Facturado"
             value={formatCurrency(totalFacturado)}
-            description="Basado en órdenes filtradas"
+            description={fechaInicioFilter || fechaFinFilter ? "Basado en órdenes filtradas" : "Mes actual"}
             icon={DollarSign}
             color="success"
           />
