@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getBillingDataset } from "@/lib/facturacion-data";
 import type { BillingDataset } from "@/lib/facturacion-data";
 import { generateBillingPdf } from "@/lib/facturacion-pdf";
@@ -143,8 +144,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const datos = (dataset.proyecto.datosFacturacion ?? {}) as DatosFacturacion;
-    const toEmail = datos.contacto?.email;
+    let datos = (dataset.proyecto.datosFacturacion ?? {}) as DatosFacturacion;
+    
+    // Buscar email en datosFacturacion.contacto.email
+    let toEmail = datos.contacto?.email;
+    
+    // Si no hay email en el dataset, buscar el proyecto directamente
+    if (!toEmail && proyectoId !== "ALL") {
+      const proyectoDirecto = await prisma.proyecto.findUnique({
+        where: { id: proyectoId },
+        select: { datosFacturacion: true },
+      });
+      
+      if (proyectoDirecto?.datosFacturacion) {
+        const datosDirecto = proyectoDirecto.datosFacturacion as DatosFacturacion;
+        toEmail = datosDirecto.contacto?.email;
+      }
+    }
 
     if (!toEmail) {
       return NextResponse.json(

@@ -66,8 +66,11 @@ export function getDateRange(desde: string, hasta: string): BillingRange | null 
 
   const start = new Date(`${desde}T06:00:00.000Z`);
 
+  // Para el fin, necesitamos el final del día "hasta" en hora local
+  // Eso es el inicio del día siguiente menos 1ms
   const endBase = new Date(`${hasta}T06:00:00.000Z`);
-  const end = new Date(endBase.getTime() - 1); // un milisegundo antes del siguiente día local
+  const endNextDay = new Date(endBase.getTime() + 24 * 60 * 60 * 1000); // siguiente día
+  const end = new Date(endNextDay.getTime() - 1); // un milisegundo antes
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
   if (start > end) return null;
