@@ -304,25 +304,25 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 fade-in">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gradient mb-2">
+              <h1 className="text-2xl sm:text-4xl font-bold text-gradient mb-2">
                 Gestión de Órdenes
               </h1>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-muted-foreground text-sm sm:text-lg">
                 Administra y monitorea todas las órdenes del sistema.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <Link href="/admin/ordenes/carga-masiva">
-                <EnhancedButton variant="outline" className="min-w-[160px] hover:shadow-md hover:scale-[1.02] active:scale-[0.98]">
-                  <FileText className="w-4 h-4 mr-2" />
+                <EnhancedButton variant="outline" size="sm" className="text-xs sm:text-sm sm:min-w-[160px] hover:shadow-md hover:scale-[1.02] active:scale-[0.98]">
+                  <FileText className="w-4 h-4 mr-1 sm:mr-2" />
                   Carga Masiva CSV
                 </EnhancedButton>
               </Link>
               <Link href="/admin/ordenes/crear">
-                <EnhancedButton variant="default" className="min-w-[160px] bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
-                  <Plus className="w-4 h-4 mr-2" />
+                <EnhancedButton variant="default" size="sm" className="text-xs sm:text-sm sm:min-w-[160px] bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                  <Plus className="w-4 h-4 mr-1 sm:mr-2" />
                   Nueva Orden
                 </EnhancedButton>
               </Link>
