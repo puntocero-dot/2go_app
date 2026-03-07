@@ -8,13 +8,13 @@ import { formatearFecha } from "@/lib/utils";
 
 interface RegistroEstado {
   id: string;
-  estadoAnterior: string;
-  estadoNuevo: string;
-  fecha: string;
+  estadoAnterior: string | null;
+  estadoCambiadoA: string;
+  timestamp: string;
   comentario: string | null;
   usuario: {
     nombre: string;
-  };
+  } | null;
 }
 
 interface Orden {
@@ -305,11 +305,11 @@ export default function SeguimientoPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold">
-                          {estadoEmoji[registro.estadoNuevo]}{" "}
-                          {estadoTexto[registro.estadoNuevo]}
+                          {estadoEmoji[registro.estadoCambiadoA]}{" "}
+                          {estadoTexto[registro.estadoCambiadoA]}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {formatearFecha(registro.fecha)}
+                          {formatearFecha(registro.timestamp)}
                         </p>
                         {registro.comentario && (
                           <p className="text-sm text-gray-700 mt-1">
@@ -318,7 +318,7 @@ export default function SeguimientoPage() {
                         )}
                       </div>
                       <Badge variant="outline" className="text-xs">
-                        {registro.usuario.nombre}
+                        {registro.usuario?.nombre || "Sistema"}
                       </Badge>
                     </div>
                   </div>
