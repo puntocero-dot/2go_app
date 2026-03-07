@@ -7,13 +7,33 @@ import { Source, Layer } from 'react-map-gl';
 import NavigationControl from 'react-map-gl/dist/esm/components/navigation-control';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Navigation, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Navigation, Clock, Route, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 type RutaPunto = {
   lat: number;
   lng: number;
   timestamp: string;
   tipo: string;
+};
+
+type RutaSugerida = {
+  geometry: {
+    type: 'LineString';
+    coordinates: [number, number][];
+  };
+  distancia: string;
+  distanciaMetros: number;
+  duracion: string;
+  duracionSegundos: number;
+};
+
+type Comparacion = {
+  distanciaGpsKm: number;
+  distanciaSugeridaKm: number;
+  desviacionPorcentaje: number;
+  kmExtra: number;
+  seDesvio: boolean;
 };
 
 type Props = {
@@ -23,8 +43,11 @@ type Props = {
 export function OrdenRutaMapa({ ordenId }: Props) {
   const [ruta, setRuta] = useState<RutaPunto[]>([]);
   const [destino, setDestino] = useState<{ lat: number; lng: number } | null>(null);
+  const [rutaSugerida, setRutaSugerida] = useState<RutaSugerida | null>(null);
+  const [comparacion, setComparacion] = useState<Comparacion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mostrarRutaSugerida, setMostrarRutaSugerida] = useState(true);
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -37,6 +60,8 @@ export function OrdenRutaMapa({ ordenId }: Props) {
         const data = await response.json();
         setRuta(data.ruta || []);
         setDestino(data.destino);
+        setRutaSugerida(data.rutaSugerida || null);
+        setComparacion(data.comparacion || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
@@ -119,8 +144,8 @@ export function OrdenRutaMapa({ ordenId }: Props) {
       }
     : { longitude: -89.2182, latitude: 13.6929 };
 
-  // Crear línea de la ruta para GeoJSON
-  const rutaLineString = {
+  // Crear línea de la ruta GPS real para GeoJSON
+  const rutaGpsLineString = {
     type: 'Feature' as const,
     properties: {},
     geometry: {
@@ -129,6 +154,13 @@ export function OrdenRutaMapa({ ordenId }: Props) {
     },
   };
 
+  // Crear línea de la ruta sugerida por carretera
+  const rutaSugeridaLineString = rutaSugerida ? {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: rutaSugerida.geometry,
+  } : null;
+
   return (
     <Card>
       <CardHeader>
@@ -136,15 +168,62 @@ export function OrdenRutaMapa({ ordenId }: Props) {
           <Navigation className="w-5 h-5" />
           Ruta del Armador
         </CardTitle>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            {ruta.length} puntos registrados
-          </div>
-          {ruta.length > 0 && (
-            <div>
-              Último registro: {new Date(ruta[ruta.length - 1].timestamp).toLocaleString('es-SV')}
+        <div className="flex flex-col gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              {ruta.length} puntos GPS
             </div>
+            {ruta.length > 0 && (
+              <div>
+                Último: {new Date(ruta[ruta.length - 1].timestamp).toLocaleString('es-SV')}
+              </div>
+            )}
+            {rutaSugerida && (
+              <div className="flex items-center gap-1">
+                <Route className="w-4 h-4" />
+                Ruta óptima: {rutaSugerida.distancia} · {rutaSugerida.duracion}
+              </div>
+            )}
+          </div>
+          
+          {/* Comparación de rutas */}
+          {comparacion && (
+            <div className={`flex flex-wrap items-center gap-3 p-2 rounded-lg text-sm ${
+              comparacion.seDesvio ? 'bg-amber-50 border border-amber-200' : 'bg-emerald-50 border border-emerald-200'
+            }`}>
+              {comparacion.seDesvio ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  <span className="text-amber-800 font-medium">
+                    Desviación detectada: +{comparacion.kmExtra} km extra ({comparacion.desviacionPorcentaje}%)
+                  </span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span className="text-emerald-800 font-medium">
+                    Ruta eficiente: {comparacion.distanciaGpsKm} km recorridos
+                  </span>
+                </>
+              )}
+              <div className="text-xs text-muted-foreground">
+                GPS: {comparacion.distanciaGpsKm} km | Sugerida: {comparacion.distanciaSugeridaKm} km
+              </div>
+            </div>
+          )}
+
+          {/* Toggle para mostrar/ocultar ruta sugerida */}
+          {rutaSugerida && (
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={mostrarRutaSugerida}
+                onChange={(e) => setMostrarRutaSugerida(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <span>Mostrar ruta sugerida (verde)</span>
+            </label>
           )}
         </div>
       </CardHeader>
@@ -160,15 +239,38 @@ export function OrdenRutaMapa({ ordenId }: Props) {
           >
             <NavigationControl position="top-right" />
 
-            {/* Línea de la ruta */}
-            <Source id="ruta" type="geojson" data={rutaLineString}>
+            {/* Línea de la ruta SUGERIDA por carretera (verde, debajo) */}
+            {mostrarRutaSugerida && rutaSugeridaLineString && (
+              <Source id="ruta-sugerida" type="geojson" data={rutaSugeridaLineString}>
+                <Layer
+                  id="ruta-sugerida-line"
+                  type="line"
+                  paint={{
+                    'line-color': '#22c55e',
+                    'line-width': 5,
+                    'line-opacity': 0.6,
+                  }}
+                  layout={{
+                    'line-join': 'round',
+                    'line-cap': 'round',
+                  }}
+                />
+              </Source>
+            )}
+
+            {/* Línea de la ruta GPS REAL (azul, encima) */}
+            <Source id="ruta-gps" type="geojson" data={rutaGpsLineString}>
               <Layer
-                id="ruta-line"
+                id="ruta-gps-line"
                 type="line"
                 paint={{
                   'line-color': '#3b82f6',
                   'line-width': 4,
-                  'line-opacity': 0.8,
+                  'line-opacity': 0.9,
+                }}
+                layout={{
+                  'line-join': 'round',
+                  'line-cap': 'round',
                 }}
               />
             </Source>
@@ -184,7 +286,7 @@ export function OrdenRutaMapa({ ordenId }: Props) {
               </Marker>
             )}
 
-            {/* Marcador de posición actual */}
+            {/* Marcador de posición actual/final */}
             {ruta.length > 0 && (
               <Marker longitude={ruta[ruta.length - 1].lng} latitude={ruta[ruta.length - 1].lat}>
                 <div className="relative">
@@ -211,23 +313,29 @@ export function OrdenRutaMapa({ ordenId }: Props) {
         {/* Leyenda */}
         <div className="flex flex-wrap gap-4 mt-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow" />
             <span>Inicio</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white" />
+            <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow" />
             <span>Posición Actual</span>
           </div>
           {destino && (
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
+              <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow" />
               <span>Destino</span>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <div className="w-12 h-1 bg-blue-500" />
-            <span>Ruta recorrida</span>
+            <div className="w-10 h-1 bg-blue-500 rounded" />
+            <span>Ruta GPS real</span>
           </div>
+          {rutaSugerida && (
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-1 bg-green-500 rounded opacity-60" />
+              <span>Ruta sugerida</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
