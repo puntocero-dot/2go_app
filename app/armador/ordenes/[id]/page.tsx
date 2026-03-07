@@ -24,6 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { OrderStatusTimeline } from "@/components/order-status-timeline";
 import { ArmadorEstadoActions } from "@/components/armador-estado-actions";
+import { RutaSugeridaCard } from "@/components/ruta-sugerida-card";
 import { formatearFecha } from "@/lib/utils";
 import { EstadoBadge } from "@/lib/orden-helpers";
 
@@ -189,6 +190,20 @@ export default async function ArmadorOrdenDetallePage({ params }: PageProps) {
             )}
           </CardContent>
         </Card>
+
+        {/* Mostrar ruta sugerida solo si la orden está ASIGNADO o EN_RUTA */}
+        {(orden.estado === "ASIGNADO" || orden.estado === "EN_RUTA") && 
+          orden.usuarioFinal.coordenadasLat != null && 
+          orden.usuarioFinal.coordenadasLng != null && (
+          <RutaSugeridaCard
+            ordenId={orden.id}
+            destino={{
+              lat: orden.usuarioFinal.coordenadasLat,
+              lng: orden.usuarioFinal.coordenadasLng,
+              direccion: orden.usuarioFinal.direccionCompleta || undefined,
+            }}
+          />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="shadow-sm">

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { logAuditFromSession } from "@/lib/audit-logger";
+import { getRouteDirections, formatDuration, formatDistance } from "@/lib/mapbox-directions";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -90,7 +91,33 @@ export async function POST(request: NextRequest, context: RouteContext) {
       request,
     });
 
-    return NextResponse.json({ orden });
+    // Calcular ruta sugerida y ETA si hay coordenadas del destino y del armador
+    let rutaSugerida = null;
+    
+    if (
+      orden.usuarioFinal?.coordenadasLat != null &&
+      orden.usuarioFinal?.coordenadasLng != null &&
+      armador.ubicacionActualLat != null &&
+      armador.ubicacionActualLng != null
+    ) {
+      const direcciones = await getRouteDirections(
+        { lat: armador.ubicacionActualLat, lng: armador.ubicacionActualLng },
+        { lat: orden.usuarioFinal.coordenadasLat, lng: orden.usuarioFinal.coordenadasLng },
+        'driving-traffic'
+      );
+
+      if (direcciones.route) {
+        rutaSugerida = {
+          distancia: formatDistance(direcciones.route.distance),
+          distanciaMetros: direcciones.route.distance,
+          duracion: formatDuration(direcciones.route.duration),
+          duracionSegundos: direcciones.route.duration,
+          geometry: direcciones.route.geometry,
+        };
+      }
+    }
+
+    return NextResponse.json({ orden, rutaSugerida });
   } catch (error) {
     console.error("Error al tomar orden como armador:", error);
     return NextResponse.json(
