@@ -29,6 +29,7 @@ export function Navbar({ user }: NavbarProps) {
   const [workforceDesktopOpen, setWorkforceDesktopOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const workforceDesktopRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -51,6 +52,23 @@ export function Navbar({ user }: NavbarProps) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [userMenuOpen]);
+
+  // Cerrar dropdown de WorkForce desktop al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (workforceDesktopRef.current && !workforceDesktopRef.current.contains(event.target as Node)) {
+        setWorkforceDesktopOpen(false);
+      }
+    };
+
+    if (workforceDesktopOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [workforceDesktopOpen]);
 
   useEffect(() => {
     const handleClickOutsideMobile = (event: MouseEvent) => {
@@ -100,8 +118,14 @@ export function Navbar({ user }: NavbarProps) {
 
   const isActive = (path: string) => {
     if (!pathname) return false;
+    // Match exacto para rutas raíz de cada sección
+    if (path === "/admin" && pathname === "/admin") return true;
+    if (path === "/supervisor" && pathname === "/supervisor") return true;
     if (path === "/armador" && pathname === "/armador") return true;
-    if (path !== "/armador" && pathname.startsWith(path)) return true;
+    // Para subrutas, verificar que empiece con el path Y que no sea la ruta raíz
+    if (path !== "/admin" && path !== "/supervisor" && path !== "/armador") {
+      return pathname.startsWith(path);
+    }
     return false;
   };
 
@@ -161,7 +185,7 @@ export function Navbar({ user }: NavbarProps) {
                       Administración
                     </EnhancedButton>
                   </Link>
-                  <div className="relative">
+                  <div className="relative" ref={workforceDesktopRef}>
                     <EnhancedButton 
                       variant="ghost" 
                       size="sm"
