@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Circle, Coffee, Utensils, Power } from "lucide-react";
+import { Circle, Coffee, Utensils, Power, Briefcase } from "lucide-react";
 
 interface EstadoLoggeoSelectorProps {
   estadoActual: string;
@@ -10,6 +10,7 @@ interface EstadoLoggeoSelectorProps {
 
 const ESTADOS = [
   { value: "ACTIVO", label: "Activo", icon: Circle, color: "text-green-500", bgColor: "bg-green-100" },
+  { value: "BACKOFFICE", label: "BackOffice", icon: Briefcase, color: "text-blue-500", bgColor: "bg-blue-100" },
   { value: "LUNCH", label: "Lunch", icon: Utensils, color: "text-orange-500", bgColor: "bg-orange-100" },
   { value: "BREAK", label: "Break", icon: Coffee, color: "text-yellow-500", bgColor: "bg-yellow-100" },
   { value: "OFFLINE", label: "Offline", icon: Power, color: "text-gray-500", bgColor: "bg-gray-100" },

@@ -138,15 +138,21 @@ export class TurnoService extends BaseService {
         orderBy: { timestamp: 'desc' },
       });
 
-      // Smart sampling: solo guardar si movimiento > 50 metros
+      // Smart sampling: guardar si movimiento > 20 metros O si pasaron más de 2 minutos
       if (ultimoPunto && tipo === 'INTERMEDIO') {
         const distancia = this.calcularDistancia(
           { lat: ultimoPunto.latitud, lng: ultimoPunto.longitud },
           ubicacion
         );
 
-        const umbralMetros = parseInt(process.env.TRACKING_MIN_DISTANCE || '50');
-        if (distancia < umbralMetros) {
+        const umbralMetros = parseInt(process.env.TRACKING_MIN_DISTANCE || '20');
+        const tiempoDesdeUltimo = Date.now() - ultimoPunto.timestamp.getTime();
+        const umbralTiempoMs = 2 * 60 * 1000; // 2 minutos
+
+        // Guardar si: movimiento > umbral O tiempo > 2 min
+        const debeGuardar = distancia >= umbralMetros || tiempoDesdeUltimo >= umbralTiempoMs;
+
+        if (!debeGuardar) {
           // Solo actualizar ubicación del armador, no guardar punto
           await this.prisma.armador.update({
             where: { id: turno.armadorId },

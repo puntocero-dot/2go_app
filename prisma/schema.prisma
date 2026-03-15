@@ -451,6 +451,7 @@ model ConfiguracionFacturacion {
 
 enum EstadoLoggeo {
   ACTIVO
+  BACKOFFICE
   LUNCH
   BREAK
   OFFLINE

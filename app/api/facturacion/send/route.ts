@@ -174,9 +174,40 @@ export async function POST(request: NextRequest) {
 
     const pdfBytes = await generateBillingPdf(dataset);
     const csvContent = buildCsvFromDataset(dataset);
+    
+    // Generar JSON con datos de facturación
+    const jsonContent = JSON.stringify({
+      proyecto: {
+        id: dataset.proyecto.id,
+        nombre: dataset.proyecto.nombreComercial,
+      },
+      periodo: {
+        desde,
+        hasta,
+        label: dataset.periodoLabel,
+      },
+      resumen: {
+        totalOrdenes: dataset.ordenes.length,
+        totalFacturado: dataset.totalsByConcept.totalFacturado,
+        desglose: dataset.totalsByConcept,
+      },
+      ordenes: dataset.ordenes.map(orden => ({
+        codigo: orden.codigoReferenciaRetail,
+        cliente: orden.clienteNombre,
+        municipio: orden.municipio,
+        proyecto: orden.proyectoNombre,
+        fechaCompletado: orden.fechaCompletado?.toISOString() || null,
+        estado: orden.estado,
+        conceptos: orden.conceptos,
+        resumen: orden.resumen,
+        total: orden.total,
+      })),
+      generadoEn: new Date().toISOString(),
+    }, null, 2);
 
     const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
     const csvBase64 = Buffer.from(csvContent, "utf8").toString("base64");
+    const jsonBase64 = Buffer.from(jsonContent, "utf8").toString("base64");
 
     await resend.emails.send({
       from: process.env.EMAIL_FROM || "noreply@armados2go.com",
@@ -193,6 +224,11 @@ export async function POST(request: NextRequest) {
           filename: `${baseFilename}.csv`,
           content: csvBase64,
           contentType: "text/csv",
+        },
+        {
+          filename: `${baseFilename}.json`,
+          content: jsonBase64,
+          contentType: "application/json",
         },
       ],
     });

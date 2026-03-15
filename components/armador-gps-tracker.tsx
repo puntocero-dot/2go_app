@@ -20,6 +20,8 @@ export function ArmadorGpsTracker() {
   const lastPositionRef = useRef<{ lat: number; lng: number } | null>(null);
   const failedAttemptsRef = useRef<number>(0);
   const isSyncingRef = useRef<boolean>(false);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const backgroundIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cargar cola desde localStorage
   const loadQueue = useCallback((): QueuedPoint[] => {
@@ -224,6 +226,77 @@ export function ArmadorGpsTracker() {
     console.warn(`[GPS] Error: ${errorMessages[error.code] || error.message}`);
   }, []);
 
+  // Solicitar Wake Lock para mantener pantalla activa
+  const requestWakeLock = useCallback(async () => {
+    if ('wakeLock' in navigator) {
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+        console.log('[GPS] Wake Lock activado - pantalla no se apagará');
+        
+        wakeLockRef.current.addEventListener('release', () => {
+          console.log('[GPS] Wake Lock liberado');
+        });
+      } catch (err) {
+        console.warn('[GPS] Wake Lock no disponible:', err);
+      }
+    }
+  }, []);
+
+  // Registrar Background Sync
+  const registerBackgroundSync = useCallback(async () => {
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        // @ts-expect-error - Background Sync API no está en tipos estándar
+        await registration.sync?.register('sync-gps-points');
+        console.log('[GPS] Background Sync registrado');
+      } catch (err) {
+        console.warn('[GPS] Background Sync no disponible:', err);
+      }
+    }
+  }, []);
+
+  // Enviar punto al Service Worker para queue en background
+  const queueToServiceWorker = useCallback((lat: number, lng: number) => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'QUEUE_GPS_POINT',
+        lat,
+        lng,
+        turnoId: localStorage.getItem('turnoActivo') || '',
+      });
+    }
+  }, []);
+
+  // Tracking en background cuando la app pierde foco
+  const startBackgroundTracking = useCallback(() => {
+    if (backgroundIntervalRef.current) return;
+    
+    console.log('[GPS] Iniciando tracking en background...');
+    
+    backgroundIntervalRef.current = setInterval(() => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            queueToServiceWorker(latitude, longitude);
+            console.log('[GPS] Punto background guardado');
+          },
+          (err) => console.warn('[GPS] Error background:', err),
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+    }, 60000); // Cada 60 segundos en background
+  }, [queueToServiceWorker]);
+
+  const stopBackgroundTracking = useCallback(() => {
+    if (backgroundIntervalRef.current) {
+      clearInterval(backgroundIntervalRef.current);
+      backgroundIntervalRef.current = null;
+      console.log('[GPS] Tracking background detenido');
+    }
+  }, []);
+
   useEffect(() => {
     if (!trackingEnabled) return;
     if (typeof window === "undefined" || !("geolocation" in navigator)) return;
@@ -232,9 +305,24 @@ export function ArmadorGpsTracker() {
     const handleOnline = () => {
       console.log('[GPS] Conexión restablecida, sincronizando cola...');
       syncQueue();
+      registerBackgroundSync();
+    };
+
+    // Listener para visibility change (app en background)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        startBackgroundTracking();
+      } else {
+        stopBackgroundTracking();
+        syncQueue();
+      }
     };
     
     window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Solicitar Wake Lock
+    requestWakeLock();
 
     // Iniciar watchPosition
     watchIdRef.current = navigator.geolocation.watchPosition(
@@ -249,14 +337,22 @@ export function ArmadorGpsTracker() {
 
     // Sincronizar cola al iniciar (por si quedaron puntos de sesión anterior)
     syncQueue();
+    registerBackgroundSync();
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopBackgroundTracking();
+      
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
+      
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+      }
     };
-  }, [trackingEnabled, handlePosition, handleError, syncQueue]);
+  }, [trackingEnabled, handlePosition, handleError, syncQueue, requestWakeLock, registerBackgroundSync, startBackgroundTracking, stopBackgroundTracking]);
 
   return null;
 }

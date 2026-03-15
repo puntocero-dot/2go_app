@@ -91,6 +91,12 @@ const loginHandler = async (data: LoginInput, request: NextRequest) => {
       rol: usuario.rol,
     });
 
+    // Cambiar estado de loggeo a ACTIVO automáticamente
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { estadoLoggeo: "ACTIVO" },
+    });
+
     // Si es ARMADOR, iniciar turno automáticamente
     let turnoId = null;
     if (usuario.rol === "ARMADOR") {

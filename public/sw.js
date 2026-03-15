@@ -241,4 +241,93 @@ self.addEventListener('message', (event) => {
       )
     );
   }
+
+  // GPS Background Sync - guardar ubicación pendiente
+  if (event.data?.type === 'QUEUE_GPS_POINT') {
+    const { lat, lng, turnoId } = event.data;
+    queueGpsPoint(lat, lng, turnoId);
+  }
+});
+
+// ===== GPS Background Sync =====
+const GPS_QUEUE_KEY = 'gps_background_queue';
+
+async function queueGpsPoint(lat, lng, turnoId) {
+  try {
+    const cache = await caches.open('gps-queue');
+    const queueResponse = await cache.match(GPS_QUEUE_KEY);
+    let queue = [];
+    
+    if (queueResponse) {
+      queue = await queueResponse.json();
+    }
+    
+    queue.push({ lat, lng, turnoId, timestamp: Date.now() });
+    
+    // Limitar a 200 puntos
+    if (queue.length > 200) {
+      queue = queue.slice(-200);
+    }
+    
+    await cache.put(GPS_QUEUE_KEY, new Response(JSON.stringify(queue)));
+    console.log('[SW] GPS point queued. Total:', queue.length);
+  } catch (e) {
+    console.error('[SW] Error queuing GPS point:', e);
+  }
+}
+
+// Background Sync para GPS
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-gps-points') {
+    event.waitUntil(syncGpsPoints());
+  }
+});
+
+async function syncGpsPoints() {
+  try {
+    const cache = await caches.open('gps-queue');
+    const queueResponse = await cache.match(GPS_QUEUE_KEY);
+    
+    if (!queueResponse) return;
+    
+    const queue = await queueResponse.json();
+    if (queue.length === 0) return;
+    
+    console.log('[SW] Syncing', queue.length, 'GPS points...');
+    
+    const synced = [];
+    
+    for (const point of queue) {
+      try {
+        const response = await fetch('/api/armadores/ubicacion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat: point.lat, lng: point.lng }),
+        });
+        
+        if (response.ok) {
+          synced.push(point.timestamp);
+        } else {
+          break;
+        }
+      } catch {
+        break;
+      }
+    }
+    
+    // Remover puntos sincronizados
+    const remaining = queue.filter(p => !synced.includes(p.timestamp));
+    await cache.put(GPS_QUEUE_KEY, new Response(JSON.stringify(remaining)));
+    
+    console.log('[SW] Synced', synced.length, 'points. Remaining:', remaining.length);
+  } catch (e) {
+    console.error('[SW] Error syncing GPS:', e);
+  }
+}
+
+// Periodic Background Sync para GPS (si el navegador lo soporta)
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'gps-periodic-sync') {
+    event.waitUntil(syncGpsPoints());
+  }
 });
