@@ -46,7 +46,7 @@ const handler = async (
     const usuario = await prisma.usuario.update({
       where: { id: session.userId },
       data: {
-        estadoLoggeo: estadoLoggeo as "ACTIVO" | "LUNCH" | "BREAK" | "OFFLINE",
+        estadoLoggeo: estadoLoggeo as "ACTIVO" | "BACKOFFICE" | "LUNCH" | "BREAK" | "OFFLINE",
       },
       select: {
         id: true,

@@ -97,9 +97,14 @@ export function Navbar({ user }: NavbarProps) {
 
       if (response.ok) {
         router.refresh();
+      } else {
+        const error = await response.json();
+        console.error("Error cambiando estado:", error);
+        alert(`Error: ${error.error || 'No se pudo cambiar el estado'}`);
       }
     } catch (error) {
       console.error("Error cambiando estado:", error);
+      alert("Error al cambiar estado");
     }
   };
 

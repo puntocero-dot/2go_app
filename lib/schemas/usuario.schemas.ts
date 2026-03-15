@@ -25,7 +25,7 @@ export const ActualizarPerfilSchema = z.object({
 
 // Schema para cambiar estado de loggeo
 export const CambiarEstadoLoggeoSchema = z.object({
-  estadoLoggeo: z.enum(["ACTIVO", "LUNCH", "BREAK", "OFFLINE"]),
+  estadoLoggeo: z.enum(["ACTIVO", "BACKOFFICE", "LUNCH", "BREAK", "OFFLINE"]),
 });
 
 // Types inferidos
