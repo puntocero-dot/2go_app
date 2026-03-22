@@ -1,14 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Navbar } from "@/components/navbar";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Label } from "@/components/ui/label";
-import { MapaRutaArmador } from "@/components/MapaRutaArmador";
 import { useRutaTurno } from "@/hooks/useRutaTurno";
 import { calcularDistanciaTotal, formatearDistancia, calcularDuracion } from "@/lib/geolocation";
 import { Loader2, MapPin, Clock, Route, User as UserIcon } from "lucide-react";
+
+const MapaRutaArmador = dynamic(() => import("@/components/MapaRutaArmador").then(mod => ({ default: mod.MapaRutaArmador })), {
+  loading: () => <div className="flex items-center justify-center h-full bg-gray-100"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>,
+  ssr: false,
+});
 
 export default function RutasPage() {
   const [user, setUser] = useState<any>(null);

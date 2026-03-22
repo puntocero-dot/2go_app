@@ -24,7 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { OrderStatusTimeline } from "@/components/order-status-timeline";
 import { ArmadorEstadoActions } from "@/components/armador-estado-actions";
-import { RutaSugeridaCard } from "@/components/ruta-sugerida-card";
+import { RutaSugeridaCardLazy } from "@/components/ruta-sugerida-card-lazy";
 import { formatearFecha } from "@/lib/utils";
 import { EstadoBadge } from "@/lib/orden-helpers";
 
@@ -195,7 +195,7 @@ export default async function ArmadorOrdenDetallePage({ params }: PageProps) {
         {(orden.estado === "ASIGNADO" || orden.estado === "EN_RUTA") && 
           orden.usuarioFinal.coordenadasLat != null && 
           orden.usuarioFinal.coordenadasLng != null && (
-          <RutaSugeridaCard
+          <RutaSugeridaCardLazy
             ordenId={orden.id}
             destino={{
               lat: orden.usuarioFinal.coordenadasLat,
