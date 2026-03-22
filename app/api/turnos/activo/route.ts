@@ -34,7 +34,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ turno: turnoActivo });
+    // Si no hay turno activo, devolver null
+    if (!turnoActivo) {
+      return NextResponse.json({ id: null });
+    }
+
+    // Devolver turno activo con su ID
+    return NextResponse.json(turnoActivo);
   } catch (error) {
     console.error("Error obteniendo turno activo:", error);
     return NextResponse.json(
