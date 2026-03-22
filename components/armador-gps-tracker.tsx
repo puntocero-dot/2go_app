@@ -22,6 +22,7 @@ export function ArmadorGpsTracker() {
   const isSyncingRef = useRef<boolean>(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const backgroundIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const turnoActivoRef = useRef<string | null>(null);
 
   // Cargar cola desde localStorage
   const loadQueue = useCallback((): QueuedPoint[] => {
@@ -54,12 +55,32 @@ export function ArmadorGpsTracker() {
     console.log(`[GPS] Punto agregado a cola. Total: ${queue.length}`);
   }, [loadQueue, saveQueue]);
 
+  // Obtener turno activo
+  const fetchTurnoActivo = useCallback(async () => {
+    try {
+      const response = await fetch("/api/turnos/activo");
+      if (response.ok) {
+        const data = await response.json();
+        turnoActivoRef.current = data.id;
+        return data.id;
+      }
+    } catch (error) {
+      console.warn("[GPS] Error obteniendo turno activo:", error);
+    }
+    return null;
+  }, []);
+
   // Sincronizar cola cuando hay conexión
   const syncQueue = useCallback(async () => {
     if (isSyncingRef.current) return;
     
     const queue = loadQueue();
     if (queue.length === 0) return;
+    
+    // Si no tenemos turno activo, intentar obtenerlo
+    if (!turnoActivoRef.current) {
+      await fetchTurnoActivo();
+    }
     
     isSyncingRef.current = true;
     console.log(`[GPS] Sincronizando ${queue.length} puntos en cola...`);
@@ -69,11 +90,23 @@ export function ArmadorGpsTracker() {
     for (let i = 0; i < queue.length; i++) {
       const point = queue[i];
       try {
-        const response = await fetch("/api/armadores/ubicacion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lat: point.lat, lng: point.lng }),
-        });
+        let response;
+        
+        // Si hay turno activo, enviar al endpoint del turno
+        if (turnoActivoRef.current) {
+          response = await fetch(`/api/turnos/${turnoActivoRef.current}/ubicacion`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ latitud: point.lat, longitud: point.lng }),
+          });
+        } else {
+          // Si no, solo actualizar ubicación del armador
+          response = await fetch("/api/armadores/ubicacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lat: point.lat, lng: point.lng }),
+          });
+        }
         
         if (response.ok) {
           successfullySync.push(i);
@@ -92,7 +125,7 @@ export function ArmadorGpsTracker() {
     }
     
     isSyncingRef.current = false;
-  }, [loadQueue, saveQueue]);
+  }, [loadQueue, saveQueue, fetchTurnoActivo]);
 
   // Configuración dinámica basada en velocidad
   const getIntervalBySpeed = useCallback((speed: number | null): number => {
@@ -123,12 +156,31 @@ export function ArmadorGpsTracker() {
   // Enviar ubicación con retry
   const sendLocationWithRetry = useCallback(async (lat: number, lng: number) => {
     try {
+      // Si no tenemos turno activo, intentar obtenerlo
+      if (!turnoActivoRef.current) {
+        await fetchTurnoActivo();
+      }
+
+      // Si aún no hay turno activo, solo actualizar ubicación del armador
+      if (!turnoActivoRef.current) {
+        console.log("[GPS] Sin turno activo, solo actualizando ubicación");
+        await fetch("/api/armadores/ubicacion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat, lng }),
+        });
+        lastSentTimeRef.current = Date.now();
+        lastPositionRef.current = { lat, lng };
+        return;
+      }
+
+      // Enviar al endpoint del turno
       await retryWithBackoff(
         async () => {
-          const response = await fetch("/api/armadores/ubicacion", {
+          const response = await fetch(`/api/turnos/${turnoActivoRef.current}/ubicacion`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ lat, lng }),
+            body: JSON.stringify({ latitud: lat, longitud: lng }),
           });
           
           if (!response.ok) {
@@ -142,7 +194,7 @@ export function ArmadorGpsTracker() {
           initialDelay: 1000,
           maxDelay: 5000,
           onRetry: (attempt) => {
-            console.warn(`[GPS] Reintento ${attempt} enviando ubicación`);
+            console.warn(`[GPS] Reintento ${attempt} enviando ubicación a turno`);
           }
         }
       );
@@ -151,6 +203,7 @@ export function ArmadorGpsTracker() {
       lastSentTimeRef.current = Date.now();
       lastPositionRef.current = { lat, lng };
       failedAttemptsRef.current = 0;
+      console.log(`[GPS] Punto guardado en turno ${turnoActivoRef.current}`);
       
       // Intentar sincronizar cola si hay puntos pendientes
       syncQueue();
@@ -162,7 +215,7 @@ export function ArmadorGpsTracker() {
       // Agregar a cola local para sincronizar después
       addToQueue(lat, lng);
     }
-  }, [addToQueue, syncQueue]);
+  }, [addToQueue, syncQueue, fetchTurnoActivo]);
 
   // Manejar nueva posición
   const handlePosition = useCallback((pos: GeolocationPosition) => {
