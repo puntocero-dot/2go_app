@@ -123,15 +123,22 @@ export async function GET() {
         estadoLoggeo: armador.usuario.estadoLoggeo,
       }));
 
-    // Formatear turnos activos
-    const turnosFormateados = await Promise.all(
-      turnosActivos
-        .filter((t) => t.armador) // evitar nulos
-        .map(async (turno) => {
+    // Obtener conteos de puntos en una sola query (evitar N+1)
+    const puntosConteo = await prisma.rutaPunto.groupBy({
+      by: ["turnoId"],
+      _count: { id: true },
+    });
+    
+    const puntosMap = new Map(
+      puntosConteo.map((p) => [p.turnoId, p._count.id])
+    );
+
+    // Formatear turnos activos sin queries adicionales
+    const turnosFormateados = turnosActivos
+      .filter((t) => t.armador) // evitar nulos
+      .map((turno) => {
         const ultimoPunto = turno.rutaPuntos[0];
-        const totalPuntosRuta = await prisma.rutaPunto.count({
-          where: { turnoId: turno.id },
-        });
+        const totalPuntosRuta = puntosMap.get(turno.id) || 0;
 
         return {
           id: turno.id,
@@ -160,8 +167,7 @@ export async function GET() {
             : null,
           totalPuntosRuta,
         };
-      })
-    );
+      });
 
     return NextResponse.json({
       turnosActivos: turnosFormateados,

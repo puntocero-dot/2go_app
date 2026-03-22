@@ -485,6 +485,7 @@ model Turno {
   @@index([armadorId])
   @@index([estado])
   @@index([inicioTurno])
+  @@index([estado, inicioTurno])
   @@map("turnos")
 }
 

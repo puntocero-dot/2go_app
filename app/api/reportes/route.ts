@@ -84,47 +84,43 @@ export async function GET(request: NextRequest) {
           },
         });
 
-        // Contar órdenes activas y completadas por armador
+        // Obtener todas las estadísticas en una sola query
         const ordenesStats = await prisma.orden.groupBy({
-          by: ["armadorId"],
+          by: ["armadorId", "estado"],
           _count: { id: true },
           where: {
             armadorId: { not: null },
           },
         });
 
-        const ordenesCompletadas = await prisma.orden.groupBy({
-          by: ["armadorId"],
-          _count: { id: true },
-          where: {
-            armadorId: { not: null },
-            estado: "ARMADO_COMPLETADO",
-          },
+        // Procesar estadísticas en memoria
+        const statsMap = new Map<string, { activas: number; completadas: number }>();
+        
+        for (const stat of ordenesStats) {
+          if (!stat.armadorId) continue;
+          
+          if (!statsMap.has(stat.armadorId)) {
+            statsMap.set(stat.armadorId, { activas: 0, completadas: 0 });
+          }
+          
+          const current = statsMap.get(stat.armadorId)!;
+          if (stat.estado === "ARMADO_COMPLETADO") {
+            current.completadas += stat._count.id;
+          } else if (["ASIGNADO", "EN_RUTA", "ARMADO_INICIADO"].includes(stat.estado)) {
+            current.activas += stat._count.id;
+          }
+        }
+
+        data = armadores.map((a) => {
+          const stats = statsMap.get(a.id) || { activas: 0, completadas: 0 };
+          return {
+            nombre: a.usuario.nombre,
+            estado: a.estado,
+            ordenesActivas: stats.activas,
+            ordenesCompletadas: stats.completadas,
+            ultimaActividad: a.usuario.updatedAt,
+          };
         });
-
-        const ordenesActivas = await prisma.orden.groupBy({
-          by: ["armadorId"],
-          _count: { id: true },
-          where: {
-            armadorId: { not: null },
-            estado: { in: ["ASIGNADO", "EN_RUTA", "ARMADO_INICIADO"] },
-          },
-        });
-
-        const completadasMap = new Map(
-          ordenesCompletadas.map((o) => [o.armadorId, o._count.id])
-        );
-        const activasMap = new Map(
-          ordenesActivas.map((o) => [o.armadorId, o._count.id])
-        );
-
-        data = armadores.map((a) => ({
-          nombre: a.usuario.nombre,
-          estado: a.estado,
-          ordenesActivas: activasMap.get(a.id) || 0,
-          ordenesCompletadas: completadasMap.get(a.id) || 0,
-          ultimaActividad: a.usuario.updatedAt,
-        }));
         break;
       }
 
