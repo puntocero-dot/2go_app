@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
@@ -100,7 +100,7 @@ function EstadoBadge({ estado }: { estado: string }) {
   );
 }
 
-function TableRowEnhanced({ 
+const TableRowEnhanced = memo(function TableRowEnhanced({ 
   orden, 
   index, 
   isSelected, 
@@ -219,7 +219,7 @@ function TableRowEnhanced({
       </TableCell>
     </TableRow>
   );
-}
+});
 
 export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableProps) {
   const router = useRouter();
