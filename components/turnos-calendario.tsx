@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -143,11 +143,11 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
     }
   };
 
-  const getDaysInMonth = () => {
+  const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
     const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
     return eachDayOfInterval({ start, end });
-  };
+  }, [currentMonth]);
 
   const getDayData = (date: Date): DiaData => {
     const dateStr = format(date, "yyyy-MM-dd");
@@ -199,7 +199,6 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
     return "bg-yellow-50 border-yellow-200";
   };
 
-  const days = getDaysInMonth();
   const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
   // Calcular estadísticas - si hay día seleccionado, mostrar del día; si no, del mes
