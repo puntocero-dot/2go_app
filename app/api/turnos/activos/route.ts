@@ -169,7 +169,7 @@ export async function GET() {
         };
       });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       turnosActivos: turnosFormateados,
       armadoresSinTurno,
       resumen: {
@@ -178,6 +178,11 @@ export async function GET() {
         armadoresSinTurno: armadoresSinTurno.length,
       },
     });
+
+    // Cachear por 30 segundos (datos en tiempo real pero con pequeño delay)
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+    
+    return response;
   } catch (error) {
     console.error("Error obteniendo turnos activos:", error);
     return NextResponse.json(

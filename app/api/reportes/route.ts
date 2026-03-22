@@ -257,7 +257,12 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    return NextResponse.json({ data });
+    const response = NextResponse.json({ data });
+    
+    // Agregar cache headers para reportes (5 minutos)
+    response.headers.set('Cache-Control', 'private, max-age=300, stale-while-revalidate=600');
+    
+    return response;
   } catch (error) {
     console.error("Error en reporte:", error);
     return NextResponse.json(
