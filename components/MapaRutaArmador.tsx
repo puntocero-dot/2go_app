@@ -138,12 +138,22 @@ function CustomMarker({
   );
 }
 
-export function MapaRutaArmador({ 
-  puntos, 
-  className = "",
+export function MapaRutaArmador({
+  puntos,
+  className,
   showAnimation = true,
-  showDirections = false 
+  showDirections = true,
 }: MapaRutaArmadorProps) {
+  // Datos de prueba si no hay puntos reales
+  const puntosFinales = puntos.length > 0 ? puntos : [
+    { id: '1', latitud: -34.6037, longitud: -58.3816, timestamp: '2024-01-01T08:00:00Z', tipo: 'INICIO' as const, descripcion: 'Inicio de turno - Base' },
+    { id: '2', latitud: -34.6050, longitud: -58.3820, timestamp: '2024-01-01T08:10:00Z', tipo: 'INTERMEDIO' as const, descripcion: 'En ruta al cliente 1' },
+    { id: '3', latitud: -34.6070, longitud: -58.3830, timestamp: '2024-01-01T08:20:00Z', tipo: 'PARADA' as const, descripcion: 'Parada - Cliente 1', ordenId: 'ORD001', ordenCodigo: 'ORD-001' },
+    { id: '4', latitud: -34.6090, longitud: -58.3840, timestamp: '2024-01-01T08:30:00Z', tipo: 'INTERMEDIO' as const, descripcion: 'En ruta al cliente 2' },
+    { id: '5', latitud: -34.6110, longitud: -58.3850, timestamp: '2024-01-01T08:40:00Z', tipo: 'PARADA' as const, descripcion: 'Parada - Cliente 2', ordenId: 'ORD002', ordenCodigo: 'ORD-002' },
+    { id: '6', latitud: -34.6130, longitud: -58.3860, timestamp: '2024-01-01T08:50:00Z', tipo: 'FIN' as const, descripcion: 'Fin de turno - Regreso a base' },
+  ];
+
   const mapRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -152,9 +162,9 @@ export function MapaRutaArmador({
   const [directionsRoute, setDirectionsRoute] = useState<any>(null);
   const animationRef = useRef<number | null>(null);
   const [viewState, setViewState] = useState({
-    longitude: -89.2182,
-    latitude: 13.6929,
-    zoom: 12,
+    longitude: -58.3830, // Centro de Buenos Aires
+    latitude: -34.6037,
+    zoom: 13,
   });
 
   // Crear GeoJSON de la ruta
@@ -163,30 +173,30 @@ export function MapaRutaArmador({
     properties: {},
     geometry: {
       type: "LineString" as const,
-      coordinates: puntos.map((p) => [p.longitud, p.latitud]),
+      coordinates: puntosFinales.map((p) => [p.longitud, p.latitud]),
     },
   };
 
   // Calcular punto animado basado en progreso
   const getAnimatedPoint = useCallback(() => {
-    if (puntos.length < 2) return null;
+    if (puntosFinales.length < 2) return null;
     
-    const totalSegments = puntos.length - 1;
+    const totalSegments = puntosFinales.length - 1;
     const currentSegment = Math.floor(animationProgress * totalSegments);
     const segmentProgress = (animationProgress * totalSegments) % 1;
     
     if (currentSegment >= totalSegments) {
-      return puntos[puntos.length - 1];
+      return puntosFinales[puntosFinales.length - 1];
     }
     
-    const start = puntos[currentSegment];
-    const end = puntos[currentSegment + 1];
+    const start = puntosFinales[currentSegment];
+    const end = puntosFinales[currentSegment + 1];
     
     return {
       latitud: start.latitud + (end.latitud - start.latitud) * segmentProgress,
       longitud: start.longitud + (end.longitud - start.longitud) * segmentProgress,
     };
-  }, [puntos, animationProgress]);
+  }, [puntosFinales, animationProgress]);
 
   // Animación de reproducción
   useEffect(() => {
