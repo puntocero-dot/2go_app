@@ -1,6 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { randomUUID } from "crypto";
 
 const rawSecret = process.env.JWT_SECRET;
 
@@ -14,7 +13,9 @@ if (!rawSecret) {
   }
 }
 
-const devFallbackSecret = randomUUID();
+// Usar Web Crypto API (disponible en Edge Runtime, Node.js 19+ y navegadores)
+// en lugar de 'import { randomUUID } from "crypto"' que solo funciona en Node.js
+const devFallbackSecret = globalThis.crypto.randomUUID();
 const secret = new TextEncoder().encode(rawSecret || devFallbackSecret);
 
 export interface SessionPayload {
