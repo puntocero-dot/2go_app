@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { randomUUID } from "crypto";
 
 const rawSecret = process.env.JWT_SECRET;
 
@@ -8,14 +9,13 @@ if (!rawSecret) {
     throw new Error("JWT_SECRET no está definido en el entorno de producción");
   } else {
     console.warn(
-      "JWT_SECRET no está definido. Usando el valor por defecto solo para desarrollo. Asegúrate de definir JWT_SECRET en el entorno."
+      "⚠️ JWT_SECRET no definido. Usando secreto aleatorio para desarrollo (las sesiones se invalidan al reiniciar)."
     );
   }
 }
 
-const secret = new TextEncoder().encode(
-  rawSecret || "tu-secreto-super-seguro-cambialo-en-produccion"
-);
+const devFallbackSecret = randomUUID();
+const secret = new TextEncoder().encode(rawSecret || devFallbackSecret);
 
 export interface SessionPayload {
   userId: string;
@@ -24,10 +24,10 @@ export interface SessionPayload {
 }
 
 export async function createToken(payload: SessionPayload): Promise<string> {
-  return await new SignJWT(payload as any)
+  return await new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("4h")
     .sign(secret);
 }
 
@@ -39,6 +39,24 @@ export async function verifyToken(
     return payload;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Verifica el token y retorna si esta proximo a expirar (dentro de 1 hora).
+ * Usado por el middleware para auto-refresh.
+ */
+export async function verifyTokenWithExpiry(
+  token: string
+): Promise<{ session: SessionPayload | null; shouldRefresh: boolean }> {
+  try {
+    const { payload } = await jwtVerify<SessionPayload>(token, secret);
+    const exp = payload.exp ?? 0;
+    const now = Math.floor(Date.now() / 1000);
+    const shouldRefresh = exp - now < 3600; // menos de 1 hora restante
+    return { session: payload, shouldRefresh };
+  } catch {
+    return { session: null, shouldRefresh: false };
   }
 }
 
@@ -57,7 +75,7 @@ export async function createSession(payload: SessionPayload) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 4, // 4 horas
     path: "/",
   });
 }

@@ -64,6 +64,16 @@ const HAS_REDIS_RATE_LIMIT =
   !!process.env.UPSTASH_REDIS_REST_URL &&
   !!process.env.UPSTASH_REDIS_REST_TOKEN;
 
+// Advertencia en produccion si no hay Redis configurado
+// (el rate limiting in-memory no funciona en multiples instancias serverless)
+if (process.env.NODE_ENV === "production" && !HAS_REDIS_RATE_LIMIT) {
+  console.warn(
+    "⚠️ RATE LIMIT: Usando store in-memory. " +
+    "Configura UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN " +
+    "para rate limiting distribuido en produccion."
+  );
+}
+
 export async function checkRateLimit(
   key: string,
   config: RateLimitConfig,

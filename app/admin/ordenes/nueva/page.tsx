@@ -331,7 +331,7 @@ export default function NuevaOrdenPage() {
                       </select>
                       {muebles.length === 0 && (
                         <p className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
-                          No hay muebles registrados para este proyecto. Marca "Crear mueble nuevo" para continuar.
+                          No hay muebles registrados para este proyecto. Marca &quot;Crear mueble nuevo&quot; para continuar.
                         </p>
                       )}
                     </div>
@@ -380,7 +380,7 @@ export default function NuevaOrdenPage() {
                           placeholder="Ej: Sofá 3 plazas"
                         />
                         <p className="text-xs text-gray-500">
-                          Si dejas este campo vacío se utilizará "Mueble sin nombre".
+                          Si dejas este campo vacío se utilizará &quot;Mueble sin nombre&quot;.
                         </p>
                       </div>
                     </div>

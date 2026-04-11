@@ -7,6 +7,7 @@ import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { addToast } from "@/components/ui/toaster";
 import Link from "next/link";
 
 interface Orden {
@@ -108,7 +109,7 @@ export default function EditarOrdenPage() {
       });
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cargar la orden: " + (error instanceof Error ? error.message : "Error desconocido"));
+      addToast({ title: "Error al cargar la orden", description: error instanceof Error ? error.message : "Error desconocido", variant: "destructive" });
       setOrden(null);
     } finally {
       setLoading(false);
@@ -163,11 +164,11 @@ export default function EditarOrdenPage() {
         throw new Error(error.error || "Error al actualizar orden");
       }
       
-      alert("✅ Orden actualizada correctamente");
+      addToast({ title: "Orden actualizada correctamente", variant: "success" });
       router.push("/admin/ordenes");
     } catch (error) {
       console.error("Error:", error);
-      alert("❌ Error al actualizar la orden: " + (error instanceof Error ? error.message : "Error desconocido"));
+      addToast({ title: "Error al actualizar la orden", description: error instanceof Error ? error.message : "Error desconocido", variant: "destructive" });
     } finally {
       setSaving(false);
     }

@@ -3,9 +3,8 @@ import { securityHeaders } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // ESLint habilitado en builds — los errores bloquean el deploy
+  // eslint: { ignoreDuringBuilds: false } es el default, no hace falta declararlo
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', '@radix-ui/react-select', '@radix-ui/react-dialog'],
     turbo: {
@@ -26,7 +25,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "api.mapbox.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.mapbox.com",
       },
     ],
   },

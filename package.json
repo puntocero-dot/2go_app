@@ -19,7 +19,10 @@
     "db:migrate:deploy": "node scripts/safe-migrate.js deploy",
     "db:migrate:status": "node scripts/safe-migrate.js status",
     "db:push": "node scripts/safe-migrate.js push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seed.ts"
@@ -71,6 +74,7 @@
     "@types/node": "^22.19.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.4",
     "eslint": "^9",
     "eslint-config-next": "15.1.9",
     "husky": "^9.1.7",
@@ -78,6 +82,7 @@
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.4"
   }
 }

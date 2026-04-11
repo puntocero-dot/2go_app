@@ -8,6 +8,7 @@ import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Save, Loader2, User, Lock, Image } from "lucide-react";
+import { addToast } from "@/components/ui/toaster";
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function PerfilPage() {
       });
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cargar el perfil");
+      addToast({ title: "Error al cargar el perfil", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -58,15 +59,15 @@ export default function PerfilPage() {
     // Validar contraseñas si se quiere cambiar
     if (formData.password) {
       if (formData.password !== formData.passwordConfirm) {
-        alert("❌ Las contraseñas no coinciden");
+        addToast({ title: "Las contrasenas no coinciden", variant: "destructive" });
         return;
       }
       if (formData.password.length < 6) {
-        alert("❌ La contraseña debe tener al menos 6 caracteres");
+        addToast({ title: "La contrasena debe tener al menos 6 caracteres", variant: "destructive" });
         return;
       }
       if (!formData.passwordActual) {
-        alert("❌ Debes ingresar tu contraseña actual");
+        addToast({ title: "Debes ingresar tu contrasena actual", variant: "destructive" });
         return;
       }
     }
@@ -101,7 +102,7 @@ export default function PerfilPage() {
         throw new Error(error.error || "Error al guardar perfil");
       }
 
-      alert("✅ Perfil actualizado correctamente");
+      addToast({ title: "Perfil actualizado correctamente", variant: "success" });
       
       // Limpiar campos de contraseña
       setFormData(prev => ({
@@ -114,7 +115,7 @@ export default function PerfilPage() {
       cargarPerfil();
     } catch (error) {
       console.error("Error:", error);
-      alert("❌ Error al actualizar el perfil: " + (error instanceof Error ? error.message : "Error desconocido"));
+      addToast({ title: "Error al actualizar el perfil", description: error instanceof Error ? error.message : "Error desconocido", variant: "destructive" });
     } finally {
       setSaving(false);
     }

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyToken } from "./lib/auth";
+import { verifyTokenWithExpiry, createToken } from "./lib/auth";
 
 export async function middleware(request: NextRequest) {
-  // 1. HTTPS Enforcement en producción
+  // 1. HTTPS Enforcement en produccion (confiable en Vercel que valida x-forwarded-proto)
   if (
     process.env.NODE_ENV === "production" &&
     request.headers.get("x-forwarded-proto") !== "https"
@@ -15,7 +15,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get("session")?.value;
-  const session = token ? await verifyToken(token) : null;
+  const { session, shouldRefresh } = token
+    ? await verifyTokenWithExpiry(token)
+    : { session: null, shouldRefresh: false };
   const { pathname } = request.nextUrl;
 
   const invalidateSession = () => {
@@ -72,20 +74,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  return NextResponse.next();
-}
-
-function getDashboardUrl(rol: string): string {
-  switch (rol) {
-    case "ADMIN":
-      return "/admin";
-    case "SUPERVISOR":
-      return "/supervisor";
-    case "ARMADOR":
-      return "/armador";
-    default:
-      return "/";
+  // Auto-refresh: si el token esta proximo a expirar, renovar la cookie
+  if (shouldRefresh && session) {
+    const response = NextResponse.next();
+    const newToken = await createToken({
+      userId: session.userId,
+      email: session.email,
+      rol: session.rol,
+    });
+    response.cookies.set("session", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 4, // 4 horas
+      path: "/",
+    });
+    return response;
   }
+
+  return NextResponse.next();
 }
 
 export const config = {

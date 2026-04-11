@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatearFecha } from "@/lib/utils";
@@ -48,33 +48,41 @@ interface Orden {
 
 export default function SeguimientoPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const ordenId = params.id as string;
+  const token = searchParams.get("token");
 
   const [orden, setOrden] = useState<Orden | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!token) {
+      setError("Token de seguimiento requerido. Verifica el enlace proporcionado.");
+      setLoading(false);
+      return;
+    }
+
     async function fetchOrden() {
       try {
-        const res = await fetch(`/api/seguimiento/${ordenId}`);
+        const res = await fetch(`/api/seguimiento/${ordenId}?token=${encodeURIComponent(token!)}`);
         if (!res.ok) {
-          throw new Error("Orden no encontrada");
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Orden no encontrada");
         }
         const data = await res.json();
         setOrden(data.orden);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Error al cargar la orden");
       } finally {
         setLoading(false);
       }
     }
 
     fetchOrden();
-    // Actualizar cada 30 segundos
     const interval = setInterval(fetchOrden, 30000);
     return () => clearInterval(interval);
-  }, [ordenId]);
+  }, [ordenId, token]);
 
   if (loading) {
     return (

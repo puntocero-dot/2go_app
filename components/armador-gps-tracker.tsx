@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { retryWithBackoff } from "@/lib/retry";
+import { Wifi, WifiOff } from "lucide-react";
 
 interface QueuedPoint {
   lat: number;
@@ -23,6 +24,14 @@ export function ArmadorGpsTracker() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const backgroundIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const turnoActivoRef = useRef<string | null>(null);
+
+  // Estado de sincronizacion visible al armador
+  const [syncState, setSyncState] = useState<{
+    lastSync: Date | null;
+    pendingCount: number;
+    totalSaved: number;
+    isOnline: boolean;
+  }>({ lastSync: null, pendingCount: 0, totalSaved: 0, isOnline: true });
 
   // Cargar cola desde localStorage
   const loadQueue = useCallback((): QueuedPoint[] => {
@@ -199,23 +208,49 @@ export function ArmadorGpsTracker() {
         }
       );
       
-      // Éxito
+      // Exito
       lastSentTimeRef.current = Date.now();
       lastPositionRef.current = { lat, lng };
       failedAttemptsRef.current = 0;
-      console.log(`[GPS] Punto guardado en turno ${turnoActivoRef.current}`);
-      
+
+      // Leer totalPuntosGuardados de la respuesta para actualizar indicador
+      let totalSaved = 0;
+      try {
+        const lastRes = await fetch(`/api/turnos/${turnoActivoRef.current}/ubicacion`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitud: lat, longitud: lng }),
+        });
+        if (lastRes.ok) {
+          const resData = await lastRes.json();
+          totalSaved = resData.totalPuntosGuardados ?? 0;
+        }
+      } catch { /* ignorar */ }
+
+      setSyncState(prev => ({
+        ...prev,
+        lastSync: new Date(),
+        pendingCount: loadQueue().length,
+        totalSaved,
+        isOnline: true,
+      }));
+
       // Intentar sincronizar cola si hay puntos pendientes
       syncQueue();
-      
+
     } catch (error) {
-      console.error("[GPS] Error enviando ubicación después de reintentos:", error);
+      console.error("[GPS] Error enviando ubicacion despues de reintentos:", error);
       failedAttemptsRef.current++;
-      
-      // Agregar a cola local para sincronizar después
+
+      // Agregar a cola local para sincronizar despues
       addToQueue(lat, lng);
+      setSyncState(prev => ({
+        ...prev,
+        pendingCount: loadQueue().length,
+        isOnline: navigator.onLine,
+      }));
     }
-  }, [addToQueue, syncQueue, fetchTurnoActivo]);
+  }, [addToQueue, syncQueue, fetchTurnoActivo, loadQueue]);
 
   // Manejar nueva posición
   const handlePosition = useCallback((pos: GeolocationPosition) => {
@@ -407,5 +442,27 @@ export function ArmadorGpsTracker() {
     };
   }, [trackingEnabled, handlePosition, handleError, syncQueue, requestWakeLock, registerBackgroundSync, startBackgroundTracking, stopBackgroundTracking]);
 
-  return null;
+  if (!trackingEnabled) return null;
+
+  // Indicador minimalista de estado GPS
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-md border border-gray-100 text-xs">
+      {syncState.isOnline ? (
+        <Wifi className="w-3.5 h-3.5 text-green-500" />
+      ) : (
+        <WifiOff className="w-3.5 h-3.5 text-red-400" />
+      )}
+      {syncState.pendingCount > 0 ? (
+        <span className="text-amber-600 font-medium">
+          {syncState.pendingCount} pendiente{syncState.pendingCount > 1 ? "s" : ""}
+        </span>
+      ) : syncState.lastSync ? (
+        <span className="text-gray-500">
+          GPS ok · {syncState.lastSync.toLocaleTimeString("es-SV", { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      ) : (
+        <span className="text-gray-400">GPS activo</span>
+      )}
+    </div>
+  );
 }

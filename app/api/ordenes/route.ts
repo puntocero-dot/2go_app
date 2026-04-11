@@ -6,6 +6,7 @@ import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
 import { withValidation } from "@/lib/api-helpers";
 import { CrearOrdenSchema } from "@/lib/schemas/orden.schemas";
 import { logAuditFromSession } from "@/lib/audit-logger";
+import { getPaginationParams, buildPaginatedResponse } from "@/lib/pagination";
 
 // GET - Listar órdenes con filtros
 export async function GET(request: NextRequest) {
@@ -20,14 +21,15 @@ export async function GET(request: NextRequest) {
     const proyectoId = searchParams.get("proyectoId");
     const estado = searchParams.get("estado");
     const armadorId = searchParams.get("armadorId");
+    const pagination = getPaginationParams(searchParams);
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (proyectoId) where.proyectoId = proyectoId;
     if (estado) where.estado = estado;
     if (armadorId) where.armadorId = armadorId;
 
-    // Si es armador, solo ver sus órdenes
+    // Si es armador, solo ver sus ordenes
     if (session.rol === "ARMADOR") {
       const armador = await prisma.armador.findUnique({
         where: { usuarioId: session.userId },
@@ -37,33 +39,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const ordenes = await prisma.orden.findMany({
-      where,
-      include: {
-        mueble: true,
-        usuarioFinal: true,
-        armador: {
-          include: {
-            usuario: {
-              select: {
-                nombre: true,
-                telefono: true,
+    const [ordenes, total] = await Promise.all([
+      prisma.orden.findMany({
+        where,
+        include: {
+          mueble: true,
+          usuarioFinal: true,
+          armador: {
+            include: {
+              usuario: {
+                select: { nombre: true, telefono: true },
               },
             },
           },
-        },
-        proyecto: {
-          select: {
-            nombreComercial: true,
+          proyecto: {
+            select: { nombreComercial: true },
           },
         },
-      },
-      orderBy: { fechaCreacion: "desc" },
-    });
+        orderBy: { fechaCreacion: "desc" },
+        take: pagination.limit,
+        skip: pagination.skip,
+      }),
+      prisma.orden.count({ where }),
+    ]);
 
-    return NextResponse.json({ ordenes });
+    return NextResponse.json(buildPaginatedResponse(ordenes, total, pagination));
   } catch (error) {
-    console.error("Error obteniendo órdenes:", error);
+    console.error("Error obteniendo ordenes:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

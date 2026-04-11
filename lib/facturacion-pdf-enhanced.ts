@@ -51,10 +51,10 @@ export async function generateBillingPdfEnhanced(dataset: BillingDataset): Promi
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  let page = pdfDoc.addPage();
+  const page = pdfDoc.addPage();
   const { width, height } = page.getSize();
   const margin = 40;
-  let y = height - margin;
+  const y = height - margin;
 
   const ctx: PDFContext = {
     doc: pdfDoc,

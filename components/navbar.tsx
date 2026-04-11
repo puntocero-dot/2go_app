@@ -7,6 +7,7 @@ import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, B
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
+import { addToast } from "@/components/ui/toaster";
 import { ThemeToggle } from "./theme-toggle";
 import { EstadoLoggeoSelector } from "./estado-loggeo-selector";
 
@@ -100,11 +101,11 @@ export function Navbar({ user }: NavbarProps) {
       } else {
         const error = await response.json();
         console.error("Error cambiando estado:", error);
-        alert(`Error: ${error.error || 'No se pudo cambiar el estado'}`);
+        addToast({ title: "Error", description: error.error || "No se pudo cambiar el estado", variant: "destructive" });
       }
     } catch (error) {
       console.error("Error cambiando estado:", error);
-      alert("Error al cambiar estado");
+      addToast({ title: "Error al cambiar estado", variant: "destructive" });
     }
   };
 

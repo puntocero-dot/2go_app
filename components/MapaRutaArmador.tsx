@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Map, { Marker, Source, Layer, NavigationControl, Popup } from "react-map-gl";
-import type { LayerProps } from "react-map-gl";
+import type { LayerProps, MapRef } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Loader2, Play, Pause, SkipBack, Clock, MapPin, Navigation } from "lucide-react";
+import { Loader2, Play, Pause, SkipBack, Clock, MapPin, Navigation, Route, Waypoints } from "lucide-react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 
 interface RutaPunto {
@@ -60,7 +60,7 @@ const routeBorderLayerStyle: LayerProps = {
   },
 };
 
-// Estilo para la ruta animada (punto en movimiento)
+// Estilo para el punto animado
 const animatedPointLayerStyle: LayerProps = {
   id: "animated-point",
   type: "circle",
@@ -72,131 +72,62 @@ const animatedPointLayerStyle: LayerProps = {
   },
 };
 
-// Estilo para ruta con direcciones reales (de Mapbox Directions API)
-const directionsRouteStyle: LayerProps = {
-  id: "directions-route",
-  type: "line",
-  paint: {
-    "line-color": "#4285F4",
-    "line-width": 6,
-    "line-opacity": 0.9,
-  },
-  layout: {
-    "line-join": "round",
-    "line-cap": "round",
-  },
-};
-
-// Marcador personalizado
-function CustomMarker({
-  tipo,
-  descripcion,
-  latitud,
-  longitud,
-}: {
-  tipo: string;
-  descripcion?: string;
-  latitud: number;
-  longitud: number;
-}) {
-  const getMarkerConfig = () => {
-    switch (tipo) {
-      case "INICIO":
-        return { label: "SP", color: "#10B981", title: "Inicio de turno" };
-      case "FIN":
-        return { label: "AV", color: "#EF4444", title: "Fin de turno" };
-      case "PARADA":
-        return { label: "PM", color: "#F59E0B", title: "Parada" };
-      default:
-        return { label: "•", color: "#6B7280", title: "Punto intermedio" };
-    }
-  };
-
-  const config = getMarkerConfig();
-
-  return (
-    <Marker latitude={latitud} longitude={longitud} anchor="bottom">
-      <div className="flex flex-col items-center" title={descripcion || config.title}>
-        <div
-          className="flex items-center justify-center rounded-full shadow-lg border-2 border-white font-bold text-white text-xs"
-          style={{
-            backgroundColor: config.color,
-            width: tipo === "INTERMEDIO" ? "12px" : "32px",
-            height: tipo === "INTERMEDIO" ? "12px" : "32px",
-          }}
-        >
-          {tipo !== "INTERMEDIO" && config.label}
-        </div>
-        {tipo !== "INTERMEDIO" && (
-          <div
-            className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent"
-            style={{ borderTopColor: config.color }}
-          />
-        )}
-      </div>
-    </Marker>
-  );
-}
-
 export function MapaRutaArmador({
   puntos,
   className,
   showAnimation = true,
   showDirections = true,
 }: MapaRutaArmadorProps) {
-  // Datos de prueba si no hay puntos reales
-  const puntosFinales = puntos.length > 0 ? puntos : [
-    { id: '1', latitud: -34.6037, longitud: -58.3816, timestamp: '2024-01-01T08:00:00Z', tipo: 'INICIO' as const, descripcion: 'Inicio de turno - Base' },
-    { id: '2', latitud: -34.6050, longitud: -58.3820, timestamp: '2024-01-01T08:10:00Z', tipo: 'INTERMEDIO' as const, descripcion: 'En ruta al cliente 1' },
-    { id: '3', latitud: -34.6070, longitud: -58.3830, timestamp: '2024-01-01T08:20:00Z', tipo: 'PARADA' as const, descripcion: 'Parada - Cliente 1', ordenId: 'ORD001', ordenCodigo: 'ORD-001' },
-    { id: '4', latitud: -34.6090, longitud: -58.3840, timestamp: '2024-01-01T08:30:00Z', tipo: 'INTERMEDIO' as const, descripcion: 'En ruta al cliente 2' },
-    { id: '5', latitud: -34.6110, longitud: -58.3850, timestamp: '2024-01-01T08:40:00Z', tipo: 'PARADA' as const, descripcion: 'Parada - Cliente 2', ordenId: 'ORD002', ordenCodigo: 'ORD-002' },
-    { id: '6', latitud: -34.6130, longitud: -58.3860, timestamp: '2024-01-01T08:50:00Z', tipo: 'FIN' as const, descripcion: 'Fin de turno - Regreso a base' },
-  ];
-
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<MapRef>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [selectedPunto, setSelectedPunto] = useState<RutaPunto | null>(null);
-  const [directionsRoute, setDirectionsRoute] = useState<any>(null);
+  const [directionsRoute, setDirectionsRoute] = useState<GeoJSON.Feature | null>(null);
+  // Toggle: false = ruta en carretera (Directions API), true = puntos GPS raw
+  const [showRawGPS, setShowRawGPS] = useState(false);
   const animationRef = useRef<number | null>(null);
   const [viewState, setViewState] = useState({
-    longitude: -58.3830, // Centro de Buenos Aires
-    latitude: -34.6037,
-    zoom: 13,
+    longitude: -89.2182, // Centro de El Salvador (San Salvador)
+    latitude: 13.6929,
+    zoom: 12,
   });
 
-  // Crear GeoJSON de la ruta
-  const routeGeoJSON = {
-    type: "Feature" as const,
+  // GeoJSON de puntos GPS crudos
+  const rawRouteGeoJSON: GeoJSON.Feature = {
+    type: "Feature",
     properties: {},
     geometry: {
-      type: "LineString" as const,
-      coordinates: puntosFinales.map((p) => [p.longitud, p.latitud]),
+      type: "LineString",
+      coordinates: puntos.map((p) => [p.longitud, p.latitud]),
     },
   };
 
+  // La fuente activa depende del toggle y disponibilidad de directions
+  const activeRouteData = showRawGPS
+    ? rawRouteGeoJSON
+    : directionsRoute || rawRouteGeoJSON;
+
   // Calcular punto animado basado en progreso
   const getAnimatedPoint = useCallback(() => {
-    if (puntosFinales.length < 2) return null;
-    
-    const totalSegments = puntosFinales.length - 1;
+    if (puntos.length < 2) return null;
+
+    const totalSegments = puntos.length - 1;
     const currentSegment = Math.floor(animationProgress * totalSegments);
     const segmentProgress = (animationProgress * totalSegments) % 1;
-    
+
     if (currentSegment >= totalSegments) {
-      return puntosFinales[puntosFinales.length - 1];
+      return puntos[puntos.length - 1];
     }
-    
-    const start = puntosFinales[currentSegment];
-    const end = puntosFinales[currentSegment + 1];
-    
+
+    const start = puntos[currentSegment];
+    const end = puntos[currentSegment + 1];
+
     return {
       latitud: start.latitud + (end.latitud - start.latitud) * segmentProgress,
       longitud: start.longitud + (end.longitud - start.longitud) * segmentProgress,
     };
-  }, [puntosFinales, animationProgress]);
+  }, [puntos, animationProgress]);
 
   // Animación de reproducción
   useEffect(() => {
@@ -207,7 +138,7 @@ export function MapaRutaArmador({
             setIsPlaying(false);
             return 1;
           }
-          return prev + 0.002; // Velocidad de animación
+          return prev + 0.002;
         });
         animationRef.current = requestAnimationFrame(animate);
       };
@@ -215,7 +146,7 @@ export function MapaRutaArmador({
     } else if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-    
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -223,26 +154,30 @@ export function MapaRutaArmador({
     };
   }, [isPlaying, puntos.length]);
 
-  // Obtener ruta real de Mapbox Directions API
+  // Obtener ruta real de Mapbox Directions API (solo si no estamos en modo raw)
   useEffect(() => {
-    if (!showDirections || puntos.length < 2 || !MAPBOX_TOKEN) return;
-    
+    if (!showDirections || showRawGPS || puntos.length < 2 || !MAPBOX_TOKEN) return;
+
     const fetchDirections = async () => {
       // Limitar a 25 puntos para la API (máximo permitido)
-      const waypoints = puntos.length > 25 
-        ? puntos.filter((_, i) => i % Math.ceil(puntos.length / 25) === 0 || i === puntos.length - 1)
-        : puntos;
-      
+      const waypoints =
+        puntos.length > 25
+          ? puntos.filter(
+              (_, i) =>
+                i % Math.ceil(puntos.length / 25) === 0 || i === puntos.length - 1
+            )
+          : puntos;
+
       const coordinates = waypoints
         .map((p) => `${p.longitud},${p.latitud}`)
         .join(";");
-      
+
       try {
         const response = await fetch(
           `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`
         );
         const data = await response.json();
-        
+
         if (data.routes && data.routes[0]) {
           setDirectionsRoute({
             type: "Feature",
@@ -250,13 +185,14 @@ export function MapaRutaArmador({
             geometry: data.routes[0].geometry,
           });
         }
-      } catch (error) {
-        console.error("Error fetching directions:", error);
+      } catch {
+        // Fallback silencioso al GeoJSON raw si Directions falla
+        setDirectionsRoute(null);
       }
     };
-    
+
     fetchDirections();
-  }, [puntos, showDirections]);
+  }, [puntos, showDirections, showRawGPS]);
 
   // Ajustar vista para mostrar toda la ruta
   useEffect(() => {
@@ -265,7 +201,6 @@ export function MapaRutaArmador({
       return;
     }
 
-    // Calcular bounds
     const lats = puntos.map((p) => p.latitud);
     const lngs = puntos.map((p) => p.longitud);
 
@@ -277,15 +212,9 @@ export function MapaRutaArmador({
     const centerLat = (minLat + maxLat) / 2;
     const centerLng = (minLng + maxLng) / 2;
 
-    setViewState({
-      latitude: centerLat,
-      longitude: centerLng,
-      zoom: 13,
-    });
-
+    setViewState({ latitude: centerLat, longitude: centerLng, zoom: 13 });
     setLoading(false);
 
-    // Ajustar bounds después de que el mapa cargue
     setTimeout(() => {
       if (mapRef.current) {
         const map = mapRef.current.getMap();
@@ -294,10 +223,7 @@ export function MapaRutaArmador({
             [minLng - 0.01, minLat - 0.01],
             [maxLng + 0.01, maxLat + 0.01],
           ],
-          {
-            padding: 60,
-            duration: 1000,
-          }
+          { padding: 60, duration: 1000 }
         );
       }
     }, 100);
@@ -307,29 +233,28 @@ export function MapaRutaArmador({
 
   if (!MAPBOX_TOKEN) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
+      <div
+        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+      >
         <p className="text-red-500">Error: Token de Mapbox no configurado</p>
       </div>
     );
   }
 
+  // Estado vacío real — sin datos de prueba
   if (puntos.length === 0) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
-        <p className="text-gray-500">No hay puntos de ruta para mostrar</p>
+      <div
+        className={`flex flex-col items-center justify-center bg-gray-50 rounded-lg gap-3 ${className}`}
+      >
+        <MapPin className="w-10 h-10 text-gray-300" />
+        <p className="text-gray-500 font-medium">Sin datos de ruta</p>
+        <p className="text-gray-400 text-sm text-center px-4">
+          No hay puntos GPS registrados para este turno.
+        </p>
       </div>
     );
   }
-
-  // Calcular tiempo entre puntos
-  const getTimeBetweenPoints = (index: number) => {
-    if (index === 0 || index >= puntos.length) return null;
-    const prev = new Date(puntos[index - 1].timestamp);
-    const curr = new Date(puntos[index].timestamp);
-    const diffMs = curr.getTime() - prev.getTime();
-    const diffMins = Math.round(diffMs / 60000);
-    return diffMins;
-  };
 
   return (
     <div className={`relative ${className}`}>
@@ -339,61 +264,107 @@ export function MapaRutaArmador({
         </div>
       )}
 
-      {/* Controles de animación */}
-      {showAnimation && puntos.length > 1 && (
-        <div className="absolute top-4 left-4 z-20 bg-white rounded-lg shadow-lg p-2 flex items-center gap-2">
-          <EnhancedButton
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setAnimationProgress(0);
-              setIsPlaying(false);
-            }}
-            title="Reiniciar"
-          >
-            <SkipBack className="w-4 h-4" />
-          </EnhancedButton>
-          <EnhancedButton
-            size="sm"
-            variant={isPlaying ? "secondary" : "default"}
-            onClick={() => setIsPlaying(!isPlaying)}
-            title={isPlaying ? "Pausar" : "Reproducir"}
-          >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </EnhancedButton>
-          <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-500 transition-all duration-100"
-              style={{ width: `${animationProgress * 100}%` }}
-            />
+      {/* Controles: animación + toggle vista */}
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 flex-wrap">
+        {/* Controles de animación */}
+        {showAnimation && puntos.length > 1 && (
+          <div className="bg-white rounded-lg shadow-lg p-2 flex items-center gap-2">
+            <EnhancedButton
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setAnimationProgress(0);
+                setIsPlaying(false);
+              }}
+              title="Reiniciar"
+            >
+              <SkipBack className="w-4 h-4" />
+            </EnhancedButton>
+            <EnhancedButton
+              size="sm"
+              variant={isPlaying ? "secondary" : "default"}
+              onClick={() => setIsPlaying(!isPlaying)}
+              title={isPlaying ? "Pausar" : "Reproducir"}
+            >
+              {isPlaying ? (
+                <Pause className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </EnhancedButton>
+            <div className="w-28 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 transition-all duration-100"
+                style={{ width: `${animationProgress * 100}%` }}
+              />
+            </div>
+            <span className="text-xs text-gray-600 min-w-[36px]">
+              {Math.round(animationProgress * 100)}%
+            </span>
           </div>
-          <span className="text-xs text-gray-600 min-w-[40px]">
-            {Math.round(animationProgress * 100)}%
-          </span>
-        </div>
-      )}
+        )}
+
+        {/* Toggle GPS raw / Ruta en carretera */}
+        {showDirections && directionsRoute && (
+          <button
+            onClick={() => setShowRawGPS((v) => !v)}
+            title={
+              showRawGPS
+                ? "Ver ruta en carretera (aproximada)"
+                : "Ver puntos GPS reales"
+            }
+            className="bg-white rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 text-xs font-medium hover:bg-gray-50 transition-colors border border-gray-200"
+          >
+            {showRawGPS ? (
+              <>
+                <Route className="w-4 h-4 text-blue-500" />
+                <span>Ruta carretera</span>
+              </>
+            ) : (
+              <>
+                <Waypoints className="w-4 h-4 text-orange-500" />
+                <span>GPS real</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Leyenda */}
       <div className="absolute bottom-4 left-4 z-20 bg-white rounded-lg shadow-lg p-3">
-        <div className="text-xs font-semibold mb-2">Leyenda</div>
+        <div className="text-xs font-semibold mb-2 text-gray-700">Leyenda</div>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500"></div>
+            <div className="w-4 h-4 rounded-full bg-green-500" />
             <span className="text-xs">Inicio</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-            <span className="text-xs">Parada/Entrega</span>
+            <div className="w-4 h-4 rounded-full bg-amber-500" />
+            <span className="text-xs">Parada / Entrega</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-red-500"></div>
+            <div className="w-4 h-4 rounded-full bg-red-500" />
             <span className="text-xs">Fin</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-blue-500 rounded"></div>
+            <div className="w-8 h-1 bg-blue-500 rounded" />
             <span className="text-xs">Recorrido</span>
           </div>
+          {showRawGPS && (
+            <div className="mt-1 pt-1 border-t border-gray-100">
+              <span className="text-xs text-orange-600 font-medium">
+                Modo: GPS real
+              </span>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Badge contador de puntos */}
+      <div className="absolute top-4 right-14 z-20 bg-white rounded-lg shadow-lg px-3 py-1.5">
+        <span className="text-xs text-gray-600">
+          <span className="font-semibold text-gray-800">{puntos.length}</span> puntos GPS
+        </span>
       </div>
 
       <Map
@@ -408,14 +379,14 @@ export function MapaRutaArmador({
 
         {/* Borde de ruta (efecto sombra) */}
         {puntos.length > 1 && (
-          <Source id="route-border-source" type="geojson" data={directionsRoute || routeGeoJSON}>
+          <Source id="route-border-source" type="geojson" data={activeRouteData}>
             <Layer {...routeBorderLayerStyle} />
           </Source>
         )}
 
         {/* Línea de ruta principal */}
         {puntos.length > 1 && (
-          <Source id="route-source" type="geojson" data={directionsRoute || routeGeoJSON}>
+          <Source id="route-source" type="geojson" data={activeRouteData}>
             <Layer {...routeLayerStyle} />
           </Source>
         )}
@@ -428,7 +399,7 @@ export function MapaRutaArmador({
             anchor="center"
           >
             <div className="relative">
-              <div className="w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg animate-pulse" />
+              <div className="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
               <div className="absolute -inset-2 bg-blue-500/30 rounded-full animate-ping" />
             </div>
           </Marker>
@@ -458,17 +429,16 @@ export function MapaRutaArmador({
                       : punto.tipo === "PARADA"
                       ? "#F59E0B"
                       : "#6B7280",
-                  width: punto.tipo === "INTERMEDIO" ? "14px" : "36px",
-                  height: punto.tipo === "INTERMEDIO" ? "14px" : "36px",
+                  width: punto.tipo === "INTERMEDIO" ? "10px" : "34px",
+                  height: punto.tipo === "INTERMEDIO" ? "10px" : "34px",
                 }}
               >
-                {punto.tipo !== "INTERMEDIO" && (
-                  punto.tipo === "INICIO" ? "A" : punto.tipo === "FIN" ? "B" : index
-                )}
+                {punto.tipo !== "INTERMEDIO" &&
+                  (punto.tipo === "INICIO" ? "A" : punto.tipo === "FIN" ? "B" : index)}
               </div>
               {punto.tipo !== "INTERMEDIO" && (
                 <div
-                  className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-transparent"
+                  className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-transparent"
                   style={{
                     borderTopColor:
                       punto.tipo === "INICIO"
@@ -502,18 +472,20 @@ export function MapaRutaArmador({
                   : selectedPunto.tipo === "FIN"
                   ? "Fin del turno"
                   : selectedPunto.tipo === "PARADA"
-                  ? "Parada/Entrega"
+                  ? "Parada / Entrega"
                   : "Punto de ruta"}
               </div>
               {selectedPunto.descripcion && (
                 <p className="text-xs text-gray-600 mb-2">{selectedPunto.descripcion}</p>
               )}
               {selectedPunto.ordenCodigo && (
-                <p className="text-xs text-blue-600 mb-2">Orden: #{selectedPunto.ordenCodigo}</p>
+                <p className="text-xs text-blue-600 mb-2">
+                  Orden: #{selectedPunto.ordenCodigo}
+                </p>
               )}
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <Clock className="w-3 h-3" />
-                {new Date(selectedPunto.timestamp).toLocaleString("es-ES", {
+                {new Date(selectedPunto.timestamp).toLocaleString("es-SV", {
                   hour: "2-digit",
                   minute: "2-digit",
                   day: "2-digit",

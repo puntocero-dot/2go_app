@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let datos = (dataset.proyecto.datosFacturacion ?? {}) as DatosFacturacion;
+    const datos = (dataset.proyecto.datosFacturacion ?? {}) as DatosFacturacion;
     
     // Buscar email en datosFacturacion.contacto.email
     let toEmail = datos.contacto?.email;

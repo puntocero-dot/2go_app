@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Label } from "@/components/ui/label";
+import { addToast } from "@/components/ui/toaster";
 
 interface ProyectoEditFormProps {
   proyecto: any;
@@ -100,7 +101,7 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al actualizar el proyecto');
+      addToast({ title: "Error al actualizar el proyecto", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

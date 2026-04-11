@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logAuditFromSession } from "@/lib/audit-logger";
 import { crearClienteSchema } from "@/lib/schemas/cliente.schemas";
+import { getPaginationParams, buildPaginatedResponse } from "@/lib/pagination";
 
 // GET - Listar clientes
 export async function GET(request: NextRequest) {
@@ -15,23 +16,25 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const proyectoId = searchParams.get("proyectoId");
+    const pagination = getPaginationParams(searchParams);
 
     const where: Record<string, string> = {};
     if (proyectoId) where.proyectoId = proyectoId;
 
-    const clientes = await prisma.usuarioFinal.findMany({
-      where,
-      include: {
-        proyecto: {
-          select: {
-            nombreComercial: true,
-          },
+    const [clientes, total] = await Promise.all([
+      prisma.usuarioFinal.findMany({
+        where,
+        include: {
+          proyecto: { select: { nombreComercial: true } },
         },
-      },
-      orderBy: { nombre: "asc" },
-    });
+        orderBy: { nombre: "asc" },
+        take: pagination.limit,
+        skip: pagination.skip,
+      }),
+      prisma.usuarioFinal.count({ where }),
+    ]);
 
-    return NextResponse.json({ clientes });
+    return NextResponse.json(buildPaginatedResponse(clientes, total, pagination));
   } catch (error) {
     console.error("Error obteniendo clientes:", error);
     return NextResponse.json(

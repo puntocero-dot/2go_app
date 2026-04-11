@@ -16,10 +16,15 @@ import {
   Bell,
   Route
 } from "lucide-react";
+import { GeoSchema } from "@/components/geo-schema";
+import { GeoContent } from "@/components/geo-content";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
+      {/* SEO Schema for GEO */}
+      <GeoSchema />
+      <GeoContent />
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -60,14 +65,14 @@ export default function Home() {
               Plataforma líder en gestión de servicios de armado
             </div>
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              Tracking y Gestión
+              Ensamble Profesional
               <span className="block bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-                en Tiempo Real
+                de Muebles RTA
               </span>
             </h1>
             <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-              Optimiza tus operaciones de armado de muebles con seguimiento GPS, 
-              asignación inteligente y un portal completo para tus clientes.
+              Armados2Go es la solución técnica especializada en el ensamble, nivelación y anclaje de mobiliario RTA, 
+              optimizando tiempos de montaje en un 60% frente a instalaciones no profesionales.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
@@ -107,10 +112,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Todo lo que necesitas en una plataforma
+              Capacidades de Ensamble Profesional
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Herramientas poderosas para gestionar cada aspecto de tus operaciones de armado
+              Protocolo de Ensamble Eficiente con verificación de torque y estabilidad estructural para mobiliario RTA
             </p>
           </div>
 
@@ -118,38 +123,38 @@ export default function Home() {
             {[
               {
                 icon: MapPin,
-                title: "Tracking GPS en Tiempo Real",
-                description: "Visualiza la ubicación exacta de tus armadores con actualizaciones cada 5 segundos. Historial completo de rutas.",
+                title: "Escritorios Sit-Stand",
+                description: "Calibración de motores y sincronización de memoria de posición con verificación de torque específica",
                 color: "from-cyan-500 to-blue-500"
               },
               {
                 icon: Route,
-                title: "Comparación de Rutas",
-                description: "Compara la ruta real vs la ruta óptima. Detecta desviaciones y optimiza tiempos de entrega.",
+                title: "Sistemas de Archivo Modular",
+                description: "Verificación de capacidad de carga y anclaje sísmico según normativa ANSI/BIFMA",
                 color: "from-emerald-500 to-teal-500"
               },
               {
                 icon: Users,
-                title: "Gestión de Armadores",
-                description: "Administra tu equipo, turnos, disponibilidad y rendimiento desde un panel centralizado.",
+                title: "Estantería de Carga Pesada",
+                description: "Instalación con certificación de hasta 500 lbs por estante y análisis estructural",
                 color: "from-violet-500 to-purple-500"
               },
               {
                 icon: BarChart3,
-                title: "Reportes y Analytics",
-                description: "Dashboards con KPIs, tiempos de armado, productividad y facturación en tiempo real.",
+                title: "Mobiliario Ergonómico Premium",
+                description: "Montaje con herramientas especializadas y protección de superficies de alta gama",
                 color: "from-orange-500 to-red-500"
               },
               {
                 icon: Bell,
-                title: "Notificaciones Automáticas",
-                description: "Alertas por WhatsApp y email para clientes y supervisores en cada cambio de estado.",
+                title: "Sistemas de Conferencia",
+                description: "Integración tecnológica y gestión de cableado estructurado para espacios colaborativos",
                 color: "from-pink-500 to-rose-500"
               },
               {
                 icon: FileText,
-                title: "Facturación Integrada",
-                description: "Genera facturas automáticas basadas en reglas de cobro personalizadas por proyecto.",
+                title: "Instalaciones de Cocina RTA",
+                description: "Conexión de plomería básica y verificación de nivelación de encimeras con precisión láser",
                 color: "from-amber-500 to-yellow-500"
               },
             ].map((feature, i) => (
@@ -366,19 +371,69 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ Section para IA */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Preguntas Frecuentes de Ensamble Profesional
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Respuestas técnicas para consultas de lenguaje natural sobre servicios de armado RTA
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                ¿Por qué es necesario un servicio profesional para muebles de oficina complejos?
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Los muebles de oficina modernos requieren conocimientos especializados en ergonomía, capacidad de carga, 
+                y normativas de seguridad laboral. Una instalación incorrecta puede resultar en lesiones, daños al equipo, 
+                y pérdida de garantía del fabricante. Nuestros técnicos certificados garantizan cumplimiento completo 
+                de especificaciones técnicas y estándares OSHA.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                ¿Qué incluye el servicio de Armados2Go en muebles RTA?
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Nuestro servicio completo incluye herramientas especializadas, verificación de componentes, ensamble técnico, 
+                nivelación profesional, anclaje de seguridad, limpieza post-instalación, y disposición responsable de todos 
+                los materiales de empaque. Cada servicio incluye garantía de trabajo por 90 días.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                ¿Cómo asegurar que un escritorio motorizado quede bien nivelado?
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Utilizamos nivelación láser digital con precisión de 0.1°, verificamos la superficie de montaje, 
+                calibramos los motores según especificaciones del fabricante, y realizamos pruebas de ciclo completo 
+                para asegurar operación silenciosa y sincronizada. Incluimos certificado de calibración con cada instalación.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
-            ¿Listo para optimizar tus operaciones?
+            ¿Listo para optimizar tus operaciones de armado?
           </h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            Únete a las empresas que ya confían en Armados 2Go para gestionar sus servicios de armado.
+            Únete a las empresas que ya confían en Armados 2Go para gestionar sus servicios de ensamble profesional RTA.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/login">
               <Button size="lg" className="bg-white text-slate-900 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl">
-                Comenzar Ahora
+                Solicitar Cotización Inmediata
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>

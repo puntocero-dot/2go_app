@@ -8,6 +8,7 @@ import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Save, Loader2, Building2, Palette, FileText } from "lucide-react";
+import { addToast } from "@/components/ui/toaster";
 
 interface ConfiguracionFacturacion {
   id: string;
@@ -92,7 +93,7 @@ export default function ConfiguracionFacturacionPage() {
       });
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cargar la configuración");
+      addToast({ title: "Error al cargar la configuracion", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -116,11 +117,11 @@ export default function ConfiguracionFacturacionPage() {
         throw new Error(error.error || "Error al guardar configuración");
       }
 
-      alert("✅ Configuración guardada correctamente");
+      addToast({ title: "Configuracion guardada correctamente", variant: "success" });
       cargarConfiguracion();
     } catch (error) {
       console.error("Error:", error);
-      alert("❌ Error al guardar la configuración: " + (error instanceof Error ? error.message : "Error desconocido"));
+      addToast({ title: "Error al guardar la configuracion", description: error instanceof Error ? error.message : "Error desconocido", variant: "destructive" });
     } finally {
       setSaving(false);
     }

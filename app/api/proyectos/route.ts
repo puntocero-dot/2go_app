@@ -3,13 +3,14 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { withValidation } from "@/lib/api-helpers";
 import { logAuditFromSession } from "@/lib/audit-logger";
+import { getPaginationParams, buildPaginatedResponse } from "@/lib/pagination";
 import {
   CrearProyectoSchema,
   CrearProyectoInput,
 } from "@/lib/schemas/proyecto.schemas";
 
 // GET - Listar todos los proyectos
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
 
@@ -17,19 +18,22 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const proyectos = await prisma.proyecto.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: {
-            ordenes: true,
-            muebles: true,
-          },
-        },
-      },
-    });
+    const { searchParams } = new URL(request.url);
+    const pagination = getPaginationParams(searchParams);
 
-    return NextResponse.json({ proyectos });
+    const [proyectos, total] = await Promise.all([
+      prisma.proyecto.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: { select: { ordenes: true, muebles: true } },
+        },
+        take: pagination.limit,
+        skip: pagination.skip,
+      }),
+      prisma.proyecto.count(),
+    ]);
+
+    return NextResponse.json(buildPaginatedResponse(proyectos, total, pagination));
   } catch (error) {
     console.error("Error obteniendo proyectos:", error);
     return NextResponse.json(

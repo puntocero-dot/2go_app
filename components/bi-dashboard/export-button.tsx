@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Download, FileText, Table } from "lucide-react";
+import { addToast } from "@/components/ui/toaster";
 
 interface ExportButtonProps {
   proyectoId?: string;
@@ -42,7 +43,7 @@ export function ExportButton({ proyectoId, fechaInicio, fechaFin }: ExportButton
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al exportar reporte');
+      addToast({ title: "Error al exportar reporte", variant: "destructive" });
     } finally {
       setLoading(false);
     }

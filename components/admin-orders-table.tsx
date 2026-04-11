@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatearFecha } from "@/lib/utils";
+import { addToast } from "@/components/ui/toaster";
 import { 
   FileText, 
   Package, 
@@ -305,17 +306,17 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
       const failed = results.filter((r) => r.status === 'rejected').length;
 
       if (successful > 0) {
-        alert(`✅ ${successful} orden(es) asignada(s) automáticamente${failed > 0 ? `. ${failed} fallaron.` : ''}`);
+        addToast({ title: `${successful} orden(es) asignada(s) automaticamente`, description: failed > 0 ? `${failed} fallaron.` : undefined, variant: "success" });
         setSelectedIds([]);
         startTransition(() => {
           router.refresh();
         });
       } else {
-        alert('❌ No se pudo asignar ninguna orden automáticamente');
+        addToast({ title: "No se pudo asignar ninguna orden automaticamente", variant: "destructive" });
       }
     } catch (error) {
       console.error('Error en asignación automática:', error);
-      alert('❌ Error al procesar asignación automática');
+      addToast({ title: "Error al procesar asignacion automatica", variant: "destructive" });
     } finally {
       setProcessing(false);
     }

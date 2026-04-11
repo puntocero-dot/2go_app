@@ -19,12 +19,14 @@ export const securityHeaders = {
   "Permissions-Policy": "geolocation=(self), camera=(), microphone=(), payment=()",
   
   // Content Security Policy
+  // unsafe-eval: requerido por Mapbox GL JS (usa eval para shaders WebGL)
+  // unsafe-inline en style-src: requerido por Mapbox GL y Radix UI (inyectan estilos inline)
   "Content-Security-Policy": `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.mapbox.com https://vercel.live https://*.mapbox.com;
     script-src-elem 'self' 'unsafe-inline' https://api.mapbox.com https://vercel.live https://*.mapbox.com;
     style-src 'self' 'unsafe-inline' https://api.mapbox.com https://*.mapbox.com;
-    img-src 'self' data: https: blob:;
+    img-src 'self' data: blob: https://res.cloudinary.com https://api.mapbox.com https://*.mapbox.com;
     font-src 'self' data: https://api.mapbox.com https://*.mapbox.com https://vercel.live;
     connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://res.cloudinary.com https://api.cloudinary.com https://*.tiles.mapbox.com https://*.mapbox.com;
     worker-src 'self' blob: data: https://api.mapbox.com https://*.mapbox.com https://vercel.live;

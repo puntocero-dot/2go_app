@@ -67,9 +67,16 @@ const handler = async (
       },
     });
 
-    return NextResponse.json(punto);
+    // Contar total de puntos del turno para que el cliente valide sincronizacion
+    const totalPuntos = await prisma.rutaPunto.count({ where: { turnoId } });
+
+    return NextResponse.json({
+      punto,
+      totalPuntosGuardados: totalPuntos,
+      sincronizadoEn: new Date().toISOString(),
+    });
   } catch (error) {
-    console.error("Error guardando ubicación:", error);
+    console.error("Error guardando ubicacion:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

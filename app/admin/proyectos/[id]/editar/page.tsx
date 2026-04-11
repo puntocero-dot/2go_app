@@ -116,7 +116,7 @@ export default async function EditarProyectoPage({ params }: PageProps) {
                   Editar Proyecto
                 </h1>
                 <p className="text-muted-foreground">
-                  Modifica la información del proyecto "{proyecto.nombreComercial}"
+                  Modifica la información del proyecto &quot;{proyecto.nombreComercial}&quot;
                 </p>
               </div>
             </div>

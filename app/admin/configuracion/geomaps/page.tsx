@@ -7,6 +7,7 @@ import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import { Loader2, MapPin, Settings } from "lucide-react";
+import { addToast } from "@/components/ui/toaster";
 
 interface GeomapsConfig {
   duracionMinimaParada: number;
@@ -59,7 +60,7 @@ export default function GeomapsConfigPage() {
       setFormData(data);
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cargar la configuración Geomaps");
+      addToast({ title: "Error al cargar la configuracion Geomaps", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -84,14 +85,11 @@ export default function GeomapsConfigPage() {
         throw new Error(error.error || "Error al guardar configuración Geomaps");
       }
 
-      alert("✅ Configuración Geomaps guardada correctamente");
+      addToast({ title: "Configuracion Geomaps guardada correctamente", variant: "success" });
       cargarConfiguracion();
     } catch (error) {
       console.error("Error:", error);
-      alert(
-        "❌ Error al guardar la configuración Geomaps: " +
-          (error instanceof Error ? error.message : "Error desconocido")
-      );
+      addToast({ title: "Error al guardar la configuracion Geomaps", description: error instanceof Error ? error.message : "Error desconocido", variant: "destructive" });
     } finally {
       setSaving(false);
     }

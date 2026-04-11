@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Download, FileText, FileSpreadsheet, FileJson } from 'lucide-react';
+import { addToast } from "@/components/ui/toaster";
 
 interface BillingExportButtonProps {
   proyectoId: string;
@@ -59,7 +60,7 @@ export function BillingExportButton({ proyectoId, desde, hasta, disabled }: Bill
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error al exportar:', error);
-      alert('Error al exportar. Por favor intenta de nuevo.');
+      addToast({ title: "Error al exportar", description: "Por favor intenta de nuevo.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
