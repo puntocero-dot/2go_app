@@ -64,21 +64,25 @@ const HAS_REDIS_RATE_LIMIT =
   !!process.env.UPSTASH_REDIS_REST_URL &&
   !!process.env.UPSTASH_REDIS_REST_TOKEN;
 
-// Advertencia en produccion si no hay Redis configurado
-// (el rate limiting in-memory no funciona en multiples instancias serverless)
-if (process.env.NODE_ENV === "production" && !HAS_REDIS_RATE_LIMIT) {
-  console.warn(
-    "⚠️ RATE LIMIT: Usando store in-memory. " +
-    "Configura UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN " +
-    "para rate limiting distribuido en produccion."
-  );
-}
+// Flag para emitir la advertencia solo una vez en runtime (no en build time)
+let _redisMissingWarned = false;
 
 export async function checkRateLimit(
   key: string,
   config: RateLimitConfig,
   ip?: string
 ): Promise<RateLimitResult> {
+  // Advertencia en produccion si no hay Redis configurado (solo la primera vez, en runtime)
+  // No se emite en build time para evitar ruido en logs de Vercel
+  if (process.env.NODE_ENV === "production" && !HAS_REDIS_RATE_LIMIT && !_redisMissingWarned) {
+    _redisMissingWarned = true;
+    console.warn(
+      "⚠️ RATE LIMIT: Usando store in-memory. " +
+      "Configura UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN " +
+      "para rate limiting distribuido en produccion."
+    );
+  }
+
   // Si Redis está configurado, usar backend distribuido
   if (HAS_REDIS_RATE_LIMIT) {
     const redisResult = await checkRateLimitRedis(key, {
