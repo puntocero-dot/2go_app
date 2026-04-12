@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { logAuditFromSession } from "@/lib/audit-logger";
 import { getRouteDirections, formatDuration, formatDistance } from "@/lib/mapbox-directions";
+import { computeAndStoreAccumulatedTimes } from "@/lib/timing";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -60,40 +61,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       },
     });
 
-    await prisma.registroEstado.create({
-      data: {
-        ordenId: orden.id,
-        estadoAnterior: ordenActual.estado,
-        estadoNuevo: "ASIGNADO",
-        estadoCambiadoA: "ASIGNADO",
-        usuarioId: session.userId,
-        comentario: "Orden tomada por armador",
-      },
-    });
-
-    await notificarCambioEstadoOrden(orden.id);
-
-    await logAuditFromSession({
-      session,
-      action: "ASSIGN_ORDER",
-      resource: "orden",
-      resourceId: orden.id,
-      changes: {
-        before: {
-          estado: ordenActual.estado,
-          armadorId: ordenActual.armadorId,
-        },
-        after: {
-          estado: orden.estado,
-          armadorId: orden.armadorId,
-        },
-      },
-      request,
-    });
-
     // Calcular ruta sugerida y ETA si hay coordenadas del destino y del armador
-    let rutaSugerida = null;
-    
+    let rutaSugerida: {
+      distancia: string;
+      distanciaMetros: number;
+      duracion: string;
+      duracionSegundos: number;
+      geometry: { type: string; coordinates: [number, number][] };
+    } | null = null;
+
     if (
       orden.usuarioFinal?.coordenadasLat != null &&
       orden.usuarioFinal?.coordenadasLng != null &&
@@ -116,6 +92,46 @@ export async function POST(request: NextRequest, context: RouteContext) {
         };
       }
     }
+
+    // Guardar ETA en RegistroEstado si hay ruta calculada
+    const etaEstimado = rutaSugerida
+      ? new Date(Date.now() + rutaSugerida.duracionSegundos * 1000)
+      : undefined;
+
+    await prisma.registroEstado.create({
+      data: {
+        ordenId: orden.id,
+        estadoAnterior: ordenActual.estado,
+        estadoNuevo: "ASIGNADO",
+        estadoCambiadoA: "ASIGNADO",
+        usuarioId: session.userId,
+        comentario: "Orden tomada por armador",
+        etaEstimado,
+      },
+    });
+
+    // Actualizar tiempos acumulados por estado
+    await computeAndStoreAccumulatedTimes(orden.id);
+
+    await notificarCambioEstadoOrden(orden.id);
+
+    await logAuditFromSession({
+      session,
+      action: "ASSIGN_ORDER",
+      resource: "orden",
+      resourceId: orden.id,
+      changes: {
+        before: {
+          estado: ordenActual.estado,
+          armadorId: ordenActual.armadorId,
+        },
+        after: {
+          estado: orden.estado,
+          armadorId: orden.armadorId,
+        },
+      },
+      request,
+    });
 
     return NextResponse.json({ orden, rutaSugerida });
   } catch (error) {

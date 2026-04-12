@@ -7,40 +7,46 @@ import { Badge } from "@/components/ui/badge";
 import { formatearFecha } from "@/lib/utils";
 
 interface RegistroEstado {
-  id: string;
-  estadoAnterior: string | null;
   estadoCambiadoA: string;
   timestamp: string;
   comentario: string | null;
-  usuario: {
-    nombre: string;
+}
+
+interface EtaData {
+  disponible: boolean;
+  minutosEstimados: number | null;
+  distanciaKm: number | null;
+  horaLlegadaEstimada: string | null;
+  duracionTexto: string | null;
+  armadorUbicacion: {
+    lat: number;
+    lng: number;
+    actualizadoHace: string;
   } | null;
+  mensaje: string;
 }
 
 interface Orden {
   id: string;
   codigoReferenciaRetail: string;
   estado: string;
-  fechaCreacion: string;
+  fechaSolicitadaCliente: string | null;
   fechaAsignacion: string | null;
-  fechaEnRuta: string | null;
-  fechaArmadoIniciado: string | null;
-  fechaArmadoFinalizado: string | null;
-  fechaArmadoCompletado: string | null;
+  fechaRuta: string | null;
+  fechaInicioArmado: string | null;
+  fechaFinArmado: string | null;
+  fechaCompletado: string | null;
   mueble: {
     nombre: string;
     descripcion: string | null;
   };
   usuarioFinal: {
     nombre: string;
-    direccion: string;
     municipio: string;
-    telefono: string | null;
   };
   armador: {
     usuario: {
       nombre: string;
-      telefono: string | null;
     };
   } | null;
   registrosEstado: RegistroEstado[];
@@ -53,6 +59,7 @@ export default function SeguimientoPage() {
   const token = searchParams.get("token");
 
   const [orden, setOrden] = useState<Orden | null>(null);
+  const [eta, setEta] = useState<EtaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,6 +79,7 @@ export default function SeguimientoPage() {
         }
         const data = await res.json();
         setOrden(data.orden);
+        setEta(data.eta || null);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error al cargar la orden");
       } finally {
@@ -82,6 +90,7 @@ export default function SeguimientoPage() {
     fetchOrden();
     const interval = setInterval(fetchOrden, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordenId, token]);
 
   if (loading) {
@@ -89,7 +98,7 @@ export default function SeguimientoPage() {
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando información...</p>
+          <p className="mt-4 text-gray-600">Cargando informacion...</p>
         </div>
       </div>
     );
@@ -104,7 +113,7 @@ export default function SeguimientoPage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              {error || "No se pudo cargar la información de la orden."}
+              {error || "No se pudo cargar la informacion de la orden."}
             </p>
           </CardContent>
         </Card>
@@ -182,6 +191,65 @@ export default function SeguimientoPage() {
           </CardContent>
         </Card>
 
+        {/* ETA - Tiempo Estimado de Llegada */}
+        {eta && (
+          <Card className={`border-2 ${eta.disponible ? "border-emerald-200 bg-emerald-50/50" : "border-gray-200"}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🕐 {eta.disponible ? "Llegada Estimada" : "Estado del Servicio"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {eta.disponible ? (
+                <div className="text-center space-y-3">
+                  {/* Tiempo estimado grande */}
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
+                    <p className="text-4xl font-bold text-emerald-600">
+                      ~{eta.minutosEstimados} min
+                    </p>
+                    {eta.horaLlegadaEstimada && (
+                      <p className="text-lg text-gray-600 mt-1">
+                        Hora estimada:{" "}
+                        <strong>
+                          {new Date(eta.horaLlegadaEstimada).toLocaleTimeString("es-SV", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </strong>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Detalles adicionales */}
+                  <div className="flex justify-center gap-6 text-sm text-gray-500">
+                    {eta.distanciaKm && (
+                      <span className="flex items-center gap-1">
+                        📍 {eta.distanciaKm} km
+                      </span>
+                    )}
+                    {eta.duracionTexto && (
+                      <span className="flex items-center gap-1">
+                        ⏱️ {eta.duracionTexto}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Ubicacion del armador */}
+                  {eta.armadorUbicacion && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Ubicacion del armador actualizada {eta.armadorUbicacion.actualizadoHace}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-600 text-lg">{eta.mensaje}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Progreso por estados */}
         <Card>
           <CardHeader>
@@ -228,10 +296,10 @@ export default function SeguimientoPage() {
           </CardContent>
         </Card>
 
-        {/* Información del Mueble */}
+        {/* Informacion del Mueble */}
         <Card>
           <CardHeader>
-            <CardTitle>📦 Información del Mueble</CardTitle>
+            <CardTitle>📦 Informacion del Mueble</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -240,17 +308,17 @@ export default function SeguimientoPage() {
               </p>
               {orden.mueble.descripcion && (
                 <p>
-                  <strong>Descripción:</strong> {orden.mueble.descripcion}
+                  <strong>Descripcion:</strong> {orden.mueble.descripcion}
                 </p>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Información del Cliente */}
+        {/* Informacion del Cliente */}
         <Card>
           <CardHeader>
-            <CardTitle>👤 Información de Entrega</CardTitle>
+            <CardTitle>👤 Informacion de Entrega</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -258,16 +326,8 @@ export default function SeguimientoPage() {
                 <strong>Cliente:</strong> {orden.usuarioFinal.nombre}
               </p>
               <p>
-                <strong>Dirección:</strong> {orden.usuarioFinal.direccion}
-              </p>
-              <p>
                 <strong>Municipio:</strong> {orden.usuarioFinal.municipio}
               </p>
-              {orden.usuarioFinal.telefono && (
-                <p>
-                  <strong>Teléfono:</strong> {orden.usuarioFinal.telefono}
-                </p>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -283,11 +343,6 @@ export default function SeguimientoPage() {
                 <p>
                   <strong>Nombre:</strong> {orden.armador.usuario.nombre}
                 </p>
-                {orden.armador.usuario.telefono && (
-                  <p>
-                    <strong>Teléfono:</strong> {orden.armador.usuario.telefono}
-                  </p>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -302,32 +357,27 @@ export default function SeguimientoPage() {
             <div className="space-y-4">
               {orden.registrosEstado.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">
-                  No hay cambios de estado registrados aún.
+                  No hay cambios de estado registrados aun.
                 </p>
               ) : (
-                orden.registrosEstado.map((registro) => (
+                orden.registrosEstado.map((registro, index) => (
                   <div
-                    key={registro.id}
+                    key={index}
                     className="border-l-4 border-cyan-500 pl-4 py-2"
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold">
-                          {estadoEmoji[registro.estadoCambiadoA]}{" "}
-                          {estadoTexto[registro.estadoCambiadoA]}
+                    <div>
+                      <p className="font-semibold">
+                        {estadoEmoji[registro.estadoCambiadoA]}{" "}
+                        {estadoTexto[registro.estadoCambiadoA]}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatearFecha(registro.timestamp)}
+                      </p>
+                      {registro.comentario && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          💬 {registro.comentario}
                         </p>
-                        <p className="text-sm text-gray-600">
-                          {formatearFecha(registro.timestamp)}
-                        </p>
-                        {registro.comentario && (
-                          <p className="text-sm text-gray-700 mt-1">
-                            💬 {registro.comentario}
-                          </p>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {registro.usuario?.nombre || "Sistema"}
-                      </Badge>
+                      )}
                     </div>
                   </div>
                 ))
@@ -343,49 +393,51 @@ export default function SeguimientoPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Creación:</span>
-                <span className="font-semibold">
-                  {formatearFecha(orden.fechaCreacion)}
-                </span>
-              </div>
+              {orden.fechaSolicitadaCliente && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Fecha solicitada:</span>
+                  <span className="font-semibold">
+                    {formatearFecha(orden.fechaSolicitadaCliente)}
+                  </span>
+                </div>
+              )}
               {orden.fechaAsignacion && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Asignación:</span>
+                  <span className="text-gray-600">Asignacion:</span>
                   <span className="font-semibold">
                     {formatearFecha(orden.fechaAsignacion)}
                   </span>
                 </div>
               )}
-              {orden.fechaEnRuta && (
+              {orden.fechaRuta && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">En Ruta:</span>
                   <span className="font-semibold">
-                    {formatearFecha(orden.fechaEnRuta)}
+                    {formatearFecha(orden.fechaRuta)}
                   </span>
                 </div>
               )}
-              {orden.fechaArmadoIniciado && (
+              {orden.fechaInicioArmado && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Armado Iniciado:</span>
                   <span className="font-semibold">
-                    {formatearFecha(orden.fechaArmadoIniciado)}
+                    {formatearFecha(orden.fechaInicioArmado)}
                   </span>
                 </div>
               )}
-              {orden.fechaArmadoFinalizado && (
+              {orden.fechaFinArmado && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Armado Finalizado:</span>
                   <span className="font-semibold">
-                    {formatearFecha(orden.fechaArmadoFinalizado)}
+                    {formatearFecha(orden.fechaFinArmado)}
                   </span>
                 </div>
               )}
-              {orden.fechaArmadoCompletado && (
+              {orden.fechaCompletado && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Completado:</span>
                   <span className="font-semibold">
-                    {formatearFecha(orden.fechaArmadoCompletado)}
+                    {formatearFecha(orden.fechaCompletado)}
                   </span>
                 </div>
               )}
@@ -395,8 +447,8 @@ export default function SeguimientoPage() {
 
         {/* Footer */}
         <div className="text-center text-gray-500 text-sm mt-8">
-          <p>Esta página se actualiza automáticamente cada 30 segundos</p>
-          <p className="mt-2">© 2024 Armados 2Go - Todos los derechos reservados</p>
+          <p>Esta pagina se actualiza automaticamente cada 30 segundos</p>
+          <p className="mt-2">&copy; 2024 Armados 2Go - Todos los derechos reservados</p>
         </div>
       </div>
     </div>

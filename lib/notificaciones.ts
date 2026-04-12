@@ -348,7 +348,7 @@ export async function notificarCambioEstadoOrden(ordenId: string) {
 
     const ultimoRegistro = orden.registrosEstado[0];
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.armados2go.com";
-    const linkSeguimiento = `${baseUrl}/seguimiento/${orden.id}`;
+    const linkSeguimiento = `${baseUrl}/seguimiento/${orden.id}?token=${encodeURIComponent(orden.linkMagicoToken)}`;
 
     // Notificar al cliente si tiene email o teléfono
     if (orden.usuarioFinal.email) {

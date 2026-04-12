@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { withRateLimitAndValidation } from "@/lib/api-helpers";
 import { GuardarUbicacionSchema } from "@/lib/schemas/turno.schemas";
 import { RATE_LIMITS } from "@/lib/rate-limit";
+import { invalidateEta } from "@/lib/eta-cache";
 
 // POST - Guardar punto GPS durante turno activo
 const handler = async (
@@ -66,6 +67,20 @@ const handler = async (
         ultimaActualizacionGPS: new Date(),
       },
     });
+
+    // Invalidar cache ETA de ordenes EN_RUTA de este armador
+    // para que el siguiente poll del cliente recalcule con la posicion fresca
+    try {
+      const ordenesEnRuta = await prisma.orden.findMany({
+        where: { armadorId: turno.armadorId, estado: "EN_RUTA" },
+        select: { id: true },
+      });
+      for (const o of ordenesEnRuta) {
+        invalidateEta(o.id);
+      }
+    } catch {
+      // No bloquear el flujo si falla la invalidacion
+    }
 
     // Contar total de puntos del turno para que el cliente valide sincronizacion
     const totalPuntos = await prisma.rutaPunto.count({ where: { turnoId } });

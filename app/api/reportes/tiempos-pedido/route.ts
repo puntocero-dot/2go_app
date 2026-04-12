@@ -107,46 +107,50 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const orden of ordenes as any[]) {
-      // Ordenar los registros de estado por timestamp
-      const registrosOrdenados = [...orden.registrosEstado].sort(
-        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
-      );
-
-      const tiemposPorEstado: TiempoPorEstado = {};
+      let tiemposPorEstado: TiempoPorEstado = {};
       let tiempoTotal = 0;
 
-      // Calcular tiempo en cada estado
-      for (let i = 0; i < registrosOrdenados.length - 1; i++) {
-        const registroActual = registrosOrdenados[i];
-        const siguienteRegistro = registrosOrdenados[i + 1];
+      // Usar datos pre-computados si existen (campo tiempoAcumuladoEstados)
+      if (orden.tiempoAcumuladoEstados && typeof orden.tiempoAcumuladoEstados === "object") {
+        tiemposPorEstado = orden.tiempoAcumuladoEstados as TiempoPorEstado;
+        tiempoTotal = Object.values(tiemposPorEstado).reduce((acc: number, val) => acc + (val as number), 0);
+      } else {
+        // Fallback: calcular desde registrosEstado para ordenes sin datos pre-computados
+        const registrosOrdenados = [...orden.registrosEstado].sort(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (a: any, b: any) => a.timestamp.getTime() - b.timestamp.getTime()
+        );
 
-        if (registroActual.estadoCambiadoA) {
-          const duracion =
-            (siguienteRegistro.timestamp.getTime() -
-              registroActual.timestamp.getTime()) /
-            1000; // Convertir a segundos
+        for (let i = 0; i < registrosOrdenados.length - 1; i++) {
+          const registroActual = registrosOrdenados[i];
+          const siguienteRegistro = registrosOrdenados[i + 1];
 
-          // Acumular tiempo por estado
-          if (!tiemposPorEstado[registroActual.estadoCambiadoA]) {
-            tiemposPorEstado[registroActual.estadoCambiadoA] = 0;
+          if (registroActual.estadoCambiadoA) {
+            const duracion =
+              (siguienteRegistro.timestamp.getTime() -
+                registroActual.timestamp.getTime()) /
+              1000;
+
+            if (!tiemposPorEstado[registroActual.estadoCambiadoA]) {
+              tiemposPorEstado[registroActual.estadoCambiadoA] = 0;
+            }
+            tiemposPorEstado[registroActual.estadoCambiadoA] += duracion;
+            tiempoTotal += duracion;
           }
-          tiemposPorEstado[registroActual.estadoCambiadoA] += duracion;
-          tiempoTotal += duracion;
         }
-      }
 
-      // Procesar el último registro si es necesario
-      if (registrosOrdenados.length > 0) {
-        const ultimoRegistro = registrosOrdenados[registrosOrdenados.length - 1];
-        if (ultimoRegistro.estadoCambiadoA && ultimoRegistro.estadoCambiadoA !== 'CANCELADA') {
-          const tiempoActual = new Date().getTime();
-          const duracion = (tiempoActual - ultimoRegistro.timestamp.getTime()) / 1000;
-          
-          if (!tiemposPorEstado[ultimoRegistro.estadoCambiadoA]) {
-            tiemposPorEstado[ultimoRegistro.estadoCambiadoA] = 0;
+        if (registrosOrdenados.length > 0) {
+          const ultimoRegistro = registrosOrdenados[registrosOrdenados.length - 1];
+          if (ultimoRegistro.estadoCambiadoA && ultimoRegistro.estadoCambiadoA !== 'CANCELADA') {
+            const tiempoActual = new Date().getTime();
+            const duracion = (tiempoActual - ultimoRegistro.timestamp.getTime()) / 1000;
+
+            if (!tiemposPorEstado[ultimoRegistro.estadoCambiadoA]) {
+              tiemposPorEstado[ultimoRegistro.estadoCambiadoA] = 0;
+            }
+            tiemposPorEstado[ultimoRegistro.estadoCambiadoA] += duracion;
+            tiempoTotal += duracion;
           }
-          tiemposPorEstado[ultimoRegistro.estadoCambiadoA] += duracion;
-          tiempoTotal += duracion;
         }
       }
 

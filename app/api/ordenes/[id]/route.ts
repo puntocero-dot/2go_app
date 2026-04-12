@@ -5,6 +5,8 @@ import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { withValidation } from "@/lib/api-helpers";
 import { ActualizarOrdenApiSchema, ActualizarOrdenApiInput } from "@/lib/schemas/orden.schemas";
 import { logAuditFromSession } from "@/lib/audit-logger";
+import { getRouteDirections } from "@/lib/mapbox-directions";
+import { computeAndStoreAccumulatedTimes } from "@/lib/timing";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -228,10 +230,38 @@ const actualizarOrdenHandler = async (
 
     // Registrar cambio de estado si hubo cambio
     if (estado && estado !== ordenActual.estado) {
-      const etaDate =
+      // Calcular ETA: usar autoAssignMeta si existe, o calcular con Mapbox si es EN_RUTA
+      let etaDate =
         typeof autoAssignMeta?.etaEstimadoMin === "number"
           ? new Date(Date.now() + autoAssignMeta.etaEstimadoMin * 60 * 1000)
           : undefined;
+
+      // Si cambia a EN_RUTA y no hay ETA de autoAssign, calcular con Mapbox
+      if (estado === "EN_RUTA" && !etaDate && orden.armadorId) {
+        try {
+          const armadorGps = await prisma.armador.findUnique({
+            where: { id: orden.armadorId },
+            select: { ubicacionActualLat: true, ubicacionActualLng: true },
+          });
+          if (
+            armadorGps?.ubicacionActualLat &&
+            armadorGps?.ubicacionActualLng &&
+            orden.usuarioFinal?.coordenadasLat &&
+            orden.usuarioFinal?.coordenadasLng
+          ) {
+            const directions = await getRouteDirections(
+              { lat: armadorGps.ubicacionActualLat, lng: armadorGps.ubicacionActualLng },
+              { lat: orden.usuarioFinal.coordenadasLat, lng: orden.usuarioFinal.coordenadasLng },
+              "driving-traffic"
+            );
+            if (directions.route) {
+              etaDate = new Date(Date.now() + directions.route.duration * 1000);
+            }
+          }
+        } catch (e) {
+          console.warn("[ETA] Error calculando ETA en transicion EN_RUTA:", e);
+        }
+      }
 
       const latitud =
         gps && typeof gps.latitud === "number" ? (gps.latitud as number) : undefined;
@@ -256,6 +286,9 @@ const actualizarOrdenHandler = async (
           },
         })
       );
+
+      // Actualizar tiempos acumulados por estado
+      asyncTasks.push(computeAndStoreAccumulatedTimes(id));
 
       // ENVIAR NOTIFICACIONES
       asyncTasks.push(notificarCambioEstadoOrden(id));
