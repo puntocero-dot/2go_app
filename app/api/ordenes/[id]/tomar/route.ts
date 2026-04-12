@@ -5,6 +5,7 @@ import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { logAuditFromSession } from "@/lib/audit-logger";
 import { getRouteDirections, formatDuration, formatDistance } from "@/lib/mapbox-directions";
 import { computeAndStoreAccumulatedTimes } from "@/lib/timing";
+import { publishOrderUpdate } from "@/lib/realtime/publisher";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -114,6 +115,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await computeAndStoreAccumulatedTimes(orden.id);
 
     await notificarCambioEstadoOrden(orden.id);
+
+    // SSE: publicar cambio de estado en Redis para clientes en tiempo real
+    await publishOrderUpdate(orden.id, "ASIGNADO");
 
     await logAuditFromSession({
       session,

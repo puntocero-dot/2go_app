@@ -7,6 +7,9 @@ import { ActualizarOrdenApiSchema, ActualizarOrdenApiInput } from "@/lib/schemas
 import { logAuditFromSession } from "@/lib/audit-logger";
 import { getRouteDirections } from "@/lib/mapbox-directions";
 import { computeAndStoreAccumulatedTimes } from "@/lib/timing";
+import { publishOrderUpdate } from "@/lib/realtime/publisher";
+import { sendPushToUser } from "@/lib/web-push";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -290,8 +293,72 @@ const actualizarOrdenHandler = async (
       // Actualizar tiempos acumulados por estado
       asyncTasks.push(computeAndStoreAccumulatedTimes(id));
 
-      // ENVIAR NOTIFICACIONES
+      // ENVIAR NOTIFICACIONES (email/WhatsApp al cliente)
       asyncTasks.push(notificarCambioEstadoOrden(id));
+
+      // SSE: publicar nuevo estado en Redis para clientes en tiempo real
+      asyncTasks.push(publishOrderUpdate(id, estado));
+
+      // PUSH NOTIFICATIONS: notificar al armador o admin según el estado
+      if (isFeatureEnabled("PUSH_NOTIFICATIONS")) {
+        const estadoLabels: Record<string, string> = {
+          ASIGNADO: "Nueva orden asignada",
+          EN_RUTA: "Orden en ruta",
+          ARMADO_INICIADO: "Armado iniciado",
+          ARMADO_FINALIZADO: "Armado finalizado",
+          ARMADO_COMPLETADO: "Orden completada ✅",
+          CANCELADA: "Orden cancelada",
+        };
+
+        const titulo = estadoLabels[estado] ?? "Actualización de orden";
+        const codigoRef = orden.codigoReferenciaRetail;
+
+        // Notificar al armador cuando le asignan la orden
+        if (estado === "ASIGNADO" && orden.armadorId) {
+          const armadorUsuarioId = await prisma.armador
+            .findUnique({ where: { id: orden.armadorId }, select: { usuarioId: true } })
+            .then((a) => a?.usuarioId);
+          if (armadorUsuarioId) {
+            asyncTasks.push(
+              sendPushToUser(armadorUsuarioId, {
+                title: titulo,
+                body: `Orden ${codigoRef} ha sido asignada a ti`,
+                url: `/armador`,
+                tag: `orden-${id}`,
+              })
+            );
+          }
+        }
+
+        // Notificar al armador cuando le cancelan una orden activa
+        if (estado === "CANCELADA" && ordenActual.armadorId) {
+          const armadorUsuarioId = await prisma.armador
+            .findUnique({ where: { id: ordenActual.armadorId }, select: { usuarioId: true } })
+            .then((a) => a?.usuarioId);
+          if (armadorUsuarioId) {
+            asyncTasks.push(
+              sendPushToUser(armadorUsuarioId, {
+                title: titulo,
+                body: `La orden ${codigoRef} fue cancelada`,
+                url: `/armador`,
+                tag: `orden-${id}`,
+              })
+            );
+          }
+        }
+
+        // Notificar al usuario que cambió el estado (confirmación) si no es el armador
+        if (session.rol !== "ARMADOR" && estado === "ARMADO_COMPLETADO") {
+          asyncTasks.push(
+            sendPushToUser(session.userId, {
+              title: titulo,
+              body: `Orden ${codigoRef} completada exitosamente`,
+              url: `/admin/ordenes`,
+              tag: `orden-${id}`,
+            })
+          );
+        }
+      }
     }
 
     if (autoAssignMeta) {
@@ -413,6 +480,9 @@ export async function DELETE(
         comentario: "Orden cancelada por administrador",
       },
     });
+
+    // SSE: publicar cancelación en Redis
+    await publishOrderUpdate(id, "CANCELADA");
 
     await logAuditFromSession({
       session,

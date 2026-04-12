@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatearFecha } from "@/lib/utils";
+import { useEventStream } from "@/hooks/useEventStream";
 
 interface RegistroEstado {
   estadoCambiadoA: string;
@@ -15,6 +16,8 @@ interface RegistroEstado {
 interface EtaData {
   disponible: boolean;
   minutosEstimados: number | null;
+  minutosMin: number | null;
+  minutosMax: number | null;
   distanciaKm: number | null;
   horaLlegadaEstimada: string | null;
   duracionTexto: string | null;
@@ -63,6 +66,33 @@ export default function SeguimientoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchOrden = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/seguimiento/${ordenId}?token=${encodeURIComponent(token)}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Orden no encontrada");
+      }
+      const data = await res.json();
+      setOrden(data.orden);
+      setEta(data.eta || null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar la orden");
+    } finally {
+      setLoading(false);
+    }
+  }, [ordenId, token]);
+
+  // SSE para actualizaciones en tiempo real de estado
+  const { estado: estadoSSE } = useEventStream(ordenId, token, {
+    enabled: !!token,
+    onEstadoChange: () => {
+      // Cuando cambia el estado via SSE, refrescar datos completos
+      fetchOrden();
+    },
+  });
+
   useEffect(() => {
     if (!token) {
       setError("Token de seguimiento requerido. Verifica el enlace proporcionado.");
@@ -70,28 +100,19 @@ export default function SeguimientoPage() {
       return;
     }
 
-    async function fetchOrden() {
-      try {
-        const res = await fetch(`/api/seguimiento/${ordenId}?token=${encodeURIComponent(token!)}`);
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Orden no encontrada");
-        }
-        const data = await res.json();
-        setOrden(data.orden);
-        setEta(data.eta || null);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Error al cargar la orden");
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchOrden();
-    const interval = setInterval(fetchOrden, 30000);
+
+    // Polling de respaldo cada 60s (era 30s) — SSE cubre los cambios en tiempo real
+    const interval = setInterval(fetchOrden, 60000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ordenId, token]);
+  }, [fetchOrden, token]);
+
+  // Sincronizar estado SSE con el estado de la orden local
+  useEffect(() => {
+    if (estadoSSE && orden && estadoSSE !== orden.estado) {
+      setOrden((prev) => prev ? { ...prev, estado: estadoSSE } : prev);
+    }
+  }, [estadoSSE, orden]);
 
   if (loading) {
     return (
@@ -204,9 +225,15 @@ export default function SeguimientoPage() {
                 <div className="text-center space-y-3">
                   {/* Tiempo estimado grande */}
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
-                    <p className="text-4xl font-bold text-emerald-600">
-                      ~{eta.minutosEstimados} min
-                    </p>
+                    {eta.minutosMin && eta.minutosMax ? (
+                      <p className="text-4xl font-bold text-emerald-600">
+                        {eta.minutosMin}–{eta.minutosMax} min
+                      </p>
+                    ) : (
+                      <p className="text-4xl font-bold text-emerald-600">
+                        ~{eta.minutosEstimados} min
+                      </p>
+                    )}
                     {eta.horaLlegadaEstimada && (
                       <p className="text-lg text-gray-600 mt-1">
                         Hora estimada:{" "}
@@ -447,7 +474,7 @@ export default function SeguimientoPage() {
 
         {/* Footer */}
         <div className="text-center text-gray-500 text-sm mt-8">
-          <p>Esta pagina se actualiza automaticamente cada 30 segundos</p>
+          <p>Esta pagina recibe actualizaciones en tiempo real</p>
           <p className="mt-2">&copy; 2024 Armados 2Go - Todos los derechos reservados</p>
         </div>
       </div>

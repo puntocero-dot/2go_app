@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRouteDirections, formatDuration } from "@/lib/mapbox-directions";
 import { getEtaCache, setEtaCache } from "@/lib/eta-cache";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { aplicarCorreccionETA } from "@/lib/ai/eta-predictor";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 interface EtaResponse {
   disponible: boolean;
   minutosEstimados: number | null;
+  minutosMin: number | null;
+  minutosMax: number | null;
   distanciaKm: number | null;
   horaLlegadaEstimada: string | null;
   duracionTexto: string | null;
@@ -146,12 +150,15 @@ async function computeEta(orden: any): Promise<EtaResponse> {
   const noEta: EtaResponse = {
     disponible: false,
     minutosEstimados: null,
+    minutosMin: null,
+    minutosMax: null,
     distanciaKm: null,
     horaLlegadaEstimada: null,
     duracionTexto: null,
     armadorUbicacion: null,
     mensaje: "",
   };
+  const usePredictiveEta = isFeatureEnabled('PREDICTIVE_ETA');
 
   switch (orden.estado) {
     case "SIN_ASIGNAR":
@@ -210,22 +217,46 @@ async function computeEta(orden: any): Promise<EtaResponse> {
       // Verificar cache
       const cached = getEtaCache(orden.id);
       if (cached) {
-        const minutosEstimados = Math.round(cached.etaSeconds / 60);
+        const etaSeconds = cached.etaSeconds;
         const distanciaKm = Math.round(cached.distanceMeters / 100) / 10;
-        const horaLlegada = new Date(Date.now() + cached.etaSeconds * 1000);
 
+        if (usePredictiveEta && orden.usuarioFinal?.municipio) {
+          const corregido = await aplicarCorreccionETA(etaSeconds, orden.usuarioFinal.municipio);
+          const horaLlegada = new Date(Date.now() + corregido.segundosCentral * 1000);
+          const minutosMin = Math.round(corregido.segundosMin / 60);
+          const minutosMax = Math.round(corregido.segundosMax / 60);
+          const minutosCentral = Math.round(corregido.segundosCentral / 60);
+          return {
+            disponible: true,
+            minutosEstimados: minutosCentral,
+            minutosMin,
+            minutosMax,
+            distanciaKm,
+            horaLlegadaEstimada: horaLlegada.toISOString(),
+            duracionTexto: formatDuration(corregido.segundosCentral),
+            armadorUbicacion: {
+              lat: armador.ubicacionActualLat,
+              lng: armador.ubicacionActualLng,
+              actualizadoHace: formatTimeAgo(armador.ultimaActualizacionGPS || new Date()),
+            },
+            mensaje: `Tu armador llegará en aproximadamente ${minutosMin}-${minutosMax} minutos.`,
+          };
+        }
+
+        const minutosEstimados = Math.round(etaSeconds / 60);
+        const horaLlegada = new Date(Date.now() + etaSeconds * 1000);
         return {
           disponible: true,
           minutosEstimados,
+          minutosMin: null,
+          minutosMax: null,
           distanciaKm,
           horaLlegadaEstimada: horaLlegada.toISOString(),
-          duracionTexto: formatDuration(cached.etaSeconds),
+          duracionTexto: formatDuration(etaSeconds),
           armadorUbicacion: {
             lat: armador.ubicacionActualLat,
             lng: armador.ubicacionActualLng,
-            actualizadoHace: formatTimeAgo(
-              armador.ultimaActualizacionGPS || new Date()
-            ),
+            actualizadoHace: formatTimeAgo(armador.ultimaActualizacionGPS || new Date()),
           },
           mensaje: `Tu armador llegara en aproximadamente ${minutosEstimados} minutos.`,
         };
@@ -245,31 +276,52 @@ async function computeEta(orden: any): Promise<EtaResponse> {
       );
 
       if (result.route) {
-        // Guardar en cache
+        // Guardar en cache (siempre el valor crudo de Mapbox)
         setEtaCache(orden.id, {
           lastGpsTimestamp: armador.ultimaActualizacionGPS || new Date(),
           etaSeconds: result.route.duration,
           distanceMeters: result.route.distance,
         });
 
-        const minutosEstimados = Math.round(result.route.duration / 60);
         const distanciaKm = Math.round(result.route.distance / 100) / 10;
-        const horaLlegada = new Date(
-          Date.now() + result.route.duration * 1000
-        );
 
+        if (usePredictiveEta && orden.usuarioFinal?.municipio) {
+          const corregido = await aplicarCorreccionETA(result.route.duration, orden.usuarioFinal.municipio);
+          const horaLlegada = new Date(Date.now() + corregido.segundosCentral * 1000);
+          const minutosMin = Math.round(corregido.segundosMin / 60);
+          const minutosMax = Math.round(corregido.segundosMax / 60);
+          const minutosCentral = Math.round(corregido.segundosCentral / 60);
+          return {
+            disponible: true,
+            minutosEstimados: minutosCentral,
+            minutosMin,
+            minutosMax,
+            distanciaKm,
+            horaLlegadaEstimada: horaLlegada.toISOString(),
+            duracionTexto: formatDuration(corregido.segundosCentral),
+            armadorUbicacion: {
+              lat: armador.ubicacionActualLat,
+              lng: armador.ubicacionActualLng,
+              actualizadoHace: formatTimeAgo(armador.ultimaActualizacionGPS || new Date()),
+            },
+            mensaje: `Tu armador llegará en aproximadamente ${minutosMin}-${minutosMax} minutos.`,
+          };
+        }
+
+        const minutosEstimados = Math.round(result.route.duration / 60);
+        const horaLlegada = new Date(Date.now() + result.route.duration * 1000);
         return {
           disponible: true,
           minutosEstimados,
+          minutosMin: null,
+          minutosMax: null,
           distanciaKm,
           horaLlegadaEstimada: horaLlegada.toISOString(),
           duracionTexto: formatDuration(result.route.duration),
           armadorUbicacion: {
             lat: armador.ubicacionActualLat,
             lng: armador.ubicacionActualLng,
-            actualizadoHace: formatTimeAgo(
-              armador.ultimaActualizacionGPS || new Date()
-            ),
+            actualizadoHace: formatTimeAgo(armador.ultimaActualizacionGPS || new Date()),
           },
           mensaje: `Tu armador llegara en aproximadamente ${minutosEstimados} minutos.`,
         };

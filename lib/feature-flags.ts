@@ -10,7 +10,11 @@ export type FeatureFlag =
   | 'SMART_SAMPLING'
   | 'POLYLINE_ENCODING'
   | 'SERVICE_LAYER'
-  | 'AUDITORIA_DETALLADA';
+  | 'AUDITORIA_DETALLADA'
+  | 'AI_SMART_ASSIGNMENT'
+  | 'PREDICTIVE_ETA'
+  | 'REALTIME_SSE'
+  | 'PUSH_NOTIFICATIONS';
 
 interface FlagConfig {
   enabled: boolean;
@@ -58,6 +62,28 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     rolloutPercentage: 100,
     allowedRoles: ['ADMIN'],
     description: 'Logging detallado de todas las acciones',
+  },
+  AI_SMART_ASSIGNMENT: {
+    enabled: process.env.NEXT_PUBLIC_FF_AI_SMART_ASSIGNMENT === 'true',
+    rolloutPercentage: 0,
+    allowedRoles: ['ADMIN', 'SUPERVISOR'],
+    description: 'Asignación inteligente basada en datos históricos de rendimiento',
+  },
+  PREDICTIVE_ETA: {
+    enabled: process.env.NEXT_PUBLIC_FF_PREDICTIVE_ETA === 'true',
+    rolloutPercentage: 0,
+    description: 'ETA corregido con factores históricos por municipio',
+  },
+  REALTIME_SSE: {
+    enabled: process.env.NEXT_PUBLIC_FF_REALTIME_SSE === 'true',
+    rolloutPercentage: 0,
+    description: 'Actualizaciones en tiempo real via Server-Sent Events',
+  },
+  PUSH_NOTIFICATIONS: {
+    enabled: process.env.NEXT_PUBLIC_FF_PUSH_NOTIFICATIONS === 'true',
+    rolloutPercentage: 0,
+    allowedRoles: ['ADMIN', 'SUPERVISOR', 'ARMADOR'],
+    description: 'Notificaciones push via Web Push API',
   },
 };
 

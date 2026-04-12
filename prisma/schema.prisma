@@ -25,6 +25,7 @@ model Usuario {
   supervisorProyectos SupervisorProyecto[]
   notificacionesSistemaEnviadas NotificacionSistema[] @relation("NotificacionesSistemaEnviadas")
   notificaciones      NotificacionUsuario[] @relation("NotificacionesUsuario")
+  pushSubscriptions   PushSubscription[]
 
   @@index([email])
   @@map("usuarios")
@@ -529,6 +530,19 @@ model AuditLog {
   @@index([createdAt])
   @@index([status])
   @@map("audit_logs")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  usuario   Usuario  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 model ConfiguracionGeomaps {

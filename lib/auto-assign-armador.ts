@@ -1,8 +1,21 @@
 import { prisma } from "@/lib/prisma";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { seleccionarMejorArmador } from "@/lib/ai/smart-assignment";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function asignarArmadorAutomatico(_orden: any) {
   try {
+    // Si el flag AI_SMART_ASSIGNMENT está activo, usar scoring histórico
+    if (isFeatureEnabled('AI_SMART_ASSIGNMENT') && _orden?.id && _orden?.muebleId && _orden?.usuarioFinalId) {
+      const armador = await seleccionarMejorArmador({
+        id: _orden.id,
+        muebleId: _orden.muebleId,
+        usuarioFinalId: _orden.usuarioFinalId,
+      });
+      if (armador) return armador;
+      // Si falla (sin datos históricos), cae al algoritmo original abajo
+    }
+
     const armadores = await prisma.armador.findMany({
       where: {
         estado: "ACTIVO",
