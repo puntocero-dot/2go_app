@@ -46,6 +46,7 @@ export default function EditarOrdenPage() {
   const params = useParams();
   const id = params.id as string;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [orden, setOrden] = useState<Orden | null>(null);
   const [armadores, setArmadores] = useState<Armador[]>([]);
@@ -68,6 +69,7 @@ export default function EditarOrdenPage() {
       cargarOrden();
       cargarArmadores();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   
   const cargarUsuario = async () => {
@@ -88,6 +90,7 @@ export default function EditarOrdenPage() {
       if (!response.ok) throw new Error("Error al cargar orden");
       
       const json = await response.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: any = (json as any).orden ?? json;
       
       // Validar que data tenga la estructura esperada
@@ -137,6 +140,7 @@ export default function EditarOrdenPage() {
 
     setSaving(true);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload: any = {
         estado: formData.estado,
       };
@@ -174,6 +178,7 @@ export default function EditarOrdenPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };

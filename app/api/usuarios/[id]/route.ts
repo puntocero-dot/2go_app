@@ -261,35 +261,40 @@ const patchHandler = async (
     if ("nombre" in updateData) {
       camposModificados.nombre = {
         antes: usuarioActual.nombre,
-        despues: (updateData as any).nombre,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      despues: (updateData as any).nombre,
       };
     }
 
     if ("email" in updateData) {
       camposModificados.email = {
         antes: usuarioActual.email,
-        despues: (updateData as any).email,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      despues: (updateData as any).email,
       };
     }
 
     if ("telefono" in updateData) {
       camposModificados.telefono = {
         antes: usuarioActual.telefono,
-        despues: (updateData as any).telefono,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      despues: (updateData as any).telefono,
       };
     }
 
     if ("rol" in updateData) {
       camposModificados.rol = {
         antes: usuarioActual.rol,
-        despues: (updateData as any).rol,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      despues: (updateData as any).rol,
       };
     }
 
     if ("activo" in updateData) {
       camposModificados.activo = {
         antes: usuarioActual.activo,
-        despues: (updateData as any).activo,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      despues: (updateData as any).activo,
       };
     }
 

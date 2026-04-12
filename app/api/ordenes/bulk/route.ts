@@ -353,7 +353,7 @@ function normalizePrioridad(value?: string): PrioridadUsuario | undefined {
   return upper as PrioridadUsuario;
 }
 
-async function processRow(data: BulkRow, userId: string) {
+async function processRow(data: BulkRow, _userId: string) {
   const proyecto = await prisma.proyecto.findFirst({
     where: {
       nombreComercial: {

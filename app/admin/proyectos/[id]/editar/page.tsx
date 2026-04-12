@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { Label } from "@/components/ui/label";
 import { ArrowLeft, Building, Save, X } from "lucide-react";
 import { ProyectoEditForm } from "@/components/proyectos/proyecto-edit-form";
 import { ProjectBillingManager } from "@/components/project-billing-manager";

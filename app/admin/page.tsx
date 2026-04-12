@@ -1,3 +1,4 @@
+import React from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,6 @@ import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { EnhancedInput } from "@/components/ui/enhanced-input";
 import {
   Table,
   TableBody,
@@ -58,7 +58,7 @@ function KPICard({
   title: string;
   value: string | number;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   trend?: number;
   color?: "primary" | "secondary" | "success" | "warning";
 }) {

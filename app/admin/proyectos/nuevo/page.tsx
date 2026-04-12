@@ -39,6 +39,7 @@ export default function NuevoProyectoPage() {
 
     try {
       // Preparar datos de facturación según el tipo de cliente
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let datosFacturacion: any;
       
       if (tipoCliente === "CREDITO_FISCAL") {
@@ -90,8 +91,8 @@ export default function NuevoProyectoPage() {
       setTimeout(() => {
         router.push("/admin/proyectos");
       }, 1500);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

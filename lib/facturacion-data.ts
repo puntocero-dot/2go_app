@@ -200,6 +200,7 @@ export async function getBillingDataset(input: {
     }
 
     // Preparar reglas de cobro por proyecto (incluyendo lógica de volumen)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reglasParaCalculoPorProyecto = new Map<string, any>();
 
     for (const proyecto of proyectos) {

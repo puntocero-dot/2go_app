@@ -282,6 +282,7 @@ export default async function ArmadorOrdenDetallePage({ params }: PageProps) {
                       className="relative aspect-square rounded-lg overflow-hidden border group"
                     >
                       {archivo.tipo === "FOTO" ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={archivo.url}
                           alt={`Evidencia ${index + 1}`}

@@ -35,6 +35,7 @@ export function sanitizeRichHTML(input: string | null | undefined): string {
  * Sanitiza un objeto recursivamente
  * Útil para sanitizar payloads completos de APIs
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function sanitizeObject<T extends Record<string, any>>(
   obj: T,
   options: {
@@ -44,6 +45,7 @@ export function sanitizeObject<T extends Record<string, any>>(
 ): T {
   const { mode = "strict", excludeKeys = [] } = options;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sanitizeValue = (value: any, key: string): any => {
     // No sanitizar keys excluidas
     if (excludeKeys.includes(key)) {
@@ -78,6 +80,7 @@ export function sanitizeObject<T extends Record<string, any>>(
     return value;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sanitized: any = {};
 
   for (const [key, value] of Object.entries(obj)) {

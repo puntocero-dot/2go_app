@@ -91,7 +91,7 @@ export function HorariosCargaMasiva({ armadores }: { armadores: Armador[] }) {
       } else {
         setResult(data);
       }
-    } catch (error) {
+    } catch {
       setResult({
         success: false,
         created: 0,

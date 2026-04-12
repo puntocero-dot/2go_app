@@ -19,11 +19,8 @@ import {
 } from "@/components/bi-dashboard/charts";
 import {
   BarChart3,
-  DollarSign,
   Calendar,
   Filter,
-  Download,
-  Activity,
   Clock
 } from "lucide-react";
 import Link from "next/link";
@@ -35,16 +32,16 @@ interface PageProps {
 }
 
 // Funciones para calcular métricas de BI
-async function getBIDashboardData(filters: any) {
-  const where: any = {};
-  
+async function getBIDashboardData(filters: Record<string, string>) {
+  const where: Record<string, unknown> = {};
+
   if (filters.proyectoId && filters.proyectoId !== "ALL") {
     where.proyectoId = filters.proyectoId;
   }
-  
+
   // Rango de fechas: considerar creación o completado dentro del rango
   if (filters.fechaInicio || filters.fechaFin) {
-    const rangoFechas: any = {};
+    const rangoFechas: Record<string, Date> = {};
     if (typeof filters.fechaInicio === "string" && filters.fechaInicio) {
       rangoFechas.gte = new Date(`${filters.fechaInicio}T00:00:00.000Z`);
     }
@@ -252,9 +249,9 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
 
   // Parse filtros
   const filters = {
-    proyectoId: currentSearchParams?.proyectoId || "ALL",
-    fechaInicio: currentSearchParams?.fechaInicio || "",
-    fechaFin: currentSearchParams?.fechaFin || ""
+    proyectoId: String(currentSearchParams?.proyectoId || "ALL"),
+    fechaInicio: String(currentSearchParams?.fechaInicio || ""),
+    fechaFin: String(currentSearchParams?.fechaFin || "")
   };
 
   // Obtener proyectos para filtros

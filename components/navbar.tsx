@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, DollarSign, Clock, Route, Building2, Timer, Calendar } from "lucide-react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, Clock, Route, Building2, Timer, Calendar } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
@@ -360,6 +360,7 @@ export function Navbar({ user }: NavbarProps) {
                   </div>
                 </div>
                 {user.fotoPerfil ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={user.fotoPerfil}
                     alt={user.nombre}

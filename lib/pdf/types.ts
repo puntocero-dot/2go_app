@@ -6,7 +6,9 @@ import { PDFDocument, PDFPage } from 'pdf-lib';
 export interface PDFContext {
   doc: PDFDocument;
   page: PDFPage;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   font: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fontBold: any;
   y: number;
   margin: number;

@@ -41,6 +41,7 @@ export function truncateText(
   text: string,
   maxWidth: number,
   fontSize: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   font: any
 ): string {
   const safeText = sanitizePdfText(text);

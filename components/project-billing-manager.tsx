@@ -97,9 +97,11 @@ function normalizeRule(source: ReglaCobro | null): ReglaCobro {
 function createPriorityInputState(source: ReglaCobro) {
   const entries: Record<string, string> = {};
   PRIORIDAD_FIELDS.forEach(({ key }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     entries[key] = String((source as any)[key] ?? 0);
   });
   TAMANO_FIELDS.forEach(({ key }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     entries[key] = String((source as any)[key] ?? 0);
   });
   return entries;

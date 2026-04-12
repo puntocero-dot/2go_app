@@ -19,6 +19,7 @@ export function FadeIn({
   style,
   ...props 
 }: FadeInProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const directionStyles = {
     up: 'translate-y-2',
     down: '-translate-y-2',

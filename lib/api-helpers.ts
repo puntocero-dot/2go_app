@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { checkRateLimit, getClientIp, RATE_LIMITS } from "./rate-limit";
+import { checkRateLimit, getClientIp } from "./rate-limit";
 
 /**
  * Wrapper para aplicar rate limiting a un endpoint
  */
 export function withRateLimit(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (request: NextRequest, context?: any) => Promise<Response>,
   config: { windowMs: number; maxRequests: number },
   getKey: (request: NextRequest) => string
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (request: NextRequest, context?: any) => {
     const key = getKey(request);
     const ip = getClientIp(request);
@@ -50,8 +52,10 @@ export function withRateLimit(
  */
 export function withValidation<T>(
   schema: z.ZodSchema<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (data: T, request: NextRequest, context?: any) => Promise<Response>
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (request: NextRequest, context?: any) => {
     try {
       const body = await request.json();
@@ -90,6 +94,7 @@ export function withRateLimitAndValidation<T>(
   schema: z.ZodSchema<T>,
   rateLimitConfig: { windowMs: number; maxRequests: number },
   getKey: (request: NextRequest) => string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (data: T, request: NextRequest, context?: any) => Promise<Response>
 ) {
   return withRateLimit(

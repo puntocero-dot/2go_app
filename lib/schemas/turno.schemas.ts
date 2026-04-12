@@ -2,6 +2,7 @@ import { z } from "zod";
 import { zodSanitizeText } from "../sanitize";
 
 // Validación de coordenadas GPS
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const coordenadasSchema = z.object({
   latitud: z.number().min(-90).max(90),
   longitud: z.number().min(-180).max(180),

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { isToday, isTomorrow, format, subHours } from "date-fns";
+import { isToday, isTomorrow, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toZonedTime, format as formatTz } from "date-fns-tz";
 import { Clock, User, MapPin, ChevronRight, Inbox } from "lucide-react";
@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn, formatearFecha } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { EstadoBadge } from "@/lib/orden-helpers";
 
 function getFechaBadge(fecha: Date) {

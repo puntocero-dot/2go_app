@@ -19,6 +19,7 @@ export async function generateBillingPdf(dataset: BillingDataset): Promise<Uint8
   // Colores corporativos
   const primaryColor = rgb(0.2, 0.4, 0.8); // Azul
   const secondaryColor = rgb(0.5, 0.3, 0.7); // Morado
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const grayColor = rgb(0.4, 0.4, 0.4);
   const lightGray = rgb(0.95, 0.95, 0.95);
 
@@ -33,6 +34,7 @@ export async function generateBillingPdf(dataset: BillingDataset): Promise<Uint8
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const centerText = (text: string, yPos: number, size = 12, bold = false, color = rgb(0, 0, 0)) => {
     const usedFont = bold ? fontBold : font;
     const textWidth = usedFont.widthOfTextAtSize(text, size);
@@ -40,6 +42,7 @@ export async function generateBillingPdf(dataset: BillingDataset): Promise<Uint8
     drawText(text, x, yPos, size, bold, color);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const drawBox = (x: number, yPos: number, boxWidth: number, boxHeight: number, fillColor: any) => {
     page.drawRectangle({
       x,

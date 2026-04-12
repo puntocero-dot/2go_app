@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
-import { Upload, Loader2, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, X, Image as ImageIcon } from "lucide-react";
 
 interface ImageUploadProps {
   currentImage?: string | null;
@@ -100,6 +99,7 @@ export function ImageUpload({
 
       {preview ? (
         <div className="relative inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={preview}
             alt="Preview"

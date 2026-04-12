@@ -100,6 +100,7 @@ export function ArmadorEstadoActions({
         setIsLoading(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isLoading, obtenerGps, ordenId, router],
   );
 

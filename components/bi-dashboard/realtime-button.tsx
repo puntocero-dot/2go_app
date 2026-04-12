@@ -31,6 +31,7 @@ export function RealTimeButton({ isLoading = false }: RealTimeButtonProps) {
     return () => {
       if (interval) clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   const handleToggleRealTime = () => {

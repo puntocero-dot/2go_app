@@ -15,13 +15,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
-import { 
-  Package, 
-  Plus, 
-  FileText, 
-  Users, 
+import {
+  Package,
+  Plus,
+  FileText,
+  Users,
   Building,
-  TrendingUp,
   Calendar
 } from "lucide-react";
 
@@ -35,6 +34,7 @@ function ProjectCard({
   title: string;
   value: string | number;
   description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any;
   color?: "primary" | "secondary" | "success" | "warning" | "info";
 }) {

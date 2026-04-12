@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
-export async function asignarArmadorAutomatico(orden: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function asignarArmadorAutomatico(_orden: any) {
   try {
     const armadores = await prisma.armador.findMany({
       where: {
@@ -30,6 +31,7 @@ export async function asignarArmadorAutomatico(orden: any) {
 
       score -= armador.ordenes.length * 10;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const anyArmador = armador as any;
       if (typeof anyArmador.calificacionPromedio === "number") {
         score += anyArmador.calificacionPromedio * 5;

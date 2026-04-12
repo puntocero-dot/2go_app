@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { X, Download } from "lucide-react";
 
 export function InstallPrompt() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -18,9 +20,11 @@ export function InstallPrompt() {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     window.addEventListener("beforeinstallprompt", handler as any);
 
     return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       window.removeEventListener("beforeinstallprompt", handler as any);
     };
   }, []);

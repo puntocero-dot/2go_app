@@ -16,8 +16,11 @@ export default function NuevaOrdenPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [proyectos, setProyectos] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [muebles, setMuebles] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [clientes, setClientes] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
@@ -181,8 +184,8 @@ export default function NuevaOrdenPage() {
 
       // Redirigir a la lista de órdenes con confirmación
       router.push("/admin/ordenes?created=1");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

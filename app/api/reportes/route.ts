@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const source = searchParams.get("source") || "ordenes";
-    const fields = searchParams.get("fields")?.split(",") || [];
+    const _fields = searchParams.get("fields")?.split(",") || [];
     const fechaInicio = searchParams.get("fechaInicio");
     const fechaFin = searchParams.get("fechaFin");
     const proyectoId = searchParams.get("proyectoId");

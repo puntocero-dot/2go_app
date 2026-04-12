@@ -26,7 +26,6 @@ import {
   startOfWeek,
   endOfWeek,
   isPast,
-  isFuture,
 } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
@@ -43,6 +42,7 @@ interface OrdenCalendario {
   prioridad: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface DiaOrdenes {
   fecha: Date;
   ordenes: OrdenCalendario[];
@@ -52,10 +52,11 @@ export function ArmadorCalendario() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [ordenes, setOrdenes] = useState<OrdenCalendario[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchOrdenes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth]);
 
   const fetchOrdenes = async () => {

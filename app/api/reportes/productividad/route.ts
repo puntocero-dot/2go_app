@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const fechaFin = searchParams.get("fechaFin");
 
     // Construir filtros
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {
       estado: {
         in: ["ACTIVO", "FINALIZADO"],
@@ -164,8 +165,10 @@ export async function GET(request: NextRequest) {
       acc[turno.armadorId].totalOrdenes += turno.ordenesCompletadas;
 
       return acc;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }, {} as Record<string, any>);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const resumenPorArmador = Object.values(porArmador).map((armador: any) => ({
       ...armador,
       promedioHorasPorTurno: (armador.totalHoras / armador.totalTurnos).toFixed(

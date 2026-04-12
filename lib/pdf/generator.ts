@@ -21,7 +21,7 @@ export async function generateBillingPdfV2(
   const {
     showLogo = true,
     showFooter = true,
-    showNotes = true,
+    showNotes: _showNotes = true,
     colorScheme = 'default',
   } = options;
 

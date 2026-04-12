@@ -82,6 +82,7 @@ async function invalidate(...keys: CacheKey[]): Promise<void> {
 /**
  * Invalida todas las claves que coincidan con un patrón
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function invalidatePattern(pattern: string): Promise<void> {
   if (!redis) return;
   

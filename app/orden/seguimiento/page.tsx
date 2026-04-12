@@ -41,8 +41,8 @@ export default function SeguimientoPage() {
       }
 
       router.push(`/seguimiento/${orden.id}`);
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error al buscar la orden.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error al buscar la orden.");
     } finally {
       setLoading(false);
     }

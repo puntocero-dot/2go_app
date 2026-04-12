@@ -1,3 +1,4 @@
+import React from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -5,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Badge } from "@/components/ui/badge";
-import { EmptyOrders, EmptyState } from "@/components/ui/empty-state";
+import { EmptyOrders } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -48,7 +49,7 @@ function StatsCard({
   title: string;
   value: string | number;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color?: "primary" | "secondary" | "success" | "warning" | "info";
 }) {
   const colorClasses = {
@@ -291,11 +292,6 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     fechaFinFilter ||
     searchText;
   const hasOrders = ordenesVisibles.length > 0;
-
-  const getEstadoBadge = (estado: string) => {
-    const estadoConfig = ESTADOS_ORDEN.find(e => e.value === estado);
-    return estadoConfig?.color || "bg-gray-100 text-gray-800";
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Navbar } from "@/components/navbar";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Label } from "@/components/ui/label";
 import { useRutaTurno } from "@/hooks/useRutaTurno";
 import { calcularDistanciaTotal, formatearDistancia, calcularDuracion } from "@/lib/geolocation";
@@ -16,10 +15,13 @@ const MapaRutaArmador = dynamic(() => import("@/components/MapaRutaArmador").the
 });
 
 export default function RutasPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [armadores, setArmadores] = useState<any[]>([]);
   const [armadorSeleccionado, setArmadorSeleccionado] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [turnos, setTurnos] = useState<any[]>([]);
   const [turnoSeleccionado, setTurnoSeleccionado] = useState<string | null>(null);
   const [loadingTurnos, setLoadingTurnos] = useState(false);
@@ -236,7 +238,7 @@ export default function RutasPage() {
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-4">Puntos de Ruta</h3>
                 <div className="max-h-64 overflow-y-auto space-y-2">
-                  {turno.rutaPuntos.map((punto: any, index: number) => (
+                  {turno.rutaPuntos.map((punto, index: number) => (
                     <div
                       key={punto.id}
                       className="flex items-center justify-between p-3 bg-muted/20 rounded-lg"

@@ -19,6 +19,7 @@ interface GeomapsConfig {
 
 export default function GeomapsConfigPage() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,6 +28,7 @@ export default function GeomapsConfigPage() {
   useEffect(() => {
     cargarUsuario();
     cargarConfiguracion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cargarUsuario = async () => {

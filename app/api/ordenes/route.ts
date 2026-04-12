@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
 import { withValidation } from "@/lib/api-helpers";
 import { CrearOrdenSchema } from "@/lib/schemas/orden.schemas";

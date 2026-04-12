@@ -78,8 +78,9 @@ const actualizarOrdenHandler = async (
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { estado, armadorId, comentario, autoAssignMeta, gps, receptor, csat } =
-      data as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dataAny = data as any;
+    const { estado, armadorId, comentario, autoAssignMeta, gps, receptor, csat } = dataAny;
 
     // Obtener orden actual
     const ordenActual = await prisma.orden.findUnique({
@@ -118,6 +119,7 @@ const actualizarOrdenHandler = async (
     }
 
     // Preparar datos de actualización
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     if (estado) {
@@ -163,6 +165,7 @@ const actualizarOrdenHandler = async (
 
         // Encuesta CSAT (opcional)
         if (csat && typeof csat === "object") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const puntajeRaw = (csat as any).puntaje;
           const puntajeNum =
             typeof puntajeRaw === "number"
@@ -177,8 +180,11 @@ const actualizarOrdenHandler = async (
           }
 
           const comentarioCsat =
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             typeof (csat as any).comentario === "string" &&
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (csat as any).comentario.trim().length > 0
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               ? (csat as any).comentario.trim()
               : undefined;
 

@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     const userId = searchParams.get("userId") || undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const action = searchParams.get("action") as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const resource = searchParams.get("resource") as any;
     const resourceId = searchParams.get("resourceId") || undefined;
     const status = searchParams.get("status") || undefined;

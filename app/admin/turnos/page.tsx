@@ -48,6 +48,7 @@ interface Resumen {
 
 export default function TurnosActivosPage() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [turnos, setTurnos] = useState<TurnoActivo[]>([]);
@@ -72,6 +73,7 @@ export default function TurnosActivosPage() {
     // Actualizar cada 30 segundos
     const interval = setInterval(cargarTurnos, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cargarArmadores = async () => {
@@ -81,6 +83,7 @@ export default function TurnosActivosPage() {
         const data = await response.json();
         const armadoresList = data.armadores || data || [];
         setArmadores(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           armadoresList.map((a: any) => ({
             id: a.id,
             nombre: a.usuario?.nombre || a.nombre || "Sin nombre",

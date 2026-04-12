@@ -11,7 +11,7 @@ import {
 } from "@/lib/schemas/usuario.schemas";
 
 // GET - Obtener perfil del usuario actual
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getSession();
 

@@ -180,6 +180,7 @@ export function buildFacturaFromDataset(dataset: BillingDataset): FacturaElectro
     departamento: "San Salvador",
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const datos = (dataset.proyecto.datosFacturacion ?? {}) as any;
 
   const cuerpoDocumento: ItemFactura[] = [];

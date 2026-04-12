@@ -7,7 +7,6 @@ import { Source, Layer } from 'react-map-gl';
 import NavigationControl from 'react-map-gl/dist/esm/components/navigation-control';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { MapPin, Navigation, Clock, Route, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 type RutaPunto = {

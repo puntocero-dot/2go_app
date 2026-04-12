@@ -342,11 +342,13 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
         setIsSubmitting(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [fetchUsuarios, formState]
   );
 
   const usuariosFiltrados = useMemo(() => usuarios, [usuarios]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapUsuarioFromApi = useCallback((raw: any): UsuarioItem | null => {
     if (!raw) return null;
     return {
@@ -442,6 +444,7 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
         setTogglingUserId(null);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [editingUser, mapUsuarioFromApi, updateUsuarioEnEstado]
   );
 
@@ -456,6 +459,7 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
       setEditFieldErrors({});
 
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const toValidate: any = {
           nombre: editingState.nombre,
           email: editingState.email,
@@ -575,6 +579,7 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
         setIsEditing(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [editingState, editingUser, mapUsuarioFromApi, updateUsuarioEnEstado]
   );
 

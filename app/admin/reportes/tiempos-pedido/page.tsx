@@ -1,3 +1,4 @@
+import React from "react";
 import { redirect } from "next/navigation";
 import type { EstadoOrden } from "@prisma/client";
 import Link from "next/link";
@@ -24,10 +25,8 @@ import {
   Users,
   Calendar,
   Filter,
-  TrendingUp,
   Timer,
   CheckCircle,
-  AlertTriangle,
   BarChart3
 } from "lucide-react";
 
@@ -97,7 +96,7 @@ function StatsCard({
   title: string;
   value: string | number;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color?: "primary" | "secondary" | "success" | "warning" | "info";
   subtitle?: string;
 }) {
@@ -310,6 +309,7 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
   }
 
   // Build where clause
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {};
   if (proyectoIdFilter !== "ALL") {
     where.proyectoId = proyectoIdFilter;

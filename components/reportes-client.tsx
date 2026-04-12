@@ -20,10 +20,6 @@ import {
   Table2,
   BarChart3,
   Layers,
-  GripVertical,
-  X,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -133,7 +129,7 @@ export function ReportesClient({ proyectos, armadores }: ReportesClientProps) {
   });
 
   // Expandir/colapsar grupos en pivot
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [_expandedGroups, _setExpandedGroups] = useState<Set<string>>(new Set());
 
   const availableFields = DATA_SOURCES[dataSource].fields;
 
@@ -142,6 +138,7 @@ export function ReportesClient({ proyectos, armadores }: ReportesClientProps) {
     setSelectedFields(availableFields.slice(0, 5).map((f) => f.key));
     setData([]);
     setPivotConfig({ rows: [], columns: [], values: [], aggregation: "sum" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSource]);
 
   const fetchData = async () => {

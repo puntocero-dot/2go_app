@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { addToast } from "@/components/ui/toaster";
 
 interface ProyectoEditFormProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   proyecto: any;
 }
 
@@ -15,6 +16,7 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   
   // Parsear datosFacturacion si viene como string JSON
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let datosFacturacion: any = {};
   try {
     if (typeof proyecto.datosFacturacion === 'string') {
@@ -54,6 +56,7 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
 
     try {
       // Construir datosFacturacion según el tipo de cliente
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const datosFacturacion: any = {
         contacto: {
           nombre: formData.contactoNombre,

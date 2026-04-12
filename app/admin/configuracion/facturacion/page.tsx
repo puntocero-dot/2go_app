@@ -26,10 +26,11 @@ interface ConfiguracionFacturacion {
 
 export default function ConfiguracionFacturacionPage() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [config, setConfig] = useState<ConfiguracionFacturacion | null>(null);
+  const [_config, setConfig] = useState<ConfiguracionFacturacion | null>(null);
 
   const [formData, setFormData] = useState({
     nombreEmpresa: "",
@@ -47,6 +48,7 @@ export default function ConfiguracionFacturacionPage() {
   useEffect(() => {
     cargarUsuario();
     cargarConfiguracion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cargarUsuario = async () => {
@@ -127,6 +129,7 @@ export default function ConfiguracionFacturacionPage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

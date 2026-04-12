@@ -2,21 +2,14 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
-import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { Label } from "@/components/ui/label";
 import MapaDashboard from "@/components/mapa-dashboard";
-import { MapPin, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import Link from "next/link";
 import { MapaFilters } from "@/components/mapa/mapa-filters";
 
 export const dynamic = 'force-dynamic';
 
-type Usuario = {
-  nombre: string;
-  email: string;
-  rol: "ADMIN" | "SUPERVISOR" | "ARMADOR";
-};
 
 async function getMapData(userId: string, rol: string) {
   // Si es SUPERVISOR, obtener solo sus proyectos asignados
@@ -133,7 +126,7 @@ export default async function MapaPage() {
         <MapaFilters proyectos={proyectos} />
 
         <MapaDashboard
-          armadores={armadores.map((a: any) => ({
+          armadores={armadores.map((a) => ({
             id: a.id,
             nombre: a.usuario.nombre,
             lat: a.ubicacionActualLat!,
@@ -141,8 +134,8 @@ export default async function MapaPage() {
             estado: a.estado,
           }))}
           ordenes={ordenes
-            .filter((o: any) => o.usuarioFinal.coordenadasLat && o.usuarioFinal.coordenadasLng)
-            .map((o: any) => ({
+            .filter((o) => o.usuarioFinal.coordenadasLat && o.usuarioFinal.coordenadasLng)
+            .map((o) => ({
               id: o.id,
               codigoReferenciaRetail: o.codigoReferenciaRetail,
               estado: o.estado,

@@ -194,6 +194,7 @@ export function ArmadorCerrarOrdenDialog({
         );
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const body: any = {
         estado: "ARMADO_COMPLETADO",
         receptor: {
@@ -274,6 +275,7 @@ export function ArmadorCerrarOrdenDialog({
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     csatComment,
     csatScore,
@@ -446,6 +448,7 @@ export function ArmadorCerrarOrdenDialog({
                     {files.map((file, index) => (
                       <div key={index} className="relative aspect-square group">
                         {file.type.startsWith("image/") && filePreviews[index] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={filePreviews[index]}
                             alt={`Preview ${index + 1}`}

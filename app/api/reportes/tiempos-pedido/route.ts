@@ -36,6 +36,7 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
       desde: searchParams.get('desde') || undefined,
       hasta: searchParams.get('hasta') || undefined,
       proyectoId: searchParams.get('proyectoId') || undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       estado: (searchParams.get('estado') || undefined) as any,
       armadorId: searchParams.get('armadorId') || undefined,
     };
@@ -55,6 +56,7 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
     const desdeDate = desde ? new Date(desde) : undefined;
     const hastaDate = hasta ? new Date(hasta) : undefined;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {
       ...(proyectoId && { proyectoId }),
       ...(estado && { estado: estado as EstadoOrden }),
@@ -103,6 +105,7 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
 
     const resultados: ResultadoReporte[] = [];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const orden of ordenes as any[]) {
       // Ordenar los registros de estado por timestamp
       const registrosOrdenados = [...orden.registrosEstado].sort(
@@ -185,6 +188,7 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
 };
 
 // Función auxiliar para formatear segundos a un string legible
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatSeconds(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);

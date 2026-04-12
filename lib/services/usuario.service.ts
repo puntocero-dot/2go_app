@@ -353,6 +353,7 @@ export class UsuarioService extends BaseService {
   /**
    * Obtener armadores activos
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async obtenerArmadoresActivos(): Promise<any[]> {
     try {
       const armadores = await this.prisma.armador.findMany({
@@ -382,6 +383,7 @@ export class UsuarioService extends BaseService {
         },
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return armadores.map((a: any) => ({
         id: a.id,
         usuarioId: a.usuario.id,

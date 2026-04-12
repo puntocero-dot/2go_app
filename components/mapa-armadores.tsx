@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Map, { Source, Layer } from 'react-map-gl';
 import Marker from 'react-map-gl/dist/esm/components/marker';
 import Popup from 'react-map-gl/dist/esm/components/popup';
@@ -8,7 +8,6 @@ import NavigationControl from 'react-map-gl/dist/esm/components/navigation-contr
 import FullscreenControl from 'react-map-gl/dist/esm/components/fullscreen-control';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type Armador = {
   id: string;
@@ -44,7 +43,9 @@ type RutaPoint = {
 type RutaAnalisis = {
   totalDistanciaKm: number;
   maxSpeedKmh: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   paradasLargas: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eventosVelocidad: any[];
   estuvoEnCliente: boolean;
 };
@@ -55,6 +56,7 @@ type RutaInfo = {
 };
 
 export default function MapaArmadores({ armadores, ordenes }: Props) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [popupInfo, setPopupInfo] = useState<any>(null);
   const [rutaByArmador, setRutaByArmador] = useState<Record<string, RutaInfo>>({});
   const [selectedRouteArmadorId, setSelectedRouteArmadorId] = useState<string | null>(null);
@@ -76,6 +78,7 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
         if (!data?.armadores) return;
 
         const map: Record<string, RutaInfo> = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for (const a of data.armadores as any[]) {
           map[a.id] = {
             ruta: Array.isArray(a.ruta) ? a.ruta : [],
@@ -133,6 +136,7 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
     <div className="relative h-[600px] w-full">
       <Map
         {...viewState}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onMove={(evt: any) => setViewState(evt.viewState)}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={mapboxToken}
@@ -173,6 +177,7 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
             key={`armador-${armador.id}`}
             longitude={armador.lng}
             latitude={armador.lat}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onClick={(e: any) => {
               e.originalEvent.stopPropagation();
               setPopupInfo({ tipo: 'armador', data: armador });
@@ -202,6 +207,7 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
             key={`orden-${orden.id}`}
             longitude={orden.lng}
             latitude={orden.lat}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onClick={(e: any) => {
               e.originalEvent.stopPropagation();
               setPopupInfo({ tipo: 'orden', data: orden });

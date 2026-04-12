@@ -201,7 +201,7 @@ export class TurnoService extends BaseService {
    */
   async finalizarTurno(params: FinalizarTurnoParams): Promise<Turno> {
     try {
-      const { turnoId, ubicacionFinal, observaciones } = params;
+      const { turnoId, ubicacionFinal, observaciones: _observaciones } = params;
 
       const turno = await this.prisma.turno.findUnique({
         where: { id: turnoId },
@@ -221,7 +221,7 @@ export class TurnoService extends BaseService {
       }
 
       // Calcular estadísticas
-      const estadisticas = this.calcularEstadisticas(turno.rutaPuntos);
+      const _estadisticas = this.calcularEstadisticas(turno.rutaPuntos);
 
       // Finalizar con transacción
       const turnoFinalizado = await this.prisma.$transaction(async (tx: TransactionClient) => {
@@ -327,6 +327,7 @@ export class TurnoService extends BaseService {
     try {
       const { armadorId, limite = 20, desde, hasta, estado } = params;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const where: any = { armadorId };
 
       if (estado) {
@@ -359,6 +360,7 @@ export class TurnoService extends BaseService {
   /**
    * Obtener todos los turnos activos (para dashboard admin)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async obtenerTurnosActivos(): Promise<any[]> {
     try {
       const turnos = await this.prisma.turno.findMany({
@@ -390,7 +392,9 @@ export class TurnoService extends BaseService {
       });
 
       return turnos
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((t: any) => t.armador)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((turno: any) => ({
           id: turno.id,
           armadorId: turno.armadorId,

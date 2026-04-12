@@ -30,6 +30,7 @@ type Props = {
   ordenes: Orden[];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ESTADOS_OPCIONES = [
   { value: 'ALL', label: 'Todos los estados' },
   { value: 'ARMADO_INICIADO', label: 'En armado' },
@@ -38,10 +39,10 @@ const ESTADOS_OPCIONES = [
 ];
 
 export default function MapaDashboard({ armadores, ordenes }: Props) {
-  const [proyectoId, setProyectoId] = useState<string>('ALL');
-  const [estado, setEstado] = useState<string>('ALL');
+  const [proyectoId, _setProyectoId] = useState<string>('ALL');
+  const [estado, _setEstado] = useState<string>('ALL');
 
-  const proyectos = useMemo(
+  const _proyectos = useMemo(
     () => {
       const map = new Map<string, string>();
       ordenes.forEach((o) => {

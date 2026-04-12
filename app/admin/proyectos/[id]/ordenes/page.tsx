@@ -18,7 +18,6 @@ import {
   ArrowLeft,
   Calendar,
   Package,
-  User,
   BadgeCheck,
   Clock,
   XCircle

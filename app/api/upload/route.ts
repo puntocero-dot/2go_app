@@ -57,6 +57,7 @@ const uploadHandler = async (request: NextRequest) => {
     const buffer = Buffer.from(bytes);
 
     // Subir a Cloudinary
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await new Promise<any>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {

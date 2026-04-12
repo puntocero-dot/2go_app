@@ -97,6 +97,7 @@ const crearReglaHandler = async (
         } : undefined,
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
           create: penalizaciones.map((p) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             tipo: p.tipo as any,
             precio: p.precio ?? p.monto ?? 0,
           })),
@@ -207,6 +208,7 @@ const actualizarReglaHandler = async (
         } : undefined,
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
           create: penalizaciones.map((p) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             tipo: p.tipo as any,
             precio: p.precio ?? p.monto ?? 0,
           })),
@@ -238,6 +240,7 @@ const actualizarReglaHandler = async (
         } : undefined,
         penalizaciones: penalizaciones && penalizaciones.length > 0 ? {
           create: penalizaciones.map((p) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             tipo: p.tipo as any,
             precio: p.precio ?? p.monto ?? 0,
           })),

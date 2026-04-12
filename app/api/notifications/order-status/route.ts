@@ -80,7 +80,7 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { tipoNotificacion, mensajeAdicional } = body;
+    const { tipoNotificacion } = body;
 
     // Obtener datos de la orden
     const orden = await prisma.orden.findUnique({

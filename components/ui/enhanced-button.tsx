@@ -49,6 +49,7 @@ const EnhancedButton = React.forwardRef<HTMLButtonElement, EnhancedButtonProps>(
     const Comp = asChild ? Slot : "button";
     
     // Filtrar props que no son atributos del DOM
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { gradient, ...domProps } = props as any;
     
     return (

@@ -44,6 +44,7 @@ export async function GET(
     }
 
     // Construir filtros
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = { armadorId };
     if (estado) {
       where.estado = estado;

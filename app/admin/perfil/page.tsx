@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
@@ -11,7 +10,7 @@ import { Save, Loader2, User, Lock, Image } from "lucide-react";
 import { addToast } from "@/components/ui/toaster";
 
 export default function PerfilPage() {
-  const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,7 +74,7 @@ export default function PerfilPage() {
     setSaving(true);
 
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         nombre: formData.nombre,
         telefono: formData.telefono,
         // El backend espera string URL o "" para fotoPerfil, no null
@@ -121,7 +120,7 @@ export default function PerfilPage() {
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -195,6 +194,7 @@ export default function PerfilPage() {
               {/* Foto de Perfil */}
               <div className="border rounded-lg p-6 bg-background">
                 <h2 className="text-xl font-semibold mb-4 text-foreground flex items-center">
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image className="w-5 h-5 mr-2" />
                   Foto de Perfil
                 </h2>

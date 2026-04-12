@@ -6,7 +6,7 @@ import { getAllFlags, getEnabledFlagsForUser } from '@/lib/feature-flags';
  * GET /api/feature-flags
  * Obtener flags habilitados para el usuario actual
  */
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     const session = await getSession();
 

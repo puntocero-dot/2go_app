@@ -16,7 +16,9 @@ const COLORS = {
 interface PDFContext {
   doc: PDFDocument;
   page: PDFPage;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   font: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fontBold: any;
   y: number;
   margin: number;
@@ -232,9 +234,11 @@ function drawCompanyInfo(ctx: PDFContext, dataset: BillingDataset) {
   });
 
   y = startY - 30;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const datosFacturacion = dataset.proyecto.datosFacturacion as any;
-  
+
   // Función para truncar texto si es muy largo, sanitizando antes
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const truncateText = (text: string, maxWidth: number, fontSize: number, font: any) => {
     const safeText = sanitizePdfText(text);
     const textWidth = font.widthOfTextAtSize(safeText, fontSize);
@@ -529,8 +533,9 @@ function drawSummary(ctx: PDFContext, dataset: BillingDataset) {
   ctx.y = y - 30;
 }
 
-function drawFooter(ctx: PDFContext, dataset: BillingDataset) {
-  const { page, font, fontBold, margin, width, height } = ctx;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function drawFooter(ctx: PDFContext, _dataset: BillingDataset) {
+  const { page, font, fontBold, margin, width, height: _height } = ctx;
 
   // Línea decorativa
   page.drawLine({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Search, Filter, RefreshCw } from "lucide-react";
+import { Download, Filter, RefreshCw } from "lucide-react";
 
 interface AuditLog {
   id: string;
@@ -11,8 +11,8 @@ interface AuditLog {
   action: string;
   resource: string;
   resourceId: string | null;
-  changes: any;
-  metadata: any;
+  changes: Record<string, unknown>;
+  metadata: Record<string, unknown>;
   ip: string | null;
   userAgent: string | null;
   status: string;
@@ -67,6 +67,7 @@ export default function AuditoriaPage() {
 
   useEffect(() => {
     fetchLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offset]);
 
   const handleExport = async () => {

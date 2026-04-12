@@ -88,7 +88,7 @@ export async function destroySession() {
 
 export async function hashPassword(password: string): Promise<string> {
   const mod = await import("bcryptjs");
-  const bcrypt = (mod as any).default || mod;
+  const bcrypt = (mod as { default?: typeof import("bcryptjs") }).default ?? (mod as typeof import("bcryptjs"));
   return await bcrypt.hash(password, 10);
 }
 
@@ -97,6 +97,6 @@ export async function verifyPassword(
   hashedPassword: string
 ): Promise<boolean> {
   const mod = await import("bcryptjs");
-  const bcrypt = (mod as any).default || mod;
+  const bcrypt = (mod as { default?: typeof import("bcryptjs") }).default ?? (mod as typeof import("bcryptjs"));
   return await bcrypt.compare(password, hashedPassword);
 }

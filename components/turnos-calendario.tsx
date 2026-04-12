@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -15,7 +15,6 @@ import {
   Plus,
   Calendar,
   Users,
-  Upload,
 } from "lucide-react";
 import { HorariosCargaMasiva } from "@/components/horarios-carga-masiva";
 import {
@@ -28,13 +27,11 @@ import {
   addMonths,
   subMonths,
   isToday,
-  getDay,
   startOfWeek,
   endOfWeek,
   addWeeks,
   subWeeks,
   isWeekend,
-  isSameWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -79,7 +76,7 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [horariosProgramados, setHorariosProgramados] = useState<HorarioProgramado[]>([]);
   const [turnosReales, setTurnosReales] = useState<TurnoReal[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedArmador, setSelectedArmador] = useState("ALL");
 
@@ -95,6 +92,7 @@ export function TurnosCalendario({ armadores }: TurnosCalendarioProps) {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth]);
 
   const fetchData = async () => {

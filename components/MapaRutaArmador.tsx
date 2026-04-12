@@ -61,6 +61,7 @@ const routeBorderLayerStyle: LayerProps = {
 };
 
 // Estilo para el punto animado
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const animatedPointLayerStyle: LayerProps = {
   id: "animated-point",
   type: "circle",

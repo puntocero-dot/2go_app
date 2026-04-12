@@ -1,3 +1,4 @@
+import React from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -30,8 +31,6 @@ import {
   FileText,
   Calendar,
   Filter,
-  Download,
-  Mail,
   TrendingUp,
   Package,
   MapPin,
@@ -54,6 +53,7 @@ type ConceptSummary = {
   prioridad: number;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function summarizeConceptos(conceptos: BillingConcept[]): ConceptSummary {
   const summary: ConceptSummary = {
     armado: 0,
@@ -97,7 +97,7 @@ function BillingCard({
   title: string;
   amount: number;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color?: "primary" | "secondary" | "success" | "warning" | "info";
   trend?: number;
 }) {
@@ -376,7 +376,8 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {billingData?.ordenes?.map((item: any, index: number) => (
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {billingData?.ordenes?.map((item: any) => (
                         <TableRow 
                           key={item.id}
                           className="hover:bg-muted/30 transition-colors cursor-pointer"

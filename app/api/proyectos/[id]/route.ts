@@ -243,7 +243,7 @@ const actualizarProyectoHandler = async (
       reglaCobro,
     } = data;
 
-    const proyecto = await prisma.proyecto.update({
+    const _proyecto = await prisma.proyecto.update({
       where: { id },
       data: {
         ...(nombreComercial !== undefined && { nombreComercial }),
@@ -268,6 +268,7 @@ const actualizarProyectoHandler = async (
     });
 
     if (reglaCobro) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await upsertReglaCobro(id, reglaCobro as any);
     }
 

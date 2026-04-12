@@ -104,6 +104,7 @@ export async function getAlternativeRoutes(
     }
 
     return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       routes: data.routes.map((route: any) => ({
         geometry: route.geometry,
         distance: route.distance,

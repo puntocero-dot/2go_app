@@ -18,6 +18,7 @@ const biExportHandler = async (req: NextRequest) => {
       proyectoId: searchParams.get('proyectoId') || undefined,
       fechaInicio: searchParams.get('fechaInicio') || undefined,
       fechaFin: searchParams.get('fechaFin') || undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       format: (searchParams.get('format') || undefined) as any,
     };
 
@@ -40,11 +41,13 @@ const biExportHandler = async (req: NextRequest) => {
 
     const format = formatRaw || 'csv';
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {};
     if (proyectoId && proyectoId !== 'ALL') {
       where.proyectoId = proyectoId;
     }
     if (fechaInicio || fechaFin) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rangoFechas: any = {};
       if (fechaInicio) {
         rangoFechas.gte = new Date(`${fechaInicio}T06:00:00.000Z`);

@@ -77,6 +77,7 @@ export function drawCompanyInfo(
   });
 
   y = startY - 30;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const datosFacturacion = dataset.proyecto.datosFacturacion as any;
 
   const receptorInfo: string[] = [];

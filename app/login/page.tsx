@@ -50,7 +50,7 @@ export default function LoginPage() {
         default:
           router.push("/");
       }
-    } catch (error) {
+    } catch {
       setError("Error de conexión. Intenta de nuevo.");
       setLoading(false);
     }

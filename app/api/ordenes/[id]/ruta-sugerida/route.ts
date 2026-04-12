@@ -7,7 +7,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // GET - Obtener ruta sugerida desde ubicación actual hasta destino
 export async function GET(
   request: NextRequest,
-  context: RouteContext
+  _context: RouteContext
 ) {
   try {
     const session = await getSession();

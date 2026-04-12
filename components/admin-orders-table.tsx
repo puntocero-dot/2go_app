@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, memo, useCallback } from "react";
+import { useState, useTransition, memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
@@ -225,7 +225,7 @@ const TableRowEnhanced = memo(function TableRowEnhanced({
 export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
   const [processing, setProcessing] = useState(false);
 
   const allVisibleIds = ordenes.map((o) => o.id);
@@ -284,6 +284,7 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
                 heuristica: suggestionData.heuristica || null,
                 score: suggestionData.sugerencia.score,
                 etaEstimadoMin: suggestionData.sugerencia.etaEstimadoMin,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 alternativas: (suggestionData.alternativas || []).map((alt: any) => ({
                   armadorId: alt.armadorId,
                   score: alt.score,

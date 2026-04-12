@@ -75,9 +75,12 @@ export interface LogAuditParams {
   resource: AuditResource;
   resourceId?: string;
   changes?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     before?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     after?: any;
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   request?: NextRequest;
   status?: "SUCCESS" | "FAILED" | "BLOCKED";
@@ -148,7 +151,9 @@ export async function logAuditFromSession(params: {
   action: AuditAction;
   resource: AuditResource;
   resourceId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   changes?: { before?: any; after?: any };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   request?: NextRequest;
   status?: "SUCCESS" | "FAILED" | "BLOCKED";
@@ -190,6 +195,7 @@ export async function getAuditLogs(filters: {
     offset = 0,
   } = filters;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {};
 
   if (userId) where.userId = userId;
@@ -226,6 +232,7 @@ export async function getAuditLogs(filters: {
 /**
  * Helper para exportar logs a CSV
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exportAuditLogsToCSV(logs: any[]): string {
   const headers = [
     "ID",
