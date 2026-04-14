@@ -235,11 +235,6 @@ const actualizarProyectoHandler = async (
       tipoCliente,
       datosFacturacion,
       activo,
-      estado,
-      descripcion,
-      contactoEmail,
-      contactoTelefono,
-      direccion,
       reglaCobro,
     } = data;
 
@@ -250,11 +245,6 @@ const actualizarProyectoHandler = async (
         ...(tipoCliente !== undefined && { tipoCliente }),
         ...(datosFacturacion !== undefined && { datosFacturacion }),
         ...(typeof activo === "boolean" && { activo }),
-        ...(estado !== undefined && { estado }),
-        ...(descripcion !== undefined && { descripcion }),
-        ...(contactoEmail !== undefined && { contactoEmail }),
-        ...(contactoTelefono !== undefined && { contactoTelefono }),
-        ...(direccion !== undefined && { direccion }),
       },
       include: {
         reglaCobro: {

@@ -33,10 +33,10 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
     nombreComercial: proyecto.nombreComercial || "",
     activo: proyecto.activo ?? true,
     tipoCliente: proyecto.tipoCliente || "CONSUMIDOR_FINAL",
-    contactoEmail: proyecto.contactoEmail || "",
-    contactoTelefono: proyecto.contactoTelefono || "",
-    direccion: proyecto.direccion || "",
-    descripcion: proyecto.descripcion || "",
+    contactoEmail: proyecto.contactoEmail || datosFacturacion?.contactoEmail || "",
+    contactoTelefono: proyecto.contactoTelefono || datosFacturacion?.contactoTelefono || "",
+    direccion: proyecto.direccion || datosFacturacion?.direccion || "",
+    descripcion: proyecto.descripcion || datosFacturacion?.descripcion || "",
     // Campos fiscales
     nit: datosFacturacion?.nit || "",
     dui: datosFacturacion?.dui || "",
@@ -81,11 +81,13 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
         nombreComercial: formData.nombreComercial,
         activo: formData.activo,
         tipoCliente: formData.tipoCliente,
-        contactoEmail: formData.contactoEmail,
-        contactoTelefono: formData.contactoTelefono,
-        direccion: formData.direccion,
-        descripcion: formData.descripcion,
-        datosFacturacion,
+        datosFacturacion: {
+          ...datosFacturacion,
+          contactoEmail: formData.contactoEmail,
+          contactoTelefono: formData.contactoTelefono,
+          direccion: formData.direccion,
+          descripcion: formData.descripcion,
+        },
       };
 
       const response = await fetch(`/api/proyectos/${proyecto.id}`, {

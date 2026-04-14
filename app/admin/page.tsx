@@ -33,6 +33,7 @@ import {
   Filter,
   X
 } from "lucide-react";
+import { DashboardRefresher } from "@/components/dashboard-refresher";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -484,6 +485,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
           </EnhancedCard>
         </section>
       </main>
+      <DashboardRefresher />
     </div>
   );
   } catch (error) {
