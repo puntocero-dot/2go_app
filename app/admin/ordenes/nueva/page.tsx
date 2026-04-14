@@ -64,7 +64,7 @@ export default function NuevaOrdenPage() {
     try {
       const response = await fetch("/api/proyectos");
       const data = await response.json();
-      setProyectos(data.proyectos || []);
+      setProyectos(data.data || data.proyectos || []);
     } catch (err) {
       console.error("Error cargando proyectos:", err);
     }
@@ -74,7 +74,7 @@ export default function NuevaOrdenPage() {
     try {
       const response = await fetch(`/api/muebles?proyectoId=${proyectoId}`);
       const data = await response.json();
-      setMuebles(data.muebles || []);
+      setMuebles(data.data || data.muebles || []);
     } catch (err) {
       console.error("Error cargando muebles:", err);
     }
@@ -84,7 +84,7 @@ export default function NuevaOrdenPage() {
     try {
       const response = await fetch(`/api/clientes?proyectoId=${proyectoId}`);
       const data = await response.json();
-      setClientes(data.clientes || []);
+      setClientes(data.data || data.clientes || []);
     } catch (err) {
       console.error("Error cargando clientes:", err);
     }
