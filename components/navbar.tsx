@@ -205,53 +205,81 @@ export function Navbar({ user }: NavbarProps) {
                       WorkForce
                     </EnhancedButton>
                     {workforceDesktopOpen && (
-                      <div className="absolute left-0 mt-2 w-56 rounded-md bg-negro-azabache border border-gray-700 shadow-lg z-40 py-2">
-                        <Link href="/admin/reportes/bi-dashboard" onClick={() => setWorkforceDesktopOpen(false)}>
-                          <button className={cn(
-                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
-                            isActive("/admin/reportes/bi-dashboard") && "bg-white/10 text-white"
-                          )}>
-                            <BarChart3 className="w-4 h-4" /> BI Dashboard
-                          </button>
-                        </Link>
+                      <div className="absolute left-0 mt-2 w-64 rounded-lg bg-negro-azabache/95 backdrop-blur-md border border-gray-700/50 shadow-xl z-40 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {/* Operaciones section */}
+                        <div className="px-3 pt-2 pb-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Operaciones</span>
+                        </div>
                         <Link href="/admin/turnos" onClick={() => setWorkforceDesktopOpen(false)}>
                           <button className={cn(
-                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
                             isActive("/admin/turnos") && "bg-white/10 text-white"
                           )}>
-                            <Timer className="w-4 h-4" /> Turnos
+                            <div className="w-7 h-7 rounded-md bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                              <Timer className="w-3.5 h-3.5 text-blue-400" />
+                            </div>
+                            <span>Turnos</span>
                           </button>
                         </Link>
                         <Link href="/admin/mapa" onClick={() => setWorkforceDesktopOpen(false)}>
                           <button className={cn(
-                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
                             isActive("/admin/mapa") && "bg-white/10 text-white"
                           )}>
-                            <Map className="w-4 h-4" /> Mapa
-                          </button>
-                        </Link>
-                        <Link href="/admin/reportes/tiempos-pedido" onClick={() => setWorkforceDesktopOpen(false)}>
-                          <button className={cn(
-                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
-                            isActive("/admin/reportes/tiempos-pedido") && "bg-white/10 text-white"
-                          )}>
-                            <Clock className="w-4 h-4" /> Tiempos
+                            <div className="w-7 h-7 rounded-md bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                              <Map className="w-3.5 h-3.5 text-emerald-400" />
+                            </div>
+                            <span>Mapa</span>
                           </button>
                         </Link>
                         <Link href="/admin/rutas" onClick={() => setWorkforceDesktopOpen(false)}>
                           <button className={cn(
-                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
                             isActive("/admin/rutas") && "bg-white/10 text-white"
                           )}>
-                            <Route className="w-4 h-4" /> Rutas
+                            <div className="w-7 h-7 rounded-md bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                              <Route className="w-3.5 h-3.5 text-orange-400" />
+                            </div>
+                            <span>Rutas</span>
+                          </button>
+                        </Link>
+
+                        {/* Analytics section */}
+                        <div className="border-t border-gray-700/50 mt-1 mb-1" />
+                        <div className="px-3 pt-2 pb-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Analytics</span>
+                        </div>
+                        <Link href="/admin/reportes/bi-dashboard" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
+                            isActive("/admin/reportes/bi-dashboard") && "bg-white/10 text-white"
+                          )}>
+                            <div className="w-7 h-7 rounded-md bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                              <BarChart3 className="w-3.5 h-3.5 text-purple-400" />
+                            </div>
+                            <span>BI Dashboard</span>
+                          </button>
+                        </Link>
+                        <Link href="/admin/reportes/tiempos-pedido" onClick={() => setWorkforceDesktopOpen(false)}>
+                          <button className={cn(
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
+                            isActive("/admin/reportes/tiempos-pedido") && "bg-white/10 text-white"
+                          )}>
+                            <div className="w-7 h-7 rounded-md bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                              <Clock className="w-3.5 h-3.5 text-amber-400" />
+                            </div>
+                            <span>Tiempos</span>
                           </button>
                         </Link>
                         <Link href="/admin/reportes" onClick={() => setWorkforceDesktopOpen(false)}>
                           <button className={cn(
-                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2",
+                            "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
                             isActive("/admin/reportes") && !isActive("/admin/reportes/bi-dashboard") && !isActive("/admin/reportes/tiempos-pedido") && "bg-white/10 text-white"
                           )}>
-                            <FileText className="w-4 h-4" /> Reportes Pivot
+                            <div className="w-7 h-7 rounded-md bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                            </div>
+                            <span>Reportes</span>
                           </button>
                         </Link>
                       </div>
@@ -513,77 +541,96 @@ export function Navbar({ user }: NavbarProps) {
                       <span className="text-xs">{workforceOpen ? "−" : "+"}</span>
                     </EnhancedButton>
                     {workforceOpen && (
-                      <div className="ml-4 mt-1 space-y-1">
-                        <Link href="/admin/reportes/bi-dashboard" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
-                          <EnhancedButton 
-                            variant="ghost" 
-                            className={cn(
-                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                              isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
-                            )}
-                          >
-                            <BarChart3 className="w-4 h-4 mr-2" />
-                            BI Dashboard
-                          </EnhancedButton>
-                        </Link>
+                      <div className="ml-4 mt-1 space-y-0.5">
+                        <div className="px-3 py-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Operaciones</span>
+                        </div>
                         <Link href="/admin/turnos" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
-                          <EnhancedButton 
-                            variant="ghost" 
+                          <EnhancedButton
+                            variant="ghost"
                             className={cn(
                               "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
                               isActive("/admin/turnos") && "text-white bg-white/10"
                             )}
                           >
-                            <Timer className="w-4 h-4 mr-2" />
+                            <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <Timer className="w-3.5 h-3.5 text-blue-400" />
+                            </div>
                             Turnos
                           </EnhancedButton>
                         </Link>
                         <Link href="/admin/mapa" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
-                          <EnhancedButton 
-                            variant="ghost" 
+                          <EnhancedButton
+                            variant="ghost"
                             className={cn(
                               "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
                               isActive("/admin/mapa") && "text-white bg-white/10"
                             )}
                           >
-                            <Map className="w-4 h-4 mr-2" />
+                            <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <Map className="w-3.5 h-3.5 text-emerald-400" />
+                            </div>
                             Mapa
                           </EnhancedButton>
                         </Link>
-                        <Link href="/admin/reportes/tiempos-pedido" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
-                          <EnhancedButton 
-                            variant="ghost" 
-                            className={cn(
-                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
-                              isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
-                            )}
-                          >
-                            <Clock className="w-4 h-4 mr-2" />
-                            Tiempos
-                          </EnhancedButton>
-                        </Link>
                         <Link href="/admin/rutas" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
-                          <EnhancedButton 
-                            variant="ghost" 
+                          <EnhancedButton
+                            variant="ghost"
                             className={cn(
                               "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
                               isActive("/admin/rutas") && "text-white bg-white/10"
                             )}
                           >
-                            <Route className="w-4 h-4 mr-2" />
+                            <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <Route className="w-3.5 h-3.5 text-orange-400" />
+                            </div>
                             Rutas
                           </EnhancedButton>
                         </Link>
+                        <div className="border-t border-gray-700/50 my-1 mx-3" />
+                        <div className="px-3 py-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Analytics</span>
+                        </div>
+                        <Link href="/admin/reportes/bi-dashboard" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton
+                            variant="ghost"
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/reportes/bi-dashboard") && "text-white bg-white/10"
+                            )}
+                          >
+                            <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <BarChart3 className="w-3.5 h-3.5 text-purple-400" />
+                            </div>
+                            BI Dashboard
+                          </EnhancedButton>
+                        </Link>
+                        <Link href="/admin/reportes/tiempos-pedido" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
+                          <EnhancedButton
+                            variant="ghost"
+                            className={cn(
+                              "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                              isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
+                            )}
+                          >
+                            <div className="w-6 h-6 rounded bg-amber-500/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <Clock className="w-3.5 h-3.5 text-amber-400" />
+                            </div>
+                            Tiempos
+                          </EnhancedButton>
+                        </Link>
                         <Link href="/admin/reportes" className="block" onClick={() => { setMobileMenuOpen(false); setWorkforceOpen(false); }}>
-                          <EnhancedButton 
-                            variant="ghost" 
+                          <EnhancedButton
+                            variant="ghost"
                             className={cn(
                               "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
                               isActive("/admin/reportes") && !isActive("/admin/reportes/bi-dashboard") && !isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
                             )}
                           >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Reportes Pivot
+                            <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                            </div>
+                            Reportes
                           </EnhancedButton>
                         </Link>
                       </div>

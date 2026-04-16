@@ -239,11 +239,15 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     ];
   }
 
+  const pageParam = parseInt(typeof currentSearchParams?.page === "string" ? currentSearchParams.page : "1") || 1;
+  const pageSize = 30;
+
   const [
     proyectos,
     ordenesVisibles,
     stats,
     totalFacturado,
+    totalCount,
   ] = await Promise.all([
     prisma.proyecto.findMany({
       where: proyectoIdsPermitidos ? { id: { in: proyectoIdsPermitidos } } : undefined,
@@ -252,7 +256,8 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     }),
     prisma.orden.findMany({
       where: ordenWhere,
-      take: 100,
+      take: pageSize,
+      skip: (pageParam - 1) * pageSize,
       orderBy: { fechaCreacion: "desc" },
       include: {
         proyecto: { select: { nombreComercial: true } },
@@ -270,6 +275,7 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
       where: ordenWhere,
       _sum: { cobroFinal: true },
     }),
+    prisma.orden.count({ where: ordenWhere }),
   ]);
 
   const statsMap = stats.reduce((acc, stat) => {
@@ -503,7 +509,7 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
             {hasOrders && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">
-                  Mostrando últimas 100 órdenes
+                  Mostrando {ordenesVisibles.length} de {totalCount} órdenes
                 </span>
               </div>
             )}
@@ -523,6 +529,9 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
                   estado: orden.estado,
                   fechaCreacion: orden.fechaCreacion.toISOString(),
                 }))}
+                currentPage={pageParam}
+                totalPages={Math.ceil(totalCount / pageSize)}
+                totalCount={totalCount}
               />
             </EnhancedCard>
           ) : (

@@ -2,10 +2,25 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import dynamic from "next/dynamic";
 import { Badge } from "@/components/ui/badge";
 import { formatearFecha } from "@/lib/utils";
 import { useEventStream } from "@/hooks/useEventStream";
+import { TrackingBottomSheet } from "@/components/tracking-bottom-sheet";
+import {
+  Package,
+  MapPin,
+  Clock,
+  User,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+
+// Dynamic import to avoid SSR issues with Mapbox GL
+const TrackingMap = dynamic(
+  () => import("@/components/tracking-map").then((mod) => ({ default: mod.TrackingMap })),
+  { ssr: false, loading: () => <div className="w-full h-full bg-slate-800 animate-pulse" /> }
+);
 
 interface RegistroEstado {
   estadoCambiadoA: string;
@@ -55,6 +70,37 @@ interface Orden {
   registrosEstado: RegistroEstado[];
 }
 
+const estadoTexto: Record<string, string> = {
+  SIN_ASIGNAR: "Buscando armador",
+  ASIGNADO: "Asignado",
+  EN_RUTA: "En camino",
+  ARMADO_INICIADO: "Armando",
+  ARMADO_FINALIZADO: "Finalizado",
+  ARMADO_COMPLETADO: "Completado",
+};
+
+const estadoColor: Record<string, string> = {
+  SIN_ASIGNAR: "bg-gray-500",
+  ASIGNADO: "bg-blue-500",
+  EN_RUTA: "bg-amber-500",
+  ARMADO_INICIADO: "bg-purple-500",
+  ARMADO_FINALIZADO: "bg-indigo-500",
+  ARMADO_COMPLETADO: "bg-emerald-500",
+};
+
+const estadoEmoji: Record<string, string> = {
+  SIN_ASIGNAR: "⏳",
+  ASIGNADO: "✅",
+  EN_RUTA: "🚗",
+  ARMADO_INICIADO: "🔧",
+  ARMADO_FINALIZADO: "✨",
+  ARMADO_COMPLETADO: "🎉",
+};
+
+// Simplified 4-step stepper for client
+const stepperStates = ["ASIGNADO", "EN_RUTA", "ARMADO_INICIADO", "ARMADO_COMPLETADO"];
+const stepperLabels = ["Asignado", "En camino", "Armando", "Listo"];
+
 export default function SeguimientoPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -65,6 +111,8 @@ export default function SeguimientoPage() {
   const [eta, setEta] = useState<EtaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [armadorPos, setArmadorPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const fetchOrden = useCallback(async () => {
     if (!token) return;
@@ -77,6 +125,14 @@ export default function SeguimientoPage() {
       const data = await res.json();
       setOrden(data.orden);
       setEta(data.eta || null);
+
+      // Set initial armador position from ETA data
+      if (data.eta?.armadorUbicacion) {
+        setArmadorPos({
+          lat: data.eta.armadorUbicacion.lat,
+          lng: data.eta.armadorUbicacion.lng,
+        });
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al cargar la orden");
     } finally {
@@ -84,13 +140,11 @@ export default function SeguimientoPage() {
     }
   }, [ordenId, token]);
 
-  // SSE para actualizaciones en tiempo real de estado
-  const { estado: estadoSSE } = useEventStream(ordenId, token, {
+  // SSE for real-time estado + ubicacion updates
+  const { estado: estadoSSE, ubicacion: ubicacionSSE } = useEventStream(ordenId, token, {
     enabled: !!token,
-    onEstadoChange: () => {
-      // Cuando cambia el estado via SSE, refrescar datos completos
-      fetchOrden();
-    },
+    onEstadoChange: () => fetchOrden(),
+    onUbicacionChange: (pos) => setArmadorPos(pos),
   });
 
   useEffect(() => {
@@ -99,385 +153,348 @@ export default function SeguimientoPage() {
       setLoading(false);
       return;
     }
-
     fetchOrden();
-
-    // Polling de respaldo cada 60s (era 30s) — SSE cubre los cambios en tiempo real
     const interval = setInterval(fetchOrden, 60000);
     return () => clearInterval(interval);
   }, [fetchOrden, token]);
 
-  // Sincronizar estado SSE con el estado de la orden local
+  // Sync SSE estado
   useEffect(() => {
     if (estadoSSE && orden && estadoSSE !== orden.estado) {
-      setOrden((prev) => prev ? { ...prev, estado: estadoSSE } : prev);
+      setOrden((prev) => (prev ? { ...prev, estado: estadoSSE } : prev));
     }
   }, [estadoSSE, orden]);
 
+  // Update armador position from SSE
+  useEffect(() => {
+    if (ubicacionSSE) {
+      setArmadorPos(ubicacionSSE);
+    }
+  }, [ubicacionSSE]);
+
+  // --- LOADING STATE ---
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center">
+      <div className="h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando informacion...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-white/20 border-t-white mx-auto" />
+          <p className="mt-4 text-white/60 text-sm">Cargando seguimiento...</p>
         </div>
       </div>
     );
   }
 
+  // --- ERROR STATE ---
   if (error || !orden) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle className="text-red-600">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              {error || "No se pudo cargar la informacion de la orden."}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="h-screen bg-slate-900 flex items-center justify-center px-4">
+        <div className="bg-slate-800 rounded-2xl p-8 max-w-sm w-full text-center">
+          <div className="w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-white font-semibold text-lg mb-2">Error</h2>
+          <p className="text-white/60 text-sm">
+            {error || "No se pudo cargar la informacion de la orden."}
+          </p>
+        </div>
       </div>
     );
   }
 
-  const estadoColor: Record<string, string> = {
-    SIN_ASIGNAR: "bg-gray-500",
-    ASIGNADO: "bg-blue-500",
-    EN_RUTA: "bg-yellow-500",
-    ARMADO_INICIADO: "bg-orange-500",
-    ARMADO_FINALIZADO: "bg-purple-500",
-    ARMADO_COMPLETADO: "bg-green-500",
-  };
+  // Compute stepper index
+  let stepperEstado = orden.estado;
+  if (stepperEstado === "ARMADO_FINALIZADO") stepperEstado = "ARMADO_COMPLETADO";
+  const currentStepIndex = stepperStates.indexOf(stepperEstado);
 
-  const estadoTexto: Record<string, string> = {
-    SIN_ASIGNAR: "Sin Asignar",
-    ASIGNADO: "Asignado",
-    EN_RUTA: "En Ruta",
-    ARMADO_INICIADO: "Armado Iniciado",
-    ARMADO_FINALIZADO: "Armado Finalizado",
-    ARMADO_COMPLETADO: "Completado",
-  };
+  // Determine if map should show (EN_RUTA with position data)
+  const showMap = (orden.estado === "EN_RUTA" || orden.estado === "ASIGNADO") && armadorPos;
 
-  const estadoEmoji: Record<string, string> = {
-    SIN_ASIGNAR: "⏳",
-    ASIGNADO: "✅",
-    EN_RUTA: "🚗",
-    ARMADO_INICIADO: "🔧",
-    ARMADO_FINALIZADO: "✨",
-    ARMADO_COMPLETADO: "🎉",
-  };
-
-  const estadosOrdenados: string[] = [
-    "SIN_ASIGNAR",
-    "ASIGNADO",
-    "EN_RUTA",
-    "ARMADO_INICIADO",
-    "ARMADO_FINALIZADO",
-    "ARMADO_COMPLETADO",
-  ];
-
-  const currentIndex = estadosOrdenados.indexOf(orden.estado);
+  // Destination position (from ETA data or fallback)
+  // Note: the API doesn't expose client coords to the public page for privacy.
+  // We use null and let the map center on armador.
+  const destinationPos = null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-cyan-600 mb-2">
-            Armados 2Go
-          </h1>
-          <p className="text-gray-600">Seguimiento de tu Orden</p>
+    <div className="h-screen flex flex-col bg-slate-900 overflow-hidden">
+      {/* ===== MAP SECTION ===== */}
+      <div className={`relative ${showMap ? "flex-1" : "h-32 bg-gradient-to-b from-slate-800 to-slate-900"}`}>
+        {showMap ? (
+          <TrackingMap
+            armadorPosition={armadorPos}
+            destinationPosition={destinationPos}
+            ordenId={ordenId}
+            token={token || ""}
+            className="w-full h-full"
+          />
+        ) : (
+          /* Static header when no map */
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center">
+              <span className="text-3xl">{estadoEmoji[orden.estado]}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Header overlay */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <Package className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-white font-semibold text-sm">Armados 2Go</span>
+          </div>
+          <Badge className={`${estadoColor[orden.estado]} text-white text-xs px-3 py-1`}>
+            {estadoTexto[orden.estado]}
+          </Badge>
         </div>
 
-        {/* Estado Actual */}
-        <Card className="border-2 border-cyan-200">
-          <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white">
-            <CardTitle className="text-2xl">
-              {estadoEmoji[orden.estado]} Estado Actual
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Badge
-                className={`${estadoColor[orden.estado]} text-white text-lg px-6 py-2`}
-              >
-                {estadoTexto[orden.estado]}
-              </Badge>
-              <p className="text-gray-600 mt-4">
-                Orden: <strong>{orden.codigoReferenciaRetail}</strong>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ETA - Tiempo Estimado de Llegada */}
-        {eta && (
-          <Card className={`border-2 ${eta.disponible ? "border-emerald-200 bg-emerald-50/50" : "border-gray-200"}`}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                🕐 {eta.disponible ? "Llegada Estimada" : "Estado del Servicio"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {eta.disponible ? (
-                <div className="text-center space-y-3">
-                  {/* Tiempo estimado grande */}
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
-                    {eta.minutosMin && eta.minutosMax ? (
-                      <p className="text-4xl font-bold text-emerald-600">
-                        {eta.minutosMin}–{eta.minutosMax} min
-                      </p>
-                    ) : (
-                      <p className="text-4xl font-bold text-emerald-600">
-                        ~{eta.minutosEstimados} min
-                      </p>
-                    )}
-                    {eta.horaLlegadaEstimada && (
-                      <p className="text-lg text-gray-600 mt-1">
-                        Hora estimada:{" "}
-                        <strong>
-                          {new Date(eta.horaLlegadaEstimada).toLocaleTimeString("es-SV", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </strong>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Detalles adicionales */}
-                  <div className="flex justify-center gap-6 text-sm text-gray-500">
-                    {eta.distanciaKm && (
-                      <span className="flex items-center gap-1">
-                        📍 {eta.distanciaKm} km
-                      </span>
-                    )}
-                    {eta.duracionTexto && (
-                      <span className="flex items-center gap-1">
-                        ⏱️ {eta.duracionTexto}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Ubicacion del armador */}
-                  {eta.armadorUbicacion && (
-                    <p className="text-xs text-gray-400 mt-2">
-                      Ubicacion del armador actualizada {eta.armadorUbicacion.actualizadoHace}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-600 text-lg">{eta.mensaje}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Live indicator */}
+        {showMap && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full">
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            En vivo
+          </div>
         )}
+      </div>
 
-        {/* Progreso por estados */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Progreso de tu servicio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-              {estadosOrdenados.map((estado, index) => {
-                const isCompleted = currentIndex > index;
-                const isCurrent = currentIndex === index;
-
-                return (
-                  <div
-                    key={estado}
-                    className="flex-1 min-w-[72px] text-center"
-                  >
-                    <div className="flex items-center">
-                      <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-semibold ${
-                          isCurrent
-                            ? "border-cyan-600 bg-cyan-600 text-white"
-                            : isCompleted
-                            ? "border-emerald-500 bg-emerald-500 text-white"
-                            : "border-gray-300 bg-white text-gray-500"
-                        }`}
-                      >
-                        {estadoEmoji[estado]}
-                      </div>
-                      {index < estadosOrdenados.length - 1 && (
-                        <div
-                          className={`mx-1 h-0.5 flex-1 ${
-                            currentIndex > index ? "bg-emerald-500" : "bg-gray-200"
-                          }`}
-                        />
-                      )}
-                    </div>
-                    <div className="mt-2 text-[11px] font-medium text-gray-600 uppercase tracking-tight">
-                      {estadoTexto[estado]}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Informacion del Mueble */}
-        <Card>
-          <CardHeader>
-            <CardTitle>📦 Informacion del Mueble</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p>
-                <strong>Mueble:</strong> {orden.mueble.nombre}
+      {/* ===== BOTTOM SHEET ===== */}
+      <TrackingBottomSheet>
+        {/* --- ETA HERO --- */}
+        <div className="mb-5">
+          {eta?.disponible ? (
+            <div className="text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-medium mb-1">
+                Llegada estimada
               </p>
-              {orden.mueble.descripcion && (
-                <p>
-                  <strong>Descripcion:</strong> {orden.mueble.descripcion}
+              <div className="flex items-baseline justify-center gap-1">
+                {eta.minutosMin && eta.minutosMax ? (
+                  <span className="text-5xl font-bold text-gray-900 dark:text-white tabular-nums">
+                    {eta.minutosMin}–{eta.minutosMax}
+                  </span>
+                ) : (
+                  <span className="text-5xl font-bold text-gray-900 dark:text-white tabular-nums">
+                    ~{eta.minutosEstimados}
+                  </span>
+                )}
+                <span className="text-xl text-gray-500 dark:text-gray-400 font-medium">min</span>
+              </div>
+              {eta.horaLlegadaEstimada && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Hora aprox:{" "}
+                  <span className="font-semibold text-gray-700 dark:text-gray-200">
+                    {new Date(eta.horaLlegadaEstimada).toLocaleTimeString("es-SV", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </p>
+              )}
+
+              {/* Distance + Duration chips */}
+              <div className="flex items-center justify-center gap-3 mt-3">
+                {eta.distanciaKm && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-full">
+                    <MapPin className="w-3 h-3" />
+                    {eta.distanciaKm} km
+                  </span>
+                )}
+                {eta.duracionTexto && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-full">
+                    <Clock className="w-3 h-3" />
+                    {eta.duracionTexto}
+                  </span>
+                )}
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-4 w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${Math.max(10, Math.min(90, 100 - (eta.minutosEstimados || 30)))}%`,
+                  }}
+                />
+              </div>
+
+              {eta.armadorUbicacion && (
+                <p className="text-[11px] text-gray-400 mt-2">
+                  GPS actualizado {eta.armadorUbicacion.actualizadoHace}
                 </p>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Informacion del Cliente */}
-        <Card>
-          <CardHeader>
-            <CardTitle>👤 Informacion de Entrega</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p>
-                <strong>Cliente:</strong> {orden.usuarioFinal.nombre}
-              </p>
-              <p>
-                <strong>Municipio:</strong> {orden.usuarioFinal.municipio}
+          ) : (
+            <div className="text-center py-2">
+              <span className="text-3xl mb-2 block">{estadoEmoji[orden.estado]}</span>
+              <p className="text-gray-600 dark:text-gray-300 text-base font-medium">
+                {eta?.mensaje || estadoTexto[orden.estado]}
               </p>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
-        {/* Armador Asignado */}
+        {/* --- STEPPER --- */}
+        <div className="mb-5">
+          <div className="flex items-center gap-1">
+            {stepperStates.map((state, index) => {
+              const isCompleted = currentStepIndex > index;
+              const isCurrent = currentStepIndex === index;
+
+              return (
+                <div key={state} className="flex-1 flex flex-col items-center">
+                  <div className="flex items-center w-full">
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${
+                        isCurrent
+                          ? "bg-blue-500 text-white ring-4 ring-blue-500/20"
+                          : isCompleted
+                          ? "bg-emerald-500 text-white"
+                          : "bg-gray-200 dark:bg-slate-700 text-gray-400"
+                      }`}
+                    >
+                      {isCompleted ? "✓" : index + 1}
+                    </div>
+                    {index < stepperStates.length - 1 && (
+                      <div
+                        className={`flex-1 h-0.5 mx-1 transition-colors ${
+                          currentStepIndex > index
+                            ? "bg-emerald-500"
+                            : "bg-gray-200 dark:bg-slate-700"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <span
+                    className={`text-[10px] mt-1.5 font-medium ${
+                      isCurrent
+                        ? "text-blue-600 dark:text-blue-400"
+                        : isCompleted
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {stepperLabels[index]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* --- ARMADOR INFO --- */}
         {orden.armador && (
-          <Card>
-            <CardHeader>
-              <CardTitle>🔧 Armador Asignado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p>
-                  <strong>Nombre:</strong> {orden.armador.usuario.nombre}
+          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-800 rounded-xl mb-4">
+            <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-blue-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                {orden.armador.usuario.nombre}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Tu armador asignado</p>
+            </div>
+          </div>
+        )}
+
+        {/* --- ORDER INFO --- */}
+        <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-xl mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {orden.mueble.nombre}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Orden #{orden.codigoReferenciaRetail}
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">{orden.usuarioFinal.municipio}</p>
+            </div>
+          </div>
+        </div>
 
-        {/* Historial de Estados */}
-        <Card>
-          <CardHeader>
-            <CardTitle>📋 Historial de Estados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {orden.registrosEstado.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">
-                  No hay cambios de estado registrados aun.
-                </p>
-              ) : (
+        {/* --- DETAILS TOGGLE --- */}
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="w-full flex items-center justify-between py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700"
+        >
+          <span>Detalles y timeline</span>
+          {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+
+        {showDetails && (
+          <div className="space-y-4 mt-2">
+            {/* Timeline */}
+            <div className="space-y-3">
+              {orden.registrosEstado.length > 0 &&
                 orden.registrosEstado.map((registro, index) => (
-                  <div
-                    key={index}
-                    className="border-l-4 border-cyan-500 pl-4 py-2"
-                  >
-                    <div>
-                      <p className="font-semibold">
-                        {estadoEmoji[registro.estadoCambiadoA]}{" "}
-                        {estadoTexto[registro.estadoCambiadoA]}
+                  <div key={index} className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs">{estadoEmoji[registro.estadoCambiadoA]}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {estadoTexto[registro.estadoCambiadoA] || registro.estadoCambiadoA}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        {formatearFecha(registro.timestamp)}
-                      </p>
+                      <p className="text-xs text-gray-500">{formatearFecha(registro.timestamp)}</p>
                       {registro.comentario && (
-                        <p className="text-sm text-gray-700 mt-1">
-                          💬 {registro.comentario}
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                          {registro.comentario}
                         </p>
                       )}
                     </div>
                   </div>
-                ))
-              )}
+                ))}
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Timeline de Fechas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>⏱️ Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+            {/* Dates */}
+            <div className="border-t dark:border-slate-700 pt-3 space-y-2">
               {orden.fechaSolicitadaCliente && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Fecha solicitada:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Fecha solicitada</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
                     {formatearFecha(orden.fechaSolicitadaCliente)}
                   </span>
                 </div>
               )}
               {orden.fechaAsignacion && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Asignacion:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Asignacion</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
                     {formatearFecha(orden.fechaAsignacion)}
                   </span>
                 </div>
               )}
               {orden.fechaRuta && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">En Ruta:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">En ruta</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
                     {formatearFecha(orden.fechaRuta)}
                   </span>
                 </div>
               )}
-              {orden.fechaInicioArmado && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Armado Iniciado:</span>
-                  <span className="font-semibold">
-                    {formatearFecha(orden.fechaInicioArmado)}
-                  </span>
-                </div>
-              )}
-              {orden.fechaFinArmado && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Armado Finalizado:</span>
-                  <span className="font-semibold">
-                    {formatearFecha(orden.fechaFinArmado)}
-                  </span>
-                </div>
-              )}
               {orden.fechaCompletado && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Completado:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Completado</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
                     {formatearFecha(orden.fechaCompletado)}
                   </span>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
 
         {/* Footer */}
-        <div className="text-center text-gray-500 text-sm mt-8">
-          <p>Esta pagina recibe actualizaciones en tiempo real</p>
-          <p className="mt-2">&copy; 2024 Armados 2Go - Todos los derechos reservados</p>
+        <div className="mt-6 text-center">
+          <p className="text-[11px] text-gray-400">
+            {showMap ? "Actualizaciones en tiempo real" : "Se actualiza automaticamente"} &bull; &copy;{" "}
+            {new Date().getFullYear()} Armados 2Go
+          </p>
         </div>
-      </div>
+      </TrackingBottomSheet>
     </div>
   );
 }

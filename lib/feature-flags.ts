@@ -70,13 +70,13 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     description: 'Asignación inteligente basada en datos históricos de rendimiento',
   },
   PREDICTIVE_ETA: {
-    enabled: process.env.NEXT_PUBLIC_FF_PREDICTIVE_ETA === 'true',
-    rolloutPercentage: 0,
+    enabled: process.env.NEXT_PUBLIC_FF_PREDICTIVE_ETA !== 'false',
+    rolloutPercentage: 100,
     description: 'ETA corregido con factores históricos por municipio',
   },
   REALTIME_SSE: {
-    enabled: process.env.NEXT_PUBLIC_FF_REALTIME_SSE === 'true',
-    rolloutPercentage: 0,
+    enabled: process.env.NEXT_PUBLIC_FF_REALTIME_SSE !== 'false',
+    rolloutPercentage: 100,
     description: 'Actualizaciones en tiempo real via Server-Sent Events',
   },
   PUSH_NOTIFICATIONS: {

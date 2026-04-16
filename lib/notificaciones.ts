@@ -19,28 +19,49 @@ export async function enviarEmailOrdenAsignada(data: {
       from: process.env.EMAIL_FROM || "noreply@armados2go.com",
       to: data.armadorEmail,
       subject: `Nueva Orden Asignada: ${data.ordenCodigo}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0891b2;">¡Nueva Orden Asignada!</h2>
-          
-          <p>Hola <strong>${data.armadorNombre}</strong>,</p>
-          
-          <p>Se te ha asignado una nueva orden de armado:</p>
-          
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Código:</strong> ${data.ordenCodigo}</p>
-            <p><strong>Cliente:</strong> ${data.clienteNombre}</p>
-            <p><strong>Dirección:</strong> ${data.clienteDireccion}</p>
-            <p><strong>Municipio:</strong> ${data.clienteMunicipio}</p>
-          </div>
-          
-          <p>Por favor, revisa los detalles completos en la aplicación.</p>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-            Armados 2Go - Sistema de Gestión de Armado de Muebles
-          </p>
-        </div>
-      `,
+      html: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, Helvetica, sans-serif;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f3f4f6;">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <tr>
+            <td style="background-color: #0891b2; padding: 28px 32px; text-align: center;">
+              <table cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="width: 36px; height: 36px; background-color: rgba(255,255,255,0.2); border-radius: 8px; text-align: center; line-height: 36px; font-size: 20px; color: #ffffff;">&#128230;</td>
+                  <td style="padding-left: 12px; font-size: 22px; font-weight: 700; color: #ffffff; font-family: Arial, sans-serif;">Armados 2Go</td>
+                </tr>
+              </table>
+              <p style="margin: 12px 0 0; font-size: 16px; color: rgba(255,255,255,0.9); font-family: Arial, sans-serif;">Nueva Orden Asignada</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 28px 32px; font-family: Arial, sans-serif;">
+              <p style="margin: 0 0 12px; font-size: 16px; color: #374151;">Hola <strong>${data.armadorNombre}</strong>,</p>
+              <p style="margin: 0 0 20px; font-size: 14px; color: #6b7280;">Se te ha asignado una nueva orden de armado:</p>
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                <tr><td style="padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #6b7280; width: 100px;">C&oacute;digo</td><td style="padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #111827; font-weight: 600;">${data.ordenCodigo}</td></tr>
+                <tr><td style="padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #6b7280;">Cliente</td><td style="padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #111827;">${data.clienteNombre}</td></tr>
+                <tr><td style="padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #6b7280;">Direcci&oacute;n</td><td style="padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #111827;">${data.clienteDireccion}</td></tr>
+                <tr><td style="padding: 14px 20px; font-size: 13px; color: #6b7280;">Municipio</td><td style="padding: 14px 20px; font-size: 14px; color: #111827;">${data.clienteMunicipio}</td></tr>
+              </table>
+              <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280;">Por favor, revisa los detalles completos en la aplicaci&oacute;n.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 32px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af; font-family: Arial, sans-serif;">&copy; ${new Date().getFullYear()} Armados 2Go</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
     });
 
     return { success: true };
@@ -57,6 +78,8 @@ export async function enviarEmailCambioEstado(data: {
   estadoAnterior: string;
   estadoNuevo: string;
   linkSeguimiento: string;
+  etaMinutos?: number | null;
+  etaHoraLlegada?: string | null;
 }) {
   try {
     const estadosAmigables: Record<string, string> = {
@@ -68,7 +91,6 @@ export async function enviarEmailCambioEstado(data: {
       ARMADO_COMPLETADO: "Armado Completado",
     };
 
-    // Para el correo usamos solo los 4 estados clave para el cliente final.
     const estadosStepper = [
       "ASIGNADO",
       "EN_RUTA",
@@ -76,7 +98,13 @@ export async function enviarEmailCambioEstado(data: {
       "ARMADO_COMPLETADO",
     ];
 
-    // Mapear estados internos a los pasos del stepper
+    const stepLabels = [
+      "Asignado",
+      "En Camino",
+      "Armado",
+      "Completado",
+    ];
+
     let estadoParaStepper = data.estadoNuevo;
     if (estadoParaStepper === "ARMADO_FINALIZADO") {
       estadoParaStepper = "ARMADO_COMPLETADO";
@@ -84,92 +112,183 @@ export async function enviarEmailCambioEstado(data: {
 
     const currentIndex = estadosStepper.indexOf(estadoParaStepper);
 
-    const stepsHtml = estadosStepper
-      .map((estado, index) => {
+    // Build table-based stepper (compatible with all email clients)
+    const stepperCells = estadosStepper
+      .map((_, index) => {
         const isCompleted = currentIndex > index;
         const isActive = currentIndex === index;
 
-        const circleColor = isActive
-          ? "#0891b2" // cian activo
-          : isCompleted
-          ? "#10b981" // verde completado
-          : "#e5e7eb"; // gris pendiente
+        const circleBg = isActive ? "#0891b2" : isCompleted ? "#10b981" : "#e5e7eb";
+        const circleText = isActive || isCompleted ? "#ffffff" : "#9ca3af";
+        const labelColor = isActive ? "#0891b2" : isCompleted ? "#10b981" : "#9ca3af";
+        const labelWeight = isActive ? "bold" : "normal";
 
-        const circleTextColor = isActive || isCompleted ? "#ffffff" : "#6b7280";
-        const labelColor = isActive ? "#111827" : "#6b7280";
-
-        const lineColor =
-          index < estadosStepper.length - 1
-            ? currentIndex >= index + 1
-              ? "#10b981"
-              : "#e5e7eb"
-            : "transparent";
-
-        const label =
-          estadosAmigables[estado] || estado.replace(/_/g, " ");
-
-        return `
-          <div style="flex: 1; min-width: 0; text-align: center;">
-            <div style="display: flex; align-items: center; justify-content: center;">
-              <div style="width: 32px; height: 32px; border-radius: 9999px; background: ${circleColor}; color: ${circleTextColor}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;">
-                ${index + 1}
-              </div>
-              ${
-                index < estadosStepper.length - 1
-                  ? `<div style="flex: 1; height: 2px; margin-left: 8px; background: ${lineColor};"></div>`
-                  : ""
-              }
-            </div>
-            <div style="margin-top: 8px; font-size: 11px; color: ${labelColor}; line-height: 1.4;">
-              ${label}
-            </div>
-          </div>
-        `;
+        return `<td style="text-align: center; vertical-align: top; padding: 0 4px; width: 25%;">
+          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 auto;">
+            <tr>
+              <td style="width: 36px; height: 36px; border-radius: 50%; background-color: ${circleBg}; color: ${circleText}; text-align: center; font-size: 14px; font-weight: 700; line-height: 36px; font-family: Arial, sans-serif;">
+                ${isCompleted ? "&#10003;" : index + 1}
+              </td>
+            </tr>
+          </table>
+          <p style="margin: 8px 0 0; font-size: 11px; color: ${labelColor}; font-weight: ${labelWeight}; line-height: 1.3; font-family: Arial, sans-serif;">
+            ${stepLabels[index]}
+          </p>
+        </td>`;
       })
       .join("");
+
+    // Connector lines between steps
+    const connectorCells = estadosStepper
+      .map((_, index) => {
+        if (index >= estadosStepper.length - 1) return "";
+        const lineColor = currentIndex > index ? "#10b981" : "#e5e7eb";
+        // Each step takes ~25% width. We use colspan tricks via padding.
+        return "";
+      })
+      .join("");
+    void connectorCells; // lines drawn inside step cells via borders
+
+    // ETA section for EN_RUTA
+    const etaSection = data.estadoNuevo === "EN_RUTA" && data.etaMinutos
+      ? `<tr>
+          <td style="padding: 0 32px 24px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #ecfdf5; border-radius: 8px; border: 1px solid #d1fae5;">
+              <tr>
+                <td style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+                  <p style="margin: 0 0 4px; font-size: 12px; color: #065f46; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Llegada estimada</p>
+                  <p style="margin: 0; font-size: 32px; font-weight: 700; color: #059669;">~${data.etaMinutos} min</p>
+                  ${data.etaHoraLlegada ? `<p style="margin: 6px 0 0; font-size: 14px; color: #047857;">Hora aprox: ${data.etaHoraLlegada}</p>` : ""}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`
+      : "";
 
     await resend.emails.send({
       from: process.env.EMAIL_FROM || "noreply@armados2go.com",
       to: data.clienteEmail,
-      subject: `Actualización de tu Orden ${data.ordenCodigo}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0891b2;">Actualización de tu Orden</h2>
-          
-          <p>Hola <strong>${data.clienteNombre}</strong>,</p>
-          
-          <p>Tu orden <strong>${data.ordenCodigo}</strong> ha sido actualizada:</p>
-          
-          <div style="margin: 24px 0 12px; font-size: 14px; color: #374151;">
-            Estados de tu servicio:
-          </div>
+      subject: `${data.estadoNuevo === "ARMADO_COMPLETADO" ? "&#127881; " : ""}Actualización de tu Orden ${data.ordenCodigo}`,
+      html: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, Helvetica, sans-serif;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f3f4f6;">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
-          <div style="display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; padding-bottom: 4px;">
-            ${stepsHtml}
-          </div>
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #0891b2; padding: 28px 32px; text-align: center;">
+              <table cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="width: 36px; height: 36px; background-color: rgba(255,255,255,0.2); border-radius: 8px; text-align: center; line-height: 36px; font-size: 20px; color: #ffffff;">
+                    &#128230;
+                  </td>
+                  <td style="padding-left: 12px; font-size: 22px; font-weight: 700; color: #ffffff; font-family: Arial, sans-serif;">
+                    Armados 2Go
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 12px 0 0; font-size: 16px; color: rgba(255,255,255,0.9); font-family: Arial, sans-serif;">
+                Actualización de tu orden
+              </p>
+            </td>
+          </tr>
 
-          <div style="background: #f3f4f6; padding: 16px 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Estado anterior:</strong> ${
-              estadosAmigables[data.estadoAnterior] || data.estadoAnterior
-            }</p>
-            <p><strong>Estado actual:</strong> <span style="color: #0891b2; font-weight: bold;">${
-              estadosAmigables[data.estadoNuevo] || data.estadoNuevo
-            }</span></p>
-          </div>
-          
-          <p>
-            <a href="${data.linkSeguimiento}" 
-               style="display: inline-block; background: #0891b2; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 6px; margin-top: 10px;">
-              Ver Estado de mi Orden
-            </a>
-          </p>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-            Armados 2Go - Sistema de Gestión de Armado de Muebles
-          </p>
-        </div>
-      `,
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 28px 32px 16px; font-family: Arial, sans-serif;">
+              <p style="margin: 0; font-size: 16px; color: #374151;">
+                Hola <strong style="color: #111827;">${data.clienteNombre}</strong>,
+              </p>
+              <p style="margin: 8px 0 0; font-size: 14px; color: #6b7280;">
+                Tu orden <strong style="color: #111827;">${data.ordenCodigo}</strong> ha sido actualizada.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Status Change Box -->
+          <tr>
+            <td style="padding: 0 32px 20px;">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f0fdfa; border-radius: 8px; border: 1px solid #ccfbf1;">
+                <tr>
+                  <td style="padding: 16px 20px; font-family: Arial, sans-serif;">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                      <tr>
+                        <td style="font-size: 13px; color: #6b7280; padding-bottom: 6px;">Estado anterior:</td>
+                        <td style="font-size: 13px; color: #374151; font-weight: 600; text-align: right; padding-bottom: 6px;">${estadosAmigables[data.estadoAnterior] || data.estadoAnterior}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="border-top: 1px solid #e5e7eb; padding-top: 6px;"></td>
+                      </tr>
+                      <tr>
+                        <td style="font-size: 13px; color: #6b7280; padding-top: 2px;">Estado actual:</td>
+                        <td style="font-size: 14px; color: #0891b2; font-weight: 700; text-align: right; padding-top: 2px;">${estadosAmigables[data.estadoNuevo] || data.estadoNuevo}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ETA Section (only for EN_RUTA) -->
+          ${etaSection}
+
+          <!-- Stepper -->
+          <tr>
+            <td style="padding: 0 32px 8px;">
+              <p style="margin: 0; font-size: 13px; color: #6b7280; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+                Progreso del servicio
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 24px 28px;">
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  ${stepperCells}
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 32px 28px; text-align: center;">
+              <table cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="background-color: #0891b2; border-radius: 8px;">
+                    <a href="${data.linkSeguimiento}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; font-family: Arial, sans-serif; letter-spacing: 0.3px;">
+                      Ver Estado en Tiempo Real &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 32px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af; font-family: Arial, sans-serif;">
+                &copy; ${new Date().getFullYear()} Armados 2Go &mdash; Sistema de Gesti&oacute;n de Armado de Muebles
+              </p>
+              <p style="margin: 6px 0 0; font-size: 11px; color: #d1d5db; font-family: Arial, sans-serif;">
+                Este correo fue enviado autom&aacute;ticamente. No respondas a este mensaje.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
     });
 
     return { success: true };

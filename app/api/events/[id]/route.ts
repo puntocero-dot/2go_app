@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const orden = await prisma.orden.findUnique({
     where: { id },
-    select: { linkMagicoToken: true, estado: true },
+    select: { linkMagicoToken: true, estado: true, armadorId: true },
   });
 
   if (!orden || orden.linkMagicoToken !== token) {
@@ -43,6 +43,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   let lastEstado = orden.estado;
+  let lastLat: number | null = null;
+  let lastLng: number | null = null;
   const startTime = Date.now();
 
   const stream = new ReadableStream({
@@ -77,6 +79,36 @@ export async function GET(request: NextRequest, context: RouteContext) {
           }
         } catch {
           // Continuar polling aunque Redis falle
+        }
+
+        // Check armador position
+        if (orden.armadorId) {
+          try {
+            const armador = await prisma.armador.findUnique({
+              where: { id: orden.armadorId },
+              select: {
+                ubicacionActualLat: true,
+                ubicacionActualLng: true,
+                ultimaActualizacionGPS: true,
+              },
+            });
+
+            if (
+              armador?.ubicacionActualLat &&
+              armador?.ubicacionActualLng &&
+              (armador.ubicacionActualLat !== lastLat || armador.ubicacionActualLng !== lastLng)
+            ) {
+              lastLat = armador.ubicacionActualLat;
+              lastLng = armador.ubicacionActualLng;
+              send("ubicacion", {
+                lat: armador.ubicacionActualLat,
+                lng: armador.ubicacionActualLng,
+                timestamp: armador.ultimaActualizacionGPS?.toISOString() || new Date().toISOString(),
+              });
+            }
+          } catch {
+            // Continue polling if DB query fails
+          }
         }
 
         setTimeout(poll, POLL_INTERVAL_MS);

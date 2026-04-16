@@ -161,16 +161,16 @@ export default async function ArmadorDashboard() {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-3 gap-6 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">
                 Órdenes Activas
               </CardTitle>
               <div className="text-2xl">⚡</div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{ordenesActivas}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{ordenesActivas}</div>
               <p className="text-xs text-muted-foreground">
                 En proceso
               </p>
@@ -178,14 +178,14 @@ export default async function ArmadorDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">
                 Completadas
               </CardTitle>
               <div className="text-2xl">✅</div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{ordenesCompletadas}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{ordenesCompletadas}</div>
               <p className="text-xs text-muted-foreground">
                 Trabajos finalizados
               </p>
@@ -193,14 +193,14 @@ export default async function ArmadorDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Órdenes
               </CardTitle>
               <div className="text-2xl">📦</div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{misOrdenes.length}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{misOrdenes.length}</div>
               <p className="text-xs text-muted-foreground">
                 Asignadas
               </p>
@@ -215,7 +215,7 @@ export default async function ArmadorDashboard() {
           </CardHeader>
           <CardContent>
             {/* Desktop: tabla */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -307,7 +307,7 @@ export default async function ArmadorDashboard() {
             </div>
 
             {/* Mobile: cards */}
-            <div className="md:hidden space-y-3">
+            <div className="lg:hidden space-y-3">
               {misOrdenes.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <p className="text-sm">No tienes órdenes asignadas</p>
@@ -327,14 +327,14 @@ export default async function ArmadorDashboard() {
                     >
                       <Card
                         className={cn(
-                          "cursor-pointer hover:shadow-md transition-shadow",
+                          "cursor-pointer hover:shadow-md transition-shadow overflow-hidden",
                           esHoy && "border-red-500 border-2 bg-red-50",
                         )}
                       >
                         <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start justify-between gap-1.5">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                                 {esHoy && (
                                   <Clock className="h-4 w-4 text-red-500 flex-shrink-0" />
                                 )}

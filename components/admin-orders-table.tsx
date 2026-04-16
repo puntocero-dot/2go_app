@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition, memo } from "react";
+import { useState, useMemo, useTransition, memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isToday, isYesterday, format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { TableSkeleton } from "@/components/ui/loading-skeleton";
@@ -17,12 +19,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatearFecha } from "@/lib/utils";
 import { addToast } from "@/components/ui/toaster";
-import { 
-  FileText, 
-  Package, 
-  Users, 
-  MapPin, 
-  Calendar, 
+import {
+  FileText,
+  Package,
+  Users,
+  MapPin,
+  Calendar,
   CheckSquare,
   Square,
   Eye,
@@ -30,7 +32,9 @@ import {
   Truck,
   AlertCircle,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Search,
+  ArrowUpDown
 } from "lucide-react";
 
 export interface OrdenResumen {
@@ -48,6 +52,9 @@ export interface OrdenResumen {
 interface AdminOrdersTableProps {
   ordenes: OrdenResumen[];
   loading?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  totalCount?: number;
 }
 
 const ESTADOS_CONFIG = {
@@ -222,13 +229,75 @@ const TableRowEnhanced = memo(function TableRowEnhanced({
   );
 });
 
-export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableProps) {
+export function AdminOrdersTable({ ordenes, loading = false, currentPage, totalPages, totalCount }: AdminOrdersTableProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [_isPending, startTransition] = useTransition();
   const [processing, setProcessing] = useState(false);
+  const [sortKey, setSortKey] = useState<"fecha" | "estado" | "proyecto">("fecha");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [searchLocal, setSearchLocal] = useState("");
 
-  const allVisibleIds = ordenes.map((o) => o.id);
+  // Sort and filter client-side
+  const filteredAndSorted = useMemo(() => {
+    let result = [...ordenes];
+
+    if (searchLocal.trim()) {
+      const q = searchLocal.toLowerCase();
+      result = result.filter(
+        (o) =>
+          o.codigoReferenciaRetail.toLowerCase().includes(q) ||
+          o.clienteNombre.toLowerCase().includes(q) ||
+          o.proyectoNombre.toLowerCase().includes(q) ||
+          (o.armadorNombre && o.armadorNombre.toLowerCase().includes(q))
+      );
+    }
+
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "fecha") {
+        cmp = new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime();
+      } else if (sortKey === "estado") {
+        const order = ["SIN_ASIGNAR", "ASIGNADO", "EN_RUTA", "ARMADO_INICIADO", "ARMADO_FINALIZADO", "ARMADO_COMPLETADO"];
+        cmp = order.indexOf(a.estado) - order.indexOf(b.estado);
+      } else if (sortKey === "proyecto") {
+        cmp = a.proyectoNombre.localeCompare(b.proyectoNombre);
+      }
+      return sortDir === "desc" ? -cmp : cmp;
+    });
+
+    return result;
+  }, [ordenes, sortKey, sortDir, searchLocal]);
+
+  // Group by date
+  const grouped = useMemo(() => {
+    const groups: { label: string; key: string; items: OrdenResumen[] }[] = [];
+    const map = new Map<string, OrdenResumen[]>();
+
+    for (const orden of filteredAndSorted) {
+      const date = parseISO(orden.fechaCreacion);
+      const key = format(date, "yyyy-MM-dd");
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(orden);
+    }
+
+    for (const [key, items] of map) {
+      const date = parseISO(key);
+      let label: string;
+      if (isToday(date)) {
+        label = "Hoy";
+      } else if (isYesterday(date)) {
+        label = "Ayer";
+      } else {
+        label = format(date, "d 'de' MMMM, yyyy", { locale: es });
+      }
+      groups.push({ label, key, items });
+    }
+
+    return groups;
+  }, [filteredAndSorted]);
+
+  const allVisibleIds = filteredAndSorted.map((o) => o.id);
 
   const toggleSelectAll = () => {
     setSelectedIds((current) =>
@@ -378,6 +447,44 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
         </div>
       )}
 
+      {/* Sort & Search Toolbar */}
+      <div className="border-b p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ordenar:</span>
+          {(["fecha", "estado", "proyecto"] as const).map((key) => (
+            <button
+              key={key}
+              onClick={() => {
+                if (sortKey === key) {
+                  setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+                } else {
+                  setSortKey(key);
+                  setSortDir("desc");
+                }
+              }}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                sortKey === key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {key === "fecha" ? "Fecha" : key === "estado" ? "Estado" : "Proyecto"}
+              {sortKey === key && <ArrowUpDown className="w-3 h-3" />}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchLocal}
+            onChange={(e) => setSearchLocal(e.target.value)}
+            placeholder="Buscar orden, cliente..."
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-background text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          />
+        </div>
+      </div>
+
       <div className="rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
@@ -388,7 +495,7 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
                     onClick={toggleSelectAll}
                     className="mr-3 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {selectedIds.length === allVisibleIds.length ? (
+                    {selectedIds.length === allVisibleIds.length && allVisibleIds.length > 0 ? (
                       <CheckSquare className="w-4 h-4" />
                     ) : (
                       <Square className="w-4 h-4" />
@@ -406,40 +513,75 @@ export function AdminOrdersTable({ ordenes, loading = false }: AdminOrdersTableP
             </TableRow>
           </TableHeader>
           <TableBody>
-            {ordenes.map((orden, index) => (
-              <TableRowEnhanced
-                key={orden.id}
-                orden={orden}
-                index={index}
-                isSelected={selectedIds.includes(orden.id)}
-                onSelect={() => toggleSelectOne(orden.id)}
-                onView={() => handleViewOrder(orden.id)}
-              />
+            {grouped.map((group) => (
+              <>
+                <TableRow key={`header-${group.key}`} className="bg-muted/30 hover:bg-muted/30">
+                  <TableCell colSpan={7} className="py-2 px-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                        {group.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({group.items.length})
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                {group.items.map((orden, index) => (
+                  <TableRowEnhanced
+                    key={orden.id}
+                    orden={orden}
+                    index={index}
+                    isSelected={selectedIds.includes(orden.id)}
+                    onSelect={() => toggleSelectOne(orden.id)}
+                    onView={() => handleViewOrder(orden.id)}
+                  />
+                ))}
+              </>
             ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* Footer con paginación o info */}
+      {/* Footer con paginación */}
       <div className="border-t bg-muted/20 p-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
-            Mostrando {ordenes.length} {ordenes.length === 1 ? "orden" : "órdenes"}
+            Mostrando {filteredAndSorted.length} de {totalCount ?? ordenes.length} {(totalCount ?? ordenes.length) === 1 ? "orden" : "órdenes"}
           </div>
-          <div className="flex items-center space-x-4">
-            <span>Resultados por página: 100</span>
+          {totalPages && totalPages > 1 ? (
             <div className="flex items-center space-x-2">
-              <EnhancedButton variant="outline" size="sm" disabled>
-                Anterior
-              </EnhancedButton>
-              <span className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-xs">
-                1
-              </span>
-              <EnhancedButton variant="outline" size="sm" disabled>
-                Siguiente
-              </EnhancedButton>
+              <Link href={`/admin/ordenes?page=${Math.max(1, (currentPage || 1) - 1)}`}>
+                <EnhancedButton variant="outline" size="sm" disabled={(currentPage || 1) <= 1}>
+                  Anterior
+                </EnhancedButton>
+              </Link>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const start = Math.max(1, Math.min((currentPage || 1) - 2, totalPages - 4));
+                const page = start + i;
+                if (page > totalPages) return null;
+                return (
+                  <Link key={page} href={`/admin/ordenes?page=${page}`}>
+                    <span className={`px-3 py-1 rounded-md text-xs cursor-pointer ${
+                      page === (currentPage || 1)
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}>
+                      {page}
+                    </span>
+                  </Link>
+                );
+              })}
+              <Link href={`/admin/ordenes?page=${Math.min(totalPages, (currentPage || 1) + 1)}`}>
+                <EnhancedButton variant="outline" size="sm" disabled={(currentPage || 1) >= totalPages}>
+                  Siguiente
+                </EnhancedButton>
+              </Link>
             </div>
-          </div>
+          ) : (
+            <span className="text-xs">P&aacute;gina 1 de 1</span>
+          )}
         </div>
       </div>
     </EnhancedCard>

@@ -15,12 +15,14 @@ import { useEffect, useRef, useState } from "react";
 interface EventStreamOptions {
   enabled?: boolean;
   onEstadoChange?: (estado: string) => void;
+  onUbicacionChange?: (ubicacion: { lat: number; lng: number }) => void;
 }
 
 interface EventStreamState {
   estado: string | null;
   connected: boolean;
   error: boolean;
+  ubicacion: { lat: number; lng: number } | null;
 }
 
 export function useEventStream(
@@ -28,11 +30,12 @@ export function useEventStream(
   token: string | null,
   options: EventStreamOptions = {}
 ): EventStreamState {
-  const { enabled = true, onEstadoChange } = options;
+  const { enabled = true, onEstadoChange, onUbicacionChange } = options;
   const [state, setState] = useState<EventStreamState>({
     estado: null,
     connected: false,
     error: false,
+    ubicacion: null,
   });
 
   const esRef = useRef<EventSource | null>(null);
@@ -66,6 +69,17 @@ export function useEventStream(
           onEstadoChange?.(data.estado);
         } catch {
           // Ignorar parse errors
+        }
+      });
+
+      es.addEventListener("ubicacion", (e: MessageEvent) => {
+        if (!mountedRef.current) return;
+        try {
+          const data = JSON.parse(e.data) as { lat: number; lng: number };
+          setState((prev) => ({ ...prev, ubicacion: { lat: data.lat, lng: data.lng } }));
+          onUbicacionChange?.({ lat: data.lat, lng: data.lng });
+        } catch {
+          // Ignore parse errors
         }
       });
 
