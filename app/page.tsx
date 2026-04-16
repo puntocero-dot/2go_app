@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRef, useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,13 @@ import {
   Route
 
 } from "lucide-react";
+
+const HeroScene = dynamic(() => import("@/components/hero-scene"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900" />
+  ),
+});
 
 function useInView(options?: IntersectionObserverInit) {
   const ref = useRef<HTMLDivElement>(null);
@@ -159,49 +167,60 @@ export default function Home() {
 
 
 
-      {/* Hero Section */}
+      {/* Hero Section — Three.js 3D Scene */}
 
-      <section className="pt-32 pb-20 bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 relative overflow-hidden">
+      <section className="pt-32 pb-20 bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 relative overflow-hidden min-h-[90vh] flex items-center">
 
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
+        {/* 3D Canvas Background */}
+        <HeroScene />
+
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-slate-900/60 via-transparent to-slate-900/80 pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
 
           <div className="max-w-4xl mx-auto text-center">
 
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-cyan-300 text-sm mb-6">
+            <FadeUp>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full text-cyan-300 text-sm mb-8 border border-white/10">
 
               <Zap className="w-4 h-4" />
 
               Plataforma líder en gestión de servicios de armado
 
             </div>
+            </FadeUp>
 
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            <FadeUp delay={100}>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight tracking-tight">
 
               Tracking y Gestión
 
-              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-[length:200%_auto] animate-gradient">
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-[length:200%_auto] animate-gradient drop-shadow-[0_0_30px_rgba(6,182,212,0.3)]">
 
                 en Tiempo Real
 
               </span>
 
             </h1>
+            </FadeUp>
 
-            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+            <FadeUp delay={200}>
+            <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
 
-              Optimiza tus operaciones de armado de muebles con seguimiento GPS, 
+              Optimiza tus operaciones de armado de muebles con seguimiento GPS,
 
               asignación inteligente y un portal completo para tus clientes.
 
             </p>
+            </FadeUp>
 
+            <FadeUp delay={300}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
 
               <Link href="/login">
 
-                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-cyan-500/25">
+                <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:scale-105">
 
                   Acceder al Sistema
 
@@ -213,7 +232,7 @@ export default function Home() {
 
               <Link href="/orden/seguimiento">
 
-                <Button size="lg" variant="outline" className="bg-white/5 hover:bg-white/10 text-white border-white/20 px-8 py-6 text-lg rounded-xl backdrop-blur-sm">
+                <Button size="lg" variant="outline" className="bg-white/5 hover:bg-white/10 text-white border-white/20 px-8 py-6 text-lg rounded-xl backdrop-blur-sm transition-all hover:scale-105">
 
                   <MapPin className="w-5 h-5 mr-2" />
 
@@ -224,38 +243,47 @@ export default function Home() {
               </Link>
 
             </div>
+            </FadeUp>
 
           </div>
 
 
 
-          {/* Stats */}
+          {/* Stats — Animated Counters */}
 
+          <FadeUp delay={400}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto">
 
-            {[
-
-              { value: "99.9%", label: "Uptime garantizado" },
-
-              { value: "< 5s", label: "Actualización GPS" },
-
-              { value: "24/7", label: "Soporte disponible" },
-
-              { value: "100%", label: "Datos en la nube" },
-
-            ].map((stat, i) => (
-
-              <div key={i} className="text-center">
-
-                <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
-
-                <div className="text-gray-400 text-sm">{stat.label}</div>
-
+            <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+                <CountUp target={99} suffix=".9%" />
               </div>
+              <div className="text-gray-400 text-sm">Uptime garantizado</div>
+            </div>
 
-            ))}
+            <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+                &lt; <CountUp target={5} suffix="s" />
+              </div>
+              <div className="text-gray-400 text-sm">Actualización GPS</div>
+            </div>
+
+            <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+              <div className="text-3xl md:text-4xl font-bold text-cyan-400 mb-1">
+                <CountUp target={24} suffix="/7" />
+              </div>
+              <div className="text-gray-400 text-sm">Soporte disponible</div>
+            </div>
+
+            <div className="text-center bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+              <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+                <CountUp target={100} suffix="%" />
+              </div>
+              <div className="text-gray-400 text-sm">Datos en la nube</div>
+            </div>
 
           </div>
+          </FadeUp>
 
         </div>
 
