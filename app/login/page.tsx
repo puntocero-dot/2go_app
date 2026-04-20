@@ -57,19 +57,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 relative"
-      style={{
-        backgroundImage: 'url("https://images.unsplash.com/photo-1490682143684-14369e18dce8?q=80&w=2070&auto=format&fit=crop")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Imagen de fondo usando etiqueta img para asegurar carga en producción */}
+      <img
+        src="https://images.unsplash.com/photo-1490682143684-14369e18dce8?q=80&w=2070&auto=format&fit=crop"
+        alt="Fondo Otoñal"
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      />
+      
       {/* Overlay oscuro para que el fondo no compita tanto con el texto */}
-      <div className="absolute inset-0 bg-black/20"></div>
+      <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-      <div className="w-full max-w-md p-10 rounded-[20px] bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] relative overflow-hidden z-10 transition-all duration-300">
+      <div className="w-full max-w-md p-10 rounded-[20px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] relative z-10 transition-all duration-300">
         
         <div className="relative z-10 space-y-8">
           <div className="text-center space-y-2">
@@ -90,7 +89,7 @@ export default function LoginPage() {
                 Correo Electrónico
               </label>
               <div className="relative border-b border-white/30 focus-within:border-cyan-400 transition-colors">
-                <Input
+                <input
                   id="email"
                   type="email"
                   placeholder="Administrador o Usuario"
@@ -98,8 +97,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  className="w-full bg-transparent border-0 px-0 py-2 pt-3 text-white text-lg placeholder:text-white/40 focus-visible:ring-0 focus-visible:-offset-0 shadow-none ring-0 focus:ring-0"
-                  style={{ boxShadow: 'none' }}
+                  className="w-full bg-transparent border-none outline-none px-0 py-2 pt-3 text-white text-lg placeholder:text-white/40 focus:ring-0 shadow-none appearance-none"
                 />
               </div>
             </div>
@@ -110,7 +108,7 @@ export default function LoginPage() {
                 Contraseña
               </label>
               <div className="relative border-b border-white/30 focus-within:border-cyan-400 transition-colors">
-                <Input
+                <input
                   id="password"
                   type="password"
                   placeholder="••••••••"
@@ -118,24 +116,23 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  className="w-full bg-transparent border-0 px-0 py-2 pt-3 text-white text-lg placeholder:text-white/40 focus-visible:ring-0 focus-visible:-offset-0 shadow-none ring-0 focus:ring-0"
-                  style={{ boxShadow: 'none' }}
+                  className="w-full bg-transparent border-none outline-none px-0 py-2 pt-3 text-white text-lg placeholder:text-white/40 focus:ring-0 shadow-none appearance-none"
                 />
               </div>
             </div>
 
             <div className="pt-4">
-              <Button 
-                className="w-full bg-[#1da1f2] hover:bg-[#1a8cd3] text-white font-bold py-6 rounded-lg transition-all duration-300 transform active:scale-[0.98] shadow-[0_4px_14px_0_rgba(29,161,242,0.39)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.23)] text-md tracking-wider" 
+              <button 
                 type="submit"
                 disabled={loading}
+                className="w-full bg-[#1da1f2] hover:bg-[#1a8cd3] text-white font-bold py-4 rounded-lg transition-all duration-300 transform active:scale-[0.98] shadow-[0_4px_14px_0_rgba(29,161,242,0.39)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.23)] text-md tracking-wider flex items-center justify-center disabled:opacity-50" 
               >
                 {loading ? "CARGANDO..." : "SIGN IN"}
-              </Button>
+              </button>
             </div>
           </form>
 
-          <div className="mt-8 pt-4 text-center">
+          <div className="mt-8 pt-4 text-center border-t border-white/10">
              <span className="text-white/70 text-sm font-medium">¿Nuevo por aquí o necesitas ayuda? </span>
              <Link href="/" className="text-[#1da1f2] hover:text-[#71c9f8] hover:underline text-sm font-bold transition-colors">
                Volver al inicio
