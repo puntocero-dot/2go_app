@@ -58,14 +58,26 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Imagen de fondo usando etiqueta img para asegurar carga en producción */}
+      {/* CSS estricto para anular el fondo blanco del auto-completado de Chrome */}
+      <style dangerouslySetInnerHTML={{__html: `
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            transition: background-color 5000s ease-in-out 0s !important;
+            -webkit-text-fill-color: white !important;
+            caret-color: white !important;
+        }
+      `}} />
+
+      {/* Imagen de fondo desde carpeta public (no puede ser bloqueada por CSP) */}
       <img
-        src="https://images.unsplash.com/photo-1490682143684-14369e18dce8?q=80&w=2070&auto=format&fit=crop"
-        alt="Fondo Otoñal"
+        src="/bg-login.jpg"
+        alt="Fondo Paisaje"
         className="absolute inset-0 w-full h-full object-cover z-0"
       />
       
-      {/* Overlay oscuro para que el fondo no compita tanto con el texto */}
+      {/* Overlay oscuro para la legibilidad */}
       <div className="absolute inset-0 bg-black/40 z-0"></div>
 
       <div className="w-full max-w-md p-10 rounded-[20px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] relative z-10 transition-all duration-300">
@@ -98,6 +110,8 @@ export default function LoginPage() {
                   required
                   disabled={loading}
                   className="w-full bg-transparent border-none outline-none px-0 py-2 pt-3 text-white text-lg placeholder:text-white/40 focus:ring-0 shadow-none appearance-none"
+                  style={{ backgroundColor: 'transparent' }}
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -117,6 +131,8 @@ export default function LoginPage() {
                   required
                   disabled={loading}
                   className="w-full bg-transparent border-none outline-none px-0 py-2 pt-3 text-white text-lg placeholder:text-white/40 focus:ring-0 shadow-none appearance-none"
+                  style={{ backgroundColor: 'transparent' }}
+                  autoComplete="current-password"
                 />
               </div>
             </div>
