@@ -18,11 +18,20 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
 
 /**
  * Suscribe al usuario actual a notificaciones push y guarda en DB.
+ * Solo se ejecuta si el usuario ya está autenticado (no en /login).
  */
 async function subscribeToPush(
   registration: ServiceWorkerRegistration
 ): Promise<void> {
   if (!VAPID_PUBLIC_KEY) return;
+
+  // No intentar suscribir en páginas públicas (ej. /login)
+  if (
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/login")
+  ) {
+    return;
+  }
 
   try {
     // Verificar si ya hay suscripción activa
@@ -60,15 +69,24 @@ async function savePushSubscription(
   const p256dh = btoa(String.fromCharCode(...new Uint8Array(key)));
   const authStr = btoa(String.fromCharCode(...new Uint8Array(auth)));
 
-  await fetch("/api/push/subscribe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      endpoint: subscription.endpoint,
-      p256dh,
-      auth: authStr,
-    }),
-  }).catch(() => {}); // No bloquear si falla
+  try {
+    const res = await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        endpoint: subscription.endpoint,
+        p256dh,
+        auth: authStr,
+      }),
+    });
+
+    // 401 = sesión no activa todavía; ignorar sin ruido
+    if (!res.ok && res.status !== 401) {
+      console.warn("[Push] Error al guardar suscripción:", res.status);
+    }
+  } catch {
+    // No bloquear la app si push falla
+  }
 }
 
 export function RegisterServiceWorker() {
