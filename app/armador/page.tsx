@@ -76,12 +76,12 @@ export default async function ArmadorDashboard() {
 
   if (!armador) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <Navbar user={usuario} />
         <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">
+          <Card glass>
+            <CardContent className="pt-6 text-center py-10">
+              <p className="text-white/50">
                 No tienes un perfil de armador configurado. Contacta al administrador.
               </p>
             </CardContent>
@@ -122,30 +122,30 @@ export default async function ArmadorDashboard() {
     ]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
-      
+
       <main className="container mx-auto px-4 py-8">
         <ArmadorGpsTracker />
-        
+
         {/* Indicador de Turno Activo */}
         {armador.turnos.length > 0 && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md">
+          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0">
-                <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="h-2.5 w-2.5 bg-emerald-400 rounded-full animate-pulse" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-800">
+                <p className="text-sm font-medium text-emerald-300">
                   Turno Activo
                 </p>
-                <p className="text-xs text-green-700 mt-1">
-                  Iniciado: {formatTz(toZonedTime(new Date(armador.turnos[0].inicioTurno), "America/El_Salvador"), "HH:mm", { locale: es })} • 
+                <p className="text-xs text-emerald-400/70 mt-0.5">
+                  Iniciado: {formatTz(toZonedTime(new Date(armador.turnos[0].inicioTurno), "America/El_Salvador"), "HH:mm", { locale: es })} •
                   Tu ubicación GPS está siendo registrada
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <Badge className="bg-green-600 hover:bg-green-700">
+                <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30">
                   🟢 En línea
                 </Badge>
               </div>
@@ -153,57 +153,49 @@ export default async function ArmadorDashboard() {
           </div>
         )}
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-deep-navy">Mis Órdenes</h1>
-          <p className="text-gray-600 mt-2">
-            Gestiona tus asignaciones de armado
-          </p>
+        <div className="mb-8 fade-in">
+          <h1 className="text-3xl font-bold text-gradient mb-2">Mis Órdenes</h1>
+          <p className="text-white/50">Gestiona tus asignaciones de armado</p>
         </div>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">
-                Órdenes Activas
-              </CardTitle>
-              <div className="text-2xl">⚡</div>
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <Card glass hover>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-5 sm:pb-2">
+              <CardTitle className="text-sm font-medium text-white/60">Órdenes Activas</CardTitle>
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                <span className="text-sm">⚡</span>
+              </div>
             </CardHeader>
-            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-lg sm:text-2xl font-bold">{ordenesActivas}</div>
-              <p className="text-xs text-muted-foreground">
-                En proceso
-              </p>
+            <CardContent className="p-3 pt-0 sm:p-5 sm:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-white">{ordenesActivas}</div>
+              <p className="text-xs text-white/35 mt-0.5">En proceso</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">
-                Completadas
-              </CardTitle>
-              <div className="text-2xl">✅</div>
+          <Card glass hover>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-5 sm:pb-2">
+              <CardTitle className="text-sm font-medium text-white/60">Completadas</CardTitle>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                <span className="text-sm">✅</span>
+              </div>
             </CardHeader>
-            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-lg sm:text-2xl font-bold">{ordenesCompletadas}</div>
-              <p className="text-xs text-muted-foreground">
-                Trabajos finalizados
-              </p>
+            <CardContent className="p-3 pt-0 sm:p-5 sm:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-white">{ordenesCompletadas}</div>
+              <p className="text-xs text-white/35 mt-0.5">Finalizadas</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Órdenes
-              </CardTitle>
-              <div className="text-2xl">📦</div>
+          <Card glass hover>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-5 sm:pb-2">
+              <CardTitle className="text-sm font-medium text-white/60">Total</CardTitle>
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/15 flex items-center justify-center">
+                <span className="text-sm">📦</span>
+              </div>
             </CardHeader>
-            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-lg sm:text-2xl font-bold">{misOrdenes.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Asignadas
-              </p>
+            <CardContent className="p-3 pt-0 sm:p-5 sm:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-white">{misOrdenes.length}</div>
+              <p className="text-xs text-white/35 mt-0.5">Asignadas</p>
             </CardContent>
           </Card>
         </div>
@@ -259,7 +251,7 @@ export default async function ArmadorDashboard() {
                           key={orden.id}
                           className={cn(
                             "hover:bg-muted/50",
-                            esHoy && "bg-red-50 hover:bg-red-100",
+                            esHoy && "bg-red-500/10 hover:bg-red-500/15",
                           )}
                         >
                           <TableCell className="font-mono text-xs">
@@ -328,7 +320,7 @@ export default async function ArmadorDashboard() {
                       <Card
                         className={cn(
                           "cursor-pointer hover:shadow-md transition-shadow overflow-hidden",
-                          esHoy && "border-red-500 border-2 bg-red-50",
+                          esHoy && "border-red-500/60 border-2 bg-red-500/10",
                         )}
                       >
                         <CardHeader className="pb-3">

@@ -136,13 +136,13 @@ export function Navbar({ user }: NavbarProps) {
   };
 
   return (
-    <nav className="bg-negro-azabache text-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
+    <nav className="bg-negro-azabache/90 text-white shadow-lg sticky top-0 z-50 backdrop-blur-md border-b border-white/[0.06]">
       <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-16 gap-2">
           {/* Logo y Dashboard */}
           <div className="flex items-center space-x-4 md:space-x-8">
             <Link href={getDashboardLink()} className="flex items-center space-x-3 group">
-              <div className="w-8 h-8 bg-madera-natural rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+              <div className="w-8 h-8 bg-[#1da1f2] rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-[0_0_12px_rgba(29,161,242,0.5)] transition-all duration-200">
                 <Package className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gradient">Armados 2Go</span>
@@ -205,7 +205,7 @@ export function Navbar({ user }: NavbarProps) {
                       WorkForce
                     </EnhancedButton>
                     {workforceDesktopOpen && (
-                      <div className="absolute left-0 mt-2 w-64 rounded-lg bg-negro-azabache/95 backdrop-blur-md border border-gray-700/50 shadow-xl z-40 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="absolute left-0 mt-2 w-64 rounded-xl bg-[#070c18]/95 backdrop-blur-xl border border-white/10 shadow-2xl z-40 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
                         {/* Operaciones section */}
                         <div className="px-3 pt-2 pb-1">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Operaciones</span>
@@ -245,7 +245,7 @@ export function Navbar({ user }: NavbarProps) {
                         </Link>
 
                         {/* Analytics section */}
-                        <div className="border-t border-gray-700/50 mt-1 mb-1" />
+                        <div className="border-t border-white/10 mt-1 mb-1" />
                         <div className="px-3 pt-2 pb-1">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Analytics</span>
                         </div>
@@ -398,14 +398,14 @@ export function Navbar({ user }: NavbarProps) {
                     }}
                   />
                 ) : (
-                  <div className="w-7 h-7 bg-terracota rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 bg-[#1da1f2]/80 rounded-full flex items-center justify-center flex-shrink-0">
                     <User className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
               </EnhancedButton>
 
               {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-md bg-negro-azabache border border-gray-700 shadow-lg z-50 py-2">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-[#070c18]/95 backdrop-blur-xl border border-white/10 shadow-2xl z-50 py-2">
                   <div className="px-3 pb-2 flex items-center justify-between">
                     <div className="text-xs text-gray-300">
                       <div className="font-medium truncate max-w-[140px]">{user.nombre}</div>
@@ -442,7 +442,7 @@ export function Navbar({ user }: NavbarProps) {
                     </>
                   )}
 
-                  <div className="border-t border-gray-700 mt-2 pt-2">
+                  <div className="border-t border-white/[0.08] mt-2 pt-2">
                     <button
                       className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
                       onClick={() => {
@@ -471,7 +471,7 @@ export function Navbar({ user }: NavbarProps) {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-700 fade-in" ref={mobileMenuRef}>
+          <div className="md:hidden border-t border-white/[0.08] fade-in" ref={mobileMenuRef}>
             <div className="flex items-center justify-between px-2 pt-3 pb-1">
               <span className="text-sm text-gray-300">Menú</span>
               <EnhancedButton
@@ -587,7 +587,7 @@ export function Navbar({ user }: NavbarProps) {
                             Rutas
                           </EnhancedButton>
                         </Link>
-                        <div className="border-t border-gray-700/50 my-1 mx-3" />
+                        <div className="border-t border-white/10 my-1 mx-3" />
                         <div className="px-3 py-1">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Analytics</span>
                         </div>
@@ -710,7 +710,7 @@ export function Navbar({ user }: NavbarProps) {
               )}
 
               {/* Enlaces comunes para todos */}
-              <div className="border-t border-gray-700 mt-2 pt-2 space-y-1">
+              <div className="border-t border-white/[0.08] mt-2 pt-2 space-y-1">
                 {user.rol !== "ARMADOR" && (
                   <Link href="/admin/perfil" className="block" onClick={() => setMobileMenuOpen(false)}>
                     <EnhancedButton

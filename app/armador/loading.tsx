@@ -75,7 +75,7 @@ function OrdenCardSkeleton() {
 
 export default function ArmadorLoading() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Navbar skeleton */}
       <div className="h-14 bg-deep-navy" />
 

@@ -117,13 +117,13 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
   const esCreditoFiscal = proyecto.tipoCliente === "CREDITO_FISCAL";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-deep-navy">
+            <h1 className="text-3xl font-bold text-gradient">
               {proyecto.nombreComercial}
             </h1>
             <p className="text-gray-600 mt-2">

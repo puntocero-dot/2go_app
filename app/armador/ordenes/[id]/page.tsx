@@ -124,7 +124,7 @@ export default async function ArmadorOrdenDetallePage({ params }: PageProps) {
   const fechaProgramada = orden.fechaSolicitadaCliente ?? orden.fechaCreacion;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8 space-y-6">
@@ -134,7 +134,7 @@ export default async function ArmadorOrdenDetallePage({ params }: PageProps) {
               Orden #{orden.codigoReferenciaRetail}
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold text-deep-navy">Detalle de la orden</h1>
+              <h1 className="text-3xl font-bold text-gradient">Detalle de la orden</h1>
               <EstadoBadge estado={orden.estado} />
             </div>
             <p className="text-sm text-gray-600">

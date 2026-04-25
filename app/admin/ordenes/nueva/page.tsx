@@ -192,7 +192,7 @@ export default function NuevaOrdenPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <main className="container mx-auto px-4 max-w-3xl">
         <div className="mb-8">
           <Link href="/admin/ordenes">
@@ -200,7 +200,7 @@ export default function NuevaOrdenPage() {
               ← Volver a Órdenes
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-deep-navy">Nueva Orden</h1>
+          <h1 className="text-3xl font-bold text-gradient">Nueva Orden</h1>
           <p className="text-gray-600 mt-2">
             Registra una nueva orden de armado de muebles
           </p>

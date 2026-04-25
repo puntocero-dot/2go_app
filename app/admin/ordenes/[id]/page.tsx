@@ -94,7 +94,7 @@ export default async function OrdenDetallePage({ params }: PageProps) {
       : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8 space-y-6">
@@ -103,7 +103,7 @@ export default async function OrdenDetallePage({ params }: PageProps) {
             <p className="text-sm text-gray-500">
               Orden #{orden.codigoReferenciaRetail}
             </p>
-            <h1 className="text-3xl font-bold text-deep-navy">
+            <h1 className="text-3xl font-bold text-white">
               Detalle de la orden
             </h1>
           </div>

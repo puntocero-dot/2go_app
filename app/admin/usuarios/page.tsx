@@ -76,12 +76,12 @@ export default async function AdminUsuariosPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-deep-navy">Usuarios del sistema</h1>
+          <h1 className="text-3xl font-bold text-gradient">Usuarios del sistema</h1>
           <p className="text-gray-600 max-w-3xl">
             Crea y administra cuentas de administradores, supervisores y armadores. Los armadores creados aquí podrán ingresar con su rol y participar en la asignación automática.
           </p>

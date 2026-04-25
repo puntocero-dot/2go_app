@@ -109,12 +109,12 @@ export default async function MapaPage() {
   const { armadores, ordenes, proyectos } = await getMapData(session.userId, session.rol);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-deep-navy">
+          <h1 className="text-3xl font-bold text-white">
             Mapa de Operaciones
           </h1>
           <p className="text-gray-600 mt-2">

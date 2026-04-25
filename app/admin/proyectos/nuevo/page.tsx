@@ -99,7 +99,7 @@ export default function NuevoProyectoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <main className="container mx-auto px-4 max-w-3xl">
         <div className="mb-8">
           <Link href="/admin/proyectos">
@@ -107,7 +107,7 @@ export default function NuevoProyectoPage() {
               ← Volver a Proyectos
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-deep-navy">Nuevo Proyecto</h1>
+          <h1 className="text-3xl font-bold text-gradient">Nuevo Proyecto</h1>
           <p className="text-gray-600 mt-2">
             Registra un nuevo cliente retail en el sistema
           </p>

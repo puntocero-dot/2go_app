@@ -40,12 +40,12 @@ interface PageProps {
 }
 
 const ESTADOS_ORDEN = [
-  { value: "SIN_ASIGNAR", label: "Sin asignar", color: "bg-gray-100 text-gray-800" },
-  { value: "ASIGNADO", label: "Asignado", color: "bg-blue-100 text-blue-800" },
-  { value: "EN_RUTA", label: "En ruta", color: "bg-yellow-100 text-yellow-800" },
-  { value: "ARMADO_INICIADO", label: "Armado iniciado", color: "bg-purple-100 text-purple-800" },
-  { value: "ARMADO_FINALIZADO", label: "Armado finalizado", color: "bg-indigo-100 text-indigo-800" },
-  { value: "ARMADO_COMPLETADO", label: "Armado completado", color: "bg-green-100 text-green-800" },
+  { value: "SIN_ASIGNAR", label: "Sin asignar", color: "bg-white/10 text-white/60 border border-white/15" },
+  { value: "ASIGNADO", label: "Asignado", color: "bg-blue-500/20 text-blue-300 border border-blue-500/30" },
+  { value: "EN_RUTA", label: "En ruta", color: "bg-amber-500/20 text-amber-300 border border-amber-500/30" },
+  { value: "ARMADO_INICIADO", label: "Armado iniciado", color: "bg-violet-500/20 text-violet-300 border border-violet-500/30" },
+  { value: "ARMADO_FINALIZADO", label: "Armado finalizado", color: "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30" },
+  { value: "ARMADO_COMPLETADO", label: "Armado completado", color: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" },
 ];
 
 function KPICard({ 
@@ -64,14 +64,14 @@ function KPICard({
   color?: "primary" | "secondary" | "success" | "warning";
 }) {
   const colorClasses = {
-    primary: "text-madera-natural bg-madera-natural/10",
-    secondary: "text-terracota bg-terracota/10",
-    success: "text-green-600 bg-green-100",
-    warning: "text-yellow-600 bg-yellow-100",
+    primary: "text-cyan-400 bg-cyan-400/10",
+    secondary: "text-violet-400 bg-violet-400/10",
+    success: "text-emerald-400 bg-emerald-400/10",
+    warning: "text-amber-400 bg-amber-400/10",
   };
 
   return (
-    <EnhancedCard hover className="relative overflow-hidden p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <EnhancedCard hover className="relative overflow-hidden p-6 glass-card-hover">
       <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10">
         <Icon className="w-24 h-24" />
       </div>
@@ -275,7 +275,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         </div>
 
         {/* Filtros */}
-        <EnhancedCard hover className="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <EnhancedCard hover className="mb-8 p-6 glass-card-hover">
           <div className="flex items-center mb-6">
             <Filter className="w-5 h-5 mr-2 text-primary" />
             <h3 className="text-lg font-semibold">Filtros de métricas</h3>
@@ -347,7 +347,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
               <EnhancedButton
                 type="submit"
                 variant="default"
-                className="min-w-[140px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="min-w-[140px]"
               >
                 Aplicar filtros
               </EnhancedButton>
@@ -494,10 +494,10 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     // Página de error simple para producción
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error en el Dashboard</h1>
-          <p className="text-gray-600 mb-4">Ha ocurrido un error al cargar el dashboard.</p>
-          <a href="/login" className="text-blue-600 hover:underline">
+        <div className="text-center glass-card p-8">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Error en el Dashboard</h1>
+          <p className="text-white/50 mb-4">Ha ocurrido un error al cargar el dashboard.</p>
+          <a href="/login" className="text-[#1da1f2] hover:underline">
             Volver al login
           </a>
         </div>

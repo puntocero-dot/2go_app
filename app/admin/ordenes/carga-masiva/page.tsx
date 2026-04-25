@@ -22,13 +22,13 @@ export default async function CargaMasivaOrdenesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
       <main className="container mx-auto px-4 py-8 space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm text-gray-500">Carga masiva</p>
-            <h1 className="text-3xl font-bold text-deep-navy">
+            <h1 className="text-3xl font-bold text-gradient">
               Carga masiva de órdenes
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-600">

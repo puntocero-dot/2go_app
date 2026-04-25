@@ -153,7 +153,7 @@ export default function TurnosActivosPage() {
       <div className="container mx-auto p-6">
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-deep-navy flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-white flex items-center gap-2">
               <Clock className="w-8 h-8" />
               Gestión de Turnos
             </h1>

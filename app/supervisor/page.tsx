@@ -41,14 +41,17 @@ export default async function SupervisorDashboard() {
   // Si no tiene proyectos asignados, mostrar mensaje
   if (proyectoIds.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         <Navbar user={usuario} />
         <main className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-white/[0.06] rounded-2xl flex items-center justify-center mx-auto mb-5 border border-white/10">
+              <span className="text-3xl">📋</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-3">
               No tienes proyectos asignados
             </h1>
-            <p className="text-gray-600">
+            <p className="text-white/50">
               Contacta al administrador para que te asigne proyectos.
             </p>
           </div>
@@ -105,69 +108,63 @@ export default async function SupervisorDashboard() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Navbar user={usuario} />
-      
+
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-deep-navy">Dashboard Supervisor</h1>
-          <p className="text-gray-600 mt-2">
+        <div className="mb-8 fade-in">
+          <h1 className="text-3xl font-bold text-gradient mb-2">Dashboard Supervisor</h1>
+          <p className="text-white/50">
             Gestión de órdenes y asignaciones
           </p>
         </div>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          <Card glass hover>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Órdenes Hoy
-              </CardTitle>
-              <div className="text-2xl">📅</div>
+              <CardTitle className="text-sm font-medium text-white/70">Órdenes Hoy</CardTitle>
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/15 flex items-center justify-center">
+                <span className="text-base">📅</span>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{ordenesHoy}</div>
-              <p className="text-xs text-muted-foreground">
-                Creadas hoy
-              </p>
+              <div className="text-3xl font-bold text-white">{ordenesHoy}</div>
+              <p className="text-xs text-white/40 mt-1">Creadas hoy</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card glass hover>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Órdenes Activas
-              </CardTitle>
-              <div className="text-2xl">⚡</div>
+              <CardTitle className="text-sm font-medium text-white/70">Órdenes Activas</CardTitle>
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                <span className="text-base">⚡</span>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{ordenesActivas}</div>
-              <p className="text-xs text-muted-foreground">
-                En proceso
-              </p>
+              <div className="text-3xl font-bold text-white">{ordenesActivas}</div>
+              <p className="text-xs text-white/40 mt-1">En proceso</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card glass hover>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Órdenes
-              </CardTitle>
-              <div className="text-2xl">📦</div>
+              <CardTitle className="text-sm font-medium text-white/70">Total Órdenes</CardTitle>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                <span className="text-base">📦</span>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{ordenes.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Registradas
-              </p>
+              <div className="text-3xl font-bold text-white">{ordenes.length}</div>
+              <p className="text-xs text-white/40 mt-1">Registradas</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Lista de Órdenes */}
-        <Card>
+        <Card glass>
           <CardHeader>
-            <CardTitle>Todas las Órdenes</CardTitle>
+            <CardTitle className="text-white">Todas las Órdenes</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
