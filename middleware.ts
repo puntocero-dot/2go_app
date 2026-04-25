@@ -34,6 +34,7 @@ export async function middleware(request: NextRequest) {
     "/sw.js",
     "/icon-192.png",
     "/icon-512.png",
+    "/bg-login.jpg",
   ];
   const isPublicRoute =
     publicRoutes.includes(pathname) || pathname.startsWith("/seguimiento/");
@@ -96,5 +97,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

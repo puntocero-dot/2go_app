@@ -142,7 +142,6 @@ export async function enviarEmailCambioEstado(data: {
     const connectorCells = estadosStepper
       .map((_, index) => {
         if (index >= estadosStepper.length - 1) return "";
-        const lineColor = currentIndex > index ? "#10b981" : "#e5e7eb";
         // Each step takes ~25% width. We use colspan tricks via padding.
         return "";
       })

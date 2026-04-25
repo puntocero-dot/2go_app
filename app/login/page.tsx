@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -71,10 +68,12 @@ export default function LoginPage() {
       `}} />
 
       {/* Imagen de fondo desde carpeta public (no puede ser bloqueada por CSP) */}
-      <img
+      <Image
         src="/bg-login.jpg"
         alt="Fondo Paisaje"
-        className="absolute inset-0 w-full h-full object-cover z-0"
+        fill
+        priority
+        className="object-cover z-0"
       />
       
       {/* Overlay oscuro para la legibilidad */}
