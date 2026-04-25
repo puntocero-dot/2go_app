@@ -67,15 +67,15 @@ function ToastItem({ toast }: { toast: Toast }) {
   };
 
   const variantStyles = {
-    default: "bg-white border-gray-200",
-    destructive: "bg-red-50 border-red-200",
-    success: "bg-green-50 border-green-200",
+    default: "bg-white/[0.08] backdrop-blur-xl border-white/[0.12]",
+    destructive: "bg-red-500/10 backdrop-blur-xl border-red-500/30",
+    success: "bg-emerald-500/10 backdrop-blur-xl border-emerald-500/30",
   };
 
   const iconStyles = {
-    default: "text-blue-500",
-    destructive: "text-red-500",
-    success: "text-green-500",
+    default: "text-[#1da1f2]",
+    destructive: "text-red-400",
+    success: "text-emerald-400",
   };
 
   const Icon = {
@@ -87,7 +87,7 @@ function ToastItem({ toast }: { toast: Toast }) {
   return (
     <div
       className={cn(
-        "relative flex gap-3 p-4 rounded-lg border shadow-lg transition-all duration-300",
+        "relative flex gap-3 p-4 rounded-xl border shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all duration-300",
         variantStyles[toast.variant || "default"],
         isExiting
           ? "opacity-0 translate-x-full"
@@ -97,15 +97,15 @@ function ToastItem({ toast }: { toast: Toast }) {
       <Icon className={cn("h-5 w-5 flex-shrink-0 mt-0.5", iconStyles[toast.variant || "default"])} />
       
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-gray-900">{toast.title}</p>
+        <p className="font-semibold text-sm text-white">{toast.title}</p>
         {toast.description && (
-          <p className="text-sm text-gray-600 mt-1">{toast.description}</p>
+          <p className="text-sm text-white/60 mt-1">{toast.description}</p>
         )}
       </div>
 
       <button
         onClick={handleClose}
-        className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+        className="flex-shrink-0 text-white/40 hover:text-white/70 transition-colors"
       >
         <X className="h-4 w-4" />
       </button>
