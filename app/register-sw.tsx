@@ -25,12 +25,17 @@ async function subscribeToPush(
 ): Promise<void> {
   if (!VAPID_PUBLIC_KEY) return;
 
-  // No intentar suscribir en páginas públicas (ej. /login)
-  if (
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/login")
-  ) {
-    return;
+  // Solo intentar suscribir en rutas autenticadas
+  if (typeof window !== "undefined") {
+    const path = window.location.pathname;
+    const isAuthenticatedRoute =
+      path.startsWith("/admin") ||
+      path.startsWith("/armador") ||
+      path.startsWith("/supervisor");
+
+    if (!isAuthenticatedRoute) {
+      return;
+    }
   }
 
   try {
