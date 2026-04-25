@@ -210,16 +210,31 @@ function Scene() {
 export default function HeroScene() {
   const [hasError, setHasError] = useState(false);
 
+  // Detect WebGL support before even mounting Canvas
+  const webglSupported = useMemo(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const canvas = document.createElement("canvas");
+      return !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+      );
+    } catch {
+      return false;
+    }
+  }, []);
+
   const onCreated = useCallback(({ gl }: { gl: THREE.WebGLRenderer }) => {
     const canvas = gl.domElement;
+    // Context loss: switch to CSS fallback
     canvas.addEventListener("webglcontextlost", (e) => {
       e.preventDefault();
       setHasError(true);
     });
   }, []);
 
-  if (hasError) {
-    // CSS-only animated fallback when WebGL fails
+  // CSS-only animated fallback when WebGL is unavailable or lost
+  if (!webglSupported || hasError) {
     return (
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 blur-3xl animate-pulse" />
@@ -237,9 +252,10 @@ export default function HeroScene() {
           antialias: false,
           alpha: true,
           powerPreference: "low-power",
-          failIfMajorPerformanceCaveat: true,
+          // Removed failIfMajorPerformanceCaveat — caused silent failures
+          // on integrated GPUs (Intel HD, mobile GPUs) returning null context
         }}
-        frameloop="always"
+        frameloop="demand"
         onCreated={onCreated}
         style={{ background: "transparent" }}
       >
