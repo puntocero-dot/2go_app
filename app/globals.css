@@ -213,14 +213,63 @@
     box-shadow: 0 6px 20px rgba(29, 161, 242, 0.45);
   }
 
-  /* Autofill fix for inputs on dark backgrounds */
+  /* Autofill fix for inputs on dark backgrounds.
+     Chrome aplica background-color y -webkit-text-fill-color al hacer
+     autofill. La transition de 5000s retrasa el cambio de bg (truco
+     clásico). El text-fill-color fuerza el color del texto blanco.
+     No usamos box-shadow inset aquí porque algunos inputs son
+     transparentes sobre glass (login) — esos definen su propio fix.
+     Para inputs sobre fondos opacos basta con el delay + text color. */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
-  input:-webkit-autofill:active {
-    transition: background-color 5000s ease-in-out 0s !important;
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
     -webkit-text-fill-color: white !important;
     caret-color: white !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+  }
+
+  /* === Dark-theme overrides for legacy light-palette classes ===
+     El proyecto fue migrado a dark-first (commit a99c6a8) pero muchos
+     componentes legacy aún usan `text-gray-XXX` y `bg-white` hardcoded.
+     Estos overrides mapean esas clases a las CSS vars del tema sin tener
+     que tocar 50+ archivos. Cuando se implemente light theme real, mover
+     estas reglas a un selector `.dark` y restaurar la paleta light en :root. */
+  .text-gray-900,
+  .text-gray-800 { color: hsl(var(--foreground)) !important; }
+  .text-gray-700 { color: hsl(var(--foreground) / 0.88) !important; }
+  .text-gray-600 { color: hsl(var(--muted-foreground)) !important; }
+  .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
+  .text-gray-400 { color: hsl(var(--muted-foreground) / 0.7) !important; }
+
+  /* Backgrounds claros legacy → fondo del card */
+  .bg-white,
+  .bg-gray-50,
+  .bg-gray-100 { background-color: hsl(var(--card)) !important; }
+
+  /* Borders grises claros legacy → border del tema */
+  .border-gray-100,
+  .border-gray-200,
+  .border-gray-300 { border-color: hsl(var(--border)) !important; }
+
+  /* Native <select> y <option> respetan el tema dark.
+     Sin este reset, Chrome usa el color del sistema (gris muy claro)
+     y las opciones quedan invisibles sobre el card dark. */
+  select {
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+  select option {
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+  }
+  select option:checked,
+  select option:hover {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 }
 

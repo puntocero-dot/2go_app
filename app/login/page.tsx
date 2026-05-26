@@ -55,15 +55,19 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* CSS estricto para anular el fondo blanco del auto-completado de Chrome */}
+      {/* CSS estricto para anular el fondo blanco del auto-completado de Chrome.
+          Específico para el login: box-shadow inset con color semi-transparente
+          que armoniza con el container glass del card (bg-white/10). */}
       <style dangerouslySetInnerHTML={{__html: `
         input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
         input:-webkit-autofill:active {
             transition: background-color 5000s ease-in-out 0s !important;
             -webkit-text-fill-color: white !important;
             caret-color: white !important;
+            -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.35) inset !important;
+            box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.35) inset !important;
         }
       `}} />
 
