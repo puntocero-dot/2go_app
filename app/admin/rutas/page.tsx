@@ -10,7 +10,7 @@ import { calcularDistanciaTotal, formatearDistancia, calcularDuracion } from "@/
 import { Loader2, MapPin, Clock, Route, User as UserIcon } from "lucide-react";
 
 const MapaRutaArmador = dynamic(() => import("@/components/MapaRutaArmador").then(mod => ({ default: mod.MapaRutaArmador })), {
-  loading: () => <div className="flex items-center justify-center h-full bg-gray-100"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>,
+  loading: () => <div className="flex items-center justify-center h-full bg-slate-900/50"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>,
   ssr: false,
 });
 
@@ -134,11 +134,11 @@ export default function RutasPage() {
                   id="armador"
                   value={armadorSeleccionado}
                   onChange={(e) => setArmadorSeleccionado(e.target.value)}
-                  className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full mt-2 px-4 py-3 bg-slate-900 text-white border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="">-- Seleccione un armador --</option>
+                  <option value="" className="bg-slate-900 text-white">-- Seleccione un armador --</option>
                   {armadores.map((armador) => (
-                    <option key={armador.id} value={armador.id}>
+                    <option key={armador.id} value={armador.id} className="bg-slate-900 text-white">
                       {armador.nombre}
                     </option>
                   ))}
@@ -151,10 +151,10 @@ export default function RutasPage() {
                   id="turno"
                   value={turnoSeleccionado || ""}
                   onChange={(e) => setTurnoSeleccionado(e.target.value || null)}
-                  className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full mt-2 px-4 py-3 bg-slate-900 text-white border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                   disabled={!armadorSeleccionado || loadingTurnos}
                 >
-                  <option value="">
+                  <option value="" className="bg-slate-900 text-white">
                     {loadingTurnos
                       ? "Cargando turnos..."
                       : !armadorSeleccionado
@@ -164,7 +164,7 @@ export default function RutasPage() {
                       : "-- Seleccione un turno --"}
                   </option>
                   {turnos.map((turno) => (
-                    <option key={turno.id} value={turno.id}>
+                    <option key={turno.id} value={turno.id} className="bg-slate-900 text-white">
                       {new Date(turno.inicioTurno).toLocaleString()} - {turno.estado}
                     </option>
                   ))}
@@ -217,18 +217,18 @@ export default function RutasPage() {
             {/* Mapa */}
             <div className="border rounded-lg overflow-hidden" style={{ height: "600px" }}>
               {loadingRuta ? (
-                <div className="flex items-center justify-center h-full bg-gray-100">
+                <div className="flex items-center justify-center h-full bg-slate-900/50">
                   <Loader2 className="w-12 h-12 animate-spin text-primary" />
                 </div>
               ) : error ? (
-                <div className="flex items-center justify-center h-full bg-gray-100">
+                <div className="flex items-center justify-center h-full bg-slate-900/50">
                   <p className="text-red-500">{error}</p>
                 </div>
               ) : turno ? (
                 <MapaRutaArmador puntos={turno.rutaPuntos} className="h-full" />
               ) : (
-                <div className="flex items-center justify-center h-full bg-gray-100">
-                  <p className="text-gray-500">Selecciona un armador y turno para ver la ruta</p>
+                <div className="flex items-center justify-center h-full bg-slate-900/50">
+                  <p className="text-slate-400">Selecciona un armador y turno para ver la ruta</p>
                 </div>
               )}
             </div>

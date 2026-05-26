@@ -8,7 +8,6 @@ import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, B
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
 import { addToast } from "@/components/ui/toaster";
-import { ThemeToggle } from "./theme-toggle";
 import { EstadoLoggeoSelector } from "./estado-loggeo-selector";
 
 interface NavbarProps {
@@ -413,7 +412,6 @@ export function Navbar({ user }: NavbarProps) {
                         {typeof user.rol === "string" ? user.rol.toLowerCase() : ""}
                       </div>
                     </div>
-                    <ThemeToggle />
                   </div>
 
                   {user.rol !== "ARMADOR" && (
