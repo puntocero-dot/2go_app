@@ -255,7 +255,7 @@ export default function HeroScene() {
           // Removed failIfMajorPerformanceCaveat — caused silent failures
           // on integrated GPUs (Intel HD, mobile GPUs) returning null context
         }}
-        frameloop="demand"
+        frameloop="always"
         onCreated={onCreated}
         style={{ background: "transparent" }}
       >

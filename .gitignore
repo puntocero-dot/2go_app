@@ -33,6 +33,13 @@ temp_env.cmd
 # vercel
 .vercel
 
+# IDE local settings (per-developer)
+.vscode/
+
+# Claude Code local config (per-developer)
+.claude/settings.local.json
+.claude/worktrees/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
