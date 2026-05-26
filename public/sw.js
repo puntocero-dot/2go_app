@@ -3,7 +3,7 @@
  * Estrategias: Network First para APIs, Cache First para assets
  */
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
@@ -79,10 +79,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // ===== APIs: Network First =====
+  // ===== APIs: pasar directo a la red (sin SW) =====
+  // Interceptar /api/* agrega latencia y rompe en fallos transitorios.
+  // Las APIs deben ir directo al servidor sin caché del SW.
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstStrategy(request, API_CACHE));
-    return;
+    return; // dejar pasar al fetch normal del browser
   }
   
   // ===== Imágenes: Cache First =====

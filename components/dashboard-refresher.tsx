@@ -8,7 +8,7 @@ interface DashboardRefresherProps {
   intervalMs?: number;
 }
 
-export function DashboardRefresher({ intervalMs = 60000 }: DashboardRefresherProps) {
+export function DashboardRefresher({ intervalMs = 180000 }: DashboardRefresherProps) {
   const router = useRouter();
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
