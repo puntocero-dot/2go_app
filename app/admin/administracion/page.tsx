@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
-import { Users, Package, DollarSign, Settings } from "lucide-react";
+import { Users, Package, DollarSign } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminAdministracionPage() {
@@ -90,15 +90,6 @@ export default async function AdminAdministracionPage() {
                 Ir a Facturación
               </EnhancedButton>
             </Link>
-          </EnhancedCard>
-        </section>
-
-        <section className="fade-in-up">
-          <EnhancedCard className="p-4 bg-white/70 border border-dashed border-gray-300 flex items-center gap-3">
-            <Settings className="w-5 h-5 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Aquí agrupamos las herramientas de configuración para mantener el menú superior más limpio.
-            </p>
           </EnhancedCard>
         </section>
       </main>
