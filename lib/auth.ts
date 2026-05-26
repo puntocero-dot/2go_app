@@ -3,6 +3,10 @@ import { cookies } from "next/headers";
 
 const rawSecret = process.env.JWT_SECRET;
 
+// Longitud mínima recomendada para HS256 (NIST SP 800-117): 32 bytes / 256 bits.
+// Un secreto corto facilita ataques de fuerza bruta sobre el HMAC.
+const MIN_JWT_SECRET_LENGTH = 32;
+
 if (!rawSecret) {
   if (process.env.NODE_ENV === "production") {
     throw new Error("JWT_SECRET no está definido en el entorno de producción");
@@ -10,6 +14,13 @@ if (!rawSecret) {
     console.warn(
       "⚠️ JWT_SECRET no definido. Usando secreto aleatorio para desarrollo (las sesiones se invalidan al reiniciar)."
     );
+  }
+} else if (rawSecret.length < MIN_JWT_SECRET_LENGTH) {
+  const msg = `JWT_SECRET debe tener al menos ${MIN_JWT_SECRET_LENGTH} caracteres (actual: ${rawSecret.length}). Genera uno con: openssl rand -base64 48`;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(msg);
+  } else {
+    console.warn(`⚠️ ${msg}`);
   }
 }
 
