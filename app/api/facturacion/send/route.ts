@@ -7,6 +7,7 @@ import type { BillingDataset } from "@/lib/facturacion-data";
 import { generateBillingPdf } from "@/lib/facturacion-pdf";
 import { generateBillingEmailHTML } from "@/lib/email-templates";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { withCsrf } from "@/lib/api-helpers";
 import { getBillingSecurityHeaders } from "@/lib/security-headers";
 import { billingFiltersSchema } from "@/lib/schemas/facturacion.schema";
 import { Resend } from "resend";
@@ -86,7 +87,7 @@ function buildCsvFromDataset(dataset: BillingDataset): string {
   return "\uFEFF" + lines.join("\n");
 }
 
-export async function POST(request: NextRequest) {
+const sendHandler = async (request: NextRequest): Promise<Response> => {
   const startedAt = Date.now();
   let proyectoId = "";
   let desde = "";
@@ -287,4 +288,7 @@ export async function POST(request: NextRequest) {
       { status: 500, headers: securityHeaders },
     );
   }
-}
+};
+
+// CSRF guard sobre el handler que ya tiene rate limit interno por userId.
+export const POST = withCsrf(sendHandler);

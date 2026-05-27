@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, createSession } from "@/lib/auth";
+import { withCsrf, withRateLimit } from "@/lib/api-helpers";
+import { RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 
-export async function POST(request: NextRequest) {
+const refreshHandler = async (request: NextRequest): Promise<Response> => {
   try {
     const token = request.cookies.get("session")?.value;
 
@@ -35,4 +37,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+// Rate limit por IP para evitar brute force / abuse del refresh.
+// CSRF guard para que un origin malicioso no pueda renovar sesiones de la víctima.
+export const POST = withCsrf(
+  withRateLimit(
+    refreshHandler,
+    RATE_LIMITS.DEFAULT,
+    (req) => `auth-refresh:${getClientIp(req)}`
+  )
+);

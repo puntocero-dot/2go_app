@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { PrioridadUsuario, Prisma, TamanoMueble } from "@prisma/client";
-import { withRateLimit } from "@/lib/api-helpers";
+import { withCsrf, withRateLimit } from "@/lib/api-helpers";
 import { logAuditFromSession } from "@/lib/audit-logger";
 
 const REQUIRED_HEADERS = [
@@ -191,7 +191,7 @@ const bulkHandler = async (request: NextRequest): Promise<Response> => {
   }
 };
 
-export const POST = withRateLimit(
+export const POST = withCsrf(withRateLimit(
   bulkHandler,
   {
     // Límite específico para cargas masivas: por defecto 5 por hora
@@ -203,7 +203,7 @@ export const POST = withRateLimit(
     const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
     return `ordenes-bulk:${ip}`;
   },
-);
+));
 
 function parseCsv(content: string) {
   const cleaned = content.replace(/^\uFEFF/, "");

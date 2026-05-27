@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
-import { withValidation } from "@/lib/api-helpers";
+import { withCsrf, withRateLimitAndValidation } from "@/lib/api-helpers";
+import { RATE_LIMITS, getClientIp } from "@/lib/rate-limit";
 import { CrearOrdenSchema } from "@/lib/schemas/orden.schemas";
 import { logAuditFromSession } from "@/lib/audit-logger";
 import { getPaginationParams, buildPaginatedResponse } from "@/lib/pagination";
@@ -193,5 +194,12 @@ const crearOrdenHandler = async (
   }
 };
 
-// Exportar POST con validación
-export const POST = withValidation(CrearOrdenSchema, crearOrdenHandler);
+// Exportar POST con validación + rate limit + CSRF
+export const POST = withCsrf(
+  withRateLimitAndValidation(
+    CrearOrdenSchema,
+    RATE_LIMITS.DEFAULT,
+    (req) => `ordenes-create:${getClientIp(req)}`,
+    crearOrdenHandler
+  )
+);

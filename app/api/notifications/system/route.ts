@@ -3,12 +3,13 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateSystemNotificationEmailHTML } from "@/lib/email-templates";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { withCsrf } from "@/lib/api-helpers";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // POST - Enviar notificación del sistema a todos los usuarios
-export async function POST(req: NextRequest) {
+const postHandler = async (req: NextRequest): Promise<Response> => {
   try {
     const session = await getSession();
     
@@ -141,7 +142,9 @@ export async function POST(req: NextRequest) {
     console.error('Error al enviar notificación del sistema:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
-}
+};
+
+export const POST = withCsrf(postHandler);
 
 // GET - Obtener historial de notificaciones del sistema
 export async function GET(req: NextRequest) {
