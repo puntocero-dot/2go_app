@@ -7,12 +7,13 @@ const nextConfig: NextConfig = {
   // eslint: { ignoreDuringBuilds: false } es el default, no hace falta declararlo
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', '@radix-ui/react-select', '@radix-ui/react-dialog'],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  },
+  // Turbopack se movió de experimental al top-level en Next 15.3+
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },

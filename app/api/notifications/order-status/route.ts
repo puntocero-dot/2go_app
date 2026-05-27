@@ -7,13 +7,13 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// GET - Obtener notificaciones de una orden
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET - Obtener notificaciones de una orden (pasar ?orderId=...)
+export async function GET(req: NextRequest) {
   try {
-    const { id } = await params;
+    const id = req.nextUrl.searchParams.get("orderId");
+    if (!id) {
+      return NextResponse.json({ error: "Falta parámetro 'orderId'" }, { status: 400 });
+    }
     const session = await getSession();
     
     if (!session) {
@@ -53,13 +53,10 @@ export async function GET(
   }
 }
 
-// POST - Enviar notificación de estado
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// POST - Enviar notificación de estado (pasar ?orderId=... o orderId en body)
+export async function POST(req: NextRequest) {
   try {
-    const { id } = await params;
+    const queryId = req.nextUrl.searchParams.get("orderId");
     const session = await getSession();
     
     if (!session || !['ADMIN', 'SUPERVISOR'].includes(session.rol)) {
@@ -80,7 +77,11 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { tipoNotificacion } = body;
+    const { tipoNotificacion, orderId: bodyId } = body;
+    const id = queryId ?? bodyId;
+    if (!id) {
+      return NextResponse.json({ error: "Falta 'orderId' (query o body)" }, { status: 400 });
+    }
 
     // Obtener datos de la orden
     const orden = await prisma.orden.findUnique({
