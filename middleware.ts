@@ -66,6 +66,15 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // OBSERVADOR: solo lectura de órdenes (lista + detalle).
+    // No acceso a mapa, reportes, configuración, ni mutaciones.
+    const observadorAllowed =
+      session.rol === "OBSERVADOR" && pathname.startsWith("/admin/ordenes");
+
+    if (observadorAllowed) {
+      return NextResponse.next();
+    }
+
     return NextResponse.redirect(new URL("/", request.url));
   }
   if (pathname.startsWith("/supervisor") && session.rol !== "SUPERVISOR") {

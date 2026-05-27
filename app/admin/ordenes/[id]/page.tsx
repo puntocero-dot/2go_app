@@ -23,9 +23,10 @@ export default async function OrdenDetallePage({ params }: PageProps) {
   const { id } = await params;
   const session = await getSession();
 
-  if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+  if (!session || !["ADMIN", "SUPERVISOR", "OBSERVADOR"].includes(session.rol)) {
     redirect("/login");
   }
+  const isReadOnly = session.rol === "OBSERVADOR";
 
   const usuario = await prisma.usuario.findUnique({
     where: { id: session.userId },
@@ -128,8 +129,12 @@ export default async function OrdenDetallePage({ params }: PageProps) {
                   ← Volver al listado
                 </Button>
               </Link>
-              <AdminOrderActions ordenId={orden.id} estado={orden.estado} />
-              <OrderDeleteButton ordenId={orden.id} currentEstado={orden.estado} />
+              {!isReadOnly && (
+                <>
+                  <AdminOrderActions ordenId={orden.id} estado={orden.estado} />
+                  <OrderDeleteButton ordenId={orden.id} currentEstado={orden.estado} />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -265,17 +270,19 @@ export default async function OrdenDetallePage({ params }: PageProps) {
                 )}
               </div>
 
-              <div className="border-t pt-4 space-y-4">
-                <AssignArmadorCard
-                  ordenId={orden.id}
-                  currentArmadorId={orden.armador?.id ?? null}
-                  currentArmadorNombre={orden.armador?.usuario.nombre ?? null}
-                  currentArmadorTelefono={orden.armador?.usuario.telefono ?? null}
-                  currentEstado={orden.estado}
-                />
+              {!isReadOnly && (
+                <div className="border-t pt-4 space-y-4">
+                  <AssignArmadorCard
+                    ordenId={orden.id}
+                    currentArmadorId={orden.armador?.id ?? null}
+                    currentArmadorNombre={orden.armador?.usuario.nombre ?? null}
+                    currentArmadorTelefono={orden.armador?.usuario.telefono ?? null}
+                    currentEstado={orden.estado}
+                  />
 
-                <AutoAssignArmador ordenId={orden.id} currentEstado={orden.estado} />
-              </div>
+                  <AutoAssignArmador ordenId={orden.id} currentEstado={orden.estado} />
+                </div>
+              )}
             </CardContent>
           </Card>
 

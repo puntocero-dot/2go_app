@@ -19,7 +19,7 @@ export type FeatureFlag =
 interface FlagConfig {
   enabled: boolean;
   rolloutPercentage?: number;
-  allowedRoles?: ('ADMIN' | 'SUPERVISOR' | 'ARMADOR')[];
+  allowedRoles?: ('ADMIN' | 'SUPERVISOR' | 'ARMADOR' | 'OBSERVADOR')[];
   description: string;
 }
 
@@ -105,7 +105,7 @@ function simpleHash(str: string): number {
 export function isFeatureEnabled(
   flag: FeatureFlag,
   userId?: string,
-  userRole?: 'ADMIN' | 'SUPERVISOR' | 'ARMADOR'
+  userRole?: 'ADMIN' | 'SUPERVISOR' | 'ARMADOR' | 'OBSERVADOR'
 ): boolean {
   const config = FLAGS[flag];
 
@@ -150,7 +150,7 @@ export function getAllFlags(): Record<FeatureFlag, FlagConfig> {
  */
 export function getEnabledFlagsForUser(
   userId?: string,
-  userRole?: 'ADMIN' | 'SUPERVISOR' | 'ARMADOR'
+  userRole?: 'ADMIN' | 'SUPERVISOR' | 'ARMADOR' | 'OBSERVADOR'
 ): FeatureFlag[] {
   return (Object.keys(FLAGS) as FeatureFlag[]).filter((flag) =>
     isFeatureEnabled(flag, userId, userRole)

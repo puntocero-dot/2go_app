@@ -44,6 +44,6 @@ temp_env.cmd
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-prisma/migrations
-.vercel
+# prisma migrations DEBEN commitearse (Vercel-build las aplica con migrate deploy)
+# Solo ignorar el client generado (que se regenera con prisma generate)
+prisma/.client

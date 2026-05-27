@@ -415,6 +415,7 @@ enum RolUsuario {
   ADMIN
   SUPERVISOR
   ARMADOR
+  OBSERVADOR
 }
 
 enum TipoArchivo {

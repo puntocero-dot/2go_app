@@ -32,7 +32,7 @@ const secret = new TextEncoder().encode(rawSecret || devFallbackSecret);
 export interface SessionPayload {
   userId: string;
   email: string;
-  rol: "ADMIN" | "SUPERVISOR" | "ARMADOR";
+  rol: "ADMIN" | "SUPERVISOR" | "ARMADOR" | "OBSERVADOR";
 }
 
 export async function createToken(payload: SessionPayload): Promise<string> {

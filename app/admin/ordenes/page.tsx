@@ -117,7 +117,7 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
   const normalizedSearch =
     searchText.startsWith("#") ? searchText.slice(1) : searchText;
 
-  if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+  if (!session || !["ADMIN", "SUPERVISOR", "OBSERVADOR"].includes(session.rol)) {
     redirect("/login");
   }
 

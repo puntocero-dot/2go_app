@@ -89,7 +89,7 @@ const crearOrdenHandler = async (
   try {
     const session = await getSession();
 
-    if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+    if (!session || !["ADMIN", "SUPERVISOR", "OBSERVADOR"].includes(session.rol)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 

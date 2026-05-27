@@ -11,9 +11,11 @@ export async function GET() {
     if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
+    // En este punto el rol es ADMIN o SUPERVISOR (no OBSERVADOR/ARMADOR).
+    const sessionRole = session.rol as 'ADMIN' | 'SUPERVISOR';
 
     // Usar Service Layer si el feature flag está habilitado
-    const useServiceLayer = isFeatureEnabled('SERVICE_LAYER', session.userId, session.rol);
+    const useServiceLayer = isFeatureEnabled('SERVICE_LAYER', session.userId, sessionRole);
     
     if (useServiceLayer) {
       const turnosActivos = await turnoService.obtenerTurnosActivos();
