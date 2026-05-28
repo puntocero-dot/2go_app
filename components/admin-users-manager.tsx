@@ -19,10 +19,11 @@ import {
 } from "@/lib/schemas/usuario.schema";
 import { useToast } from "@/hooks/use-toast";
 
-const ROLES: Array<{ value: RolPermitido; label: string }> = [
-  { value: "ADMIN", label: "Administrador" },
-  { value: "SUPERVISOR", label: "Supervisor" },
-  { value: "ARMADOR", label: "Armador" },
+const ROLES: Array<{ value: RolPermitido; label: string; pluralLabel: string }> = [
+  { value: "ADMIN", label: "Administrador", pluralLabel: "Administradores" },
+  { value: "SUPERVISOR", label: "Supervisor", pluralLabel: "Supervisores" },
+  { value: "ARMADOR", label: "Armador", pluralLabel: "Armadores" },
+  { value: "OBSERVADOR", label: "Observador", pluralLabel: "Observadores" },
 ];
 
 const ESTADOS_ARMADOR: EstadoArmadorPermitido[] = [
@@ -42,7 +43,7 @@ const DEFAULT_FORM_STATE: FormState = {
   proyectosIds: [],
 };
 
-export type RolPermitido = "ADMIN" | "SUPERVISOR" | "ARMADOR";
+export type RolPermitido = "ADMIN" | "SUPERVISOR" | "ARMADOR" | "OBSERVADOR";
 export type EstadoArmadorPermitido = "ACTIVO" | "INACTIVO" | "VACACIONES";
 
 type ProyectoItem = {
@@ -109,6 +110,7 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
   console.log('AdminUsersManager - Proyectos recibidos:', proyectos);
   const [usuarios, setUsuarios] = useState<UsuarioItem[]>(initialUsers);
   const [filterRol, setFilterRol] = useState<"ALL" | RolPermitido>("ALL");
+  const [filterProyecto, setFilterProyecto] = useState<"ALL" | string>("ALL");
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
@@ -346,7 +348,17 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
     [fetchUsuarios, formState]
   );
 
-  const usuariosFiltrados = useMemo(() => usuarios, [usuarios]);
+  // Filtro client-side por proyecto (el filtro por rol se aplica server-side
+   //  vía fetchUsuarios). Si proyecto = "ALL" devuelve todos.
+   //  Para SUPERVISOR usa la relación supervisorProyectos; para ARMADOR
+   //  no aplica filtro (los armadores no se asignan a proyectos en el modelo
+   //  actual); para ADMIN/OBSERVADOR igual.
+  const usuariosFiltrados = useMemo(() => {
+    if (filterProyecto === "ALL") return usuarios;
+    return usuarios.filter((u) =>
+      u.proyectos.some((p) => p.id === filterProyecto)
+    );
+  }, [usuarios, filterProyecto]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapUsuarioFromApi = useCallback((raw: any): UsuarioItem | null => {
@@ -841,29 +853,65 @@ export function AdminUsersManager({ initialUsers, proyectos }: Props) {
       </Card>
 
       <Card className="lg:col-span-1">
-        <CardHeader>
+        <CardHeader className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <CardTitle>Usuarios registrados</CardTitle>
             <div className="flex items-center gap-2">
-              <Label htmlFor="filtroRol" className="text-xs uppercase text-gray-500">
-                Filtrar por rol
+              <Label htmlFor="filtroProyecto" className="text-xs uppercase text-gray-500">
+                Proyecto
               </Label>
               <select
-                id="filtroRol"
-                value={filterRol}
-                onChange={(event) =>
-                  setFilterRol(event.target.value as "ALL" | RolPermitido)
-                }
+                id="filtroProyecto"
+                value={filterProyecto}
+                onChange={(event) => setFilterProyecto(event.target.value)}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-vibrant-cyan focus:outline-none"
               >
                 <option value="ALL">Todos</option>
-                {ROLES.map((rol) => (
-                  <option key={rol.value} value={rol.value}>
-                    {rol.label}
+                {proyectos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombreComercial}
                   </option>
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Tabs por rol — reemplaza al select anterior */}
+          <div className="flex flex-wrap gap-1 border-b border-border" role="tablist" aria-label="Filtrar por rol">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={filterRol === "ALL"}
+              onClick={() => setFilterRol("ALL")}
+              className={
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors " +
+                (filterRol === "ALL"
+                  ? "border-vibrant-cyan text-vibrant-cyan"
+                  : "border-transparent text-muted-foreground hover:text-foreground")
+              }
+            >
+              Todos ({usuarios.length})
+            </button>
+            {ROLES.map((rol) => {
+              const count = usuarios.filter((u) => u.rol === rol.value).length;
+              return (
+                <button
+                  key={rol.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={filterRol === rol.value}
+                  onClick={() => setFilterRol(rol.value)}
+                  className={
+                    "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors " +
+                    (filterRol === rol.value
+                      ? "border-vibrant-cyan text-vibrant-cyan"
+                      : "border-transparent text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {rol.pluralLabel} ({count})
+                </button>
+              );
+            })}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

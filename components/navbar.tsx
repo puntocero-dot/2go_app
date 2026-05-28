@@ -14,7 +14,7 @@ interface NavbarProps {
   user: {
     nombre: string;
     email: string;
-    rol: "ADMIN" | "SUPERVISOR" | "ARMADOR";
+    rol: "ADMIN" | "SUPERVISOR" | "ARMADOR" | "OBSERVADOR";
     estadoLoggeo?: string | null;
     fotoPerfil?: string | null;
   };

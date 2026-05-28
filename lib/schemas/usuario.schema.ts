@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const rolesPermitidos = ["ADMIN", "SUPERVISOR", "ARMADOR"] as const;
+export const rolesPermitidos = ["ADMIN", "SUPERVISOR", "ARMADOR", "OBSERVADOR"] as const;
 
 export const estadosArmadorPermitidos = [
   "ACTIVO",
