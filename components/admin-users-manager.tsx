@@ -93,6 +93,12 @@ type EditFormState = {
 type Props = {
   initialUsers: UsuarioItem[];
   proyectos: ProyectoItem[];
+  /**
+   * Si se provee, el filtro de la tabla y el formulario de creación quedan
+   * preseleccionados a este proyecto. Útil cuando se entra a /admin/usuarios
+   * desde "Crear usuario asignado" en /admin/proyectos/[id].
+   */
+  defaultProyectoId?: string;
 };
 
 function getPasswordChecks(value: string) {
@@ -106,15 +112,34 @@ function getPasswordChecks(value: string) {
   };
 }
 
-export function AdminUsersManager({ initialUsers, proyectos }: Props) {
-  console.log('AdminUsersManager - Proyectos recibidos:', proyectos);
+export function AdminUsersManager({ initialUsers, proyectos, defaultProyectoId }: Props) {
   const [usuarios, setUsuarios] = useState<UsuarioItem[]>(initialUsers);
   const [filterRol, setFilterRol] = useState<"ALL" | RolPermitido>("ALL");
-  const [filterProyecto, setFilterProyecto] = useState<"ALL" | string>("ALL");
+  // Preseleccionar proyecto si viene del query string (?proyectoId=…).
+  // Solo si el ID existe en la lista de proyectos disponibles (evita ID stale).
+  const [filterProyecto, setFilterProyecto] = useState<"ALL" | string>(
+    defaultProyectoId && proyectos.some((p) => p.id === defaultProyectoId)
+      ? defaultProyectoId
+      : "ALL"
+  );
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
-  const [formState, setFormState] = useState<FormState>(DEFAULT_FORM_STATE);
+  // Si entras desde /admin/proyectos/[id] con ?proyectoId=…, el formulario
+  // arranca con rol SUPERVISOR + ese proyecto ya asignado, para ahorrar pasos.
+  const [formState, setFormState] = useState<FormState>(() => {
+    const preselectedProyecto =
+      defaultProyectoId && proyectos.some((p) => p.id === defaultProyectoId)
+        ? defaultProyectoId
+        : null;
+    return preselectedProyecto
+      ? {
+          ...DEFAULT_FORM_STATE,
+          rol: "SUPERVISOR",
+          proyectosIds: [preselectedProyecto],
+        }
+      : DEFAULT_FORM_STATE;
+  });
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

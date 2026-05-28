@@ -1,11 +1,14 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectBillingManager } from "@/components/project-billing-manager";
 import { ProyectoDetailActions } from "@/components/proyecto-detail-actions";
+import { UserPlus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -73,6 +76,21 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
           rangosVolumen: true,
           cobrosDistancia: true,
           penalizaciones: true,
+        },
+      },
+      // Equipo del proyecto: supervisores asignados (relación N:M via SupervisorProyecto)
+      supervisores: {
+        include: {
+          usuario: {
+            select: {
+              id: true,
+              nombre: true,
+              email: true,
+              telefono: true,
+              activo: true,
+              rol: true,
+            },
+          },
         },
       },
     },
@@ -300,6 +318,57 @@ export default async function ProyectoDetallePage({ params }: PageProps) {
                         <TableCell className="font-medium">{cliente.nombre}</TableCell>
                         <TableCell>{cliente.telefono}</TableCell>
                         <TableCell>{cliente.municipio}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Equipo del proyecto: supervisores asignados + acción para crear nuevos */}
+        <section>
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle>Equipo del proyecto</CardTitle>
+                <Link href={`/admin/usuarios?proyectoId=${proyecto.id}`}>
+                  <Button variant="default" size="sm" className="gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Crear usuario asignado
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {proyecto.supervisores.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No hay supervisores asignados a este proyecto todavía.
+                  Usa el botón &quot;Crear usuario asignado&quot; o asigna desde
+                  el detalle de un usuario existente en /admin/usuarios.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Correo</TableHead>
+                      <TableHead>Teléfono</TableHead>
+                      <TableHead>Estado</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {proyecto.supervisores.map((sp) => (
+                      <TableRow key={sp.id}>
+                        <TableCell className="font-medium">{sp.usuario.nombre}</TableCell>
+                        <TableCell>{sp.usuario.email}</TableCell>
+                        <TableCell>{sp.usuario.telefono ?? "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant={sp.usuario.activo ? "success" : "destructive"}>
+                            {sp.usuario.activo ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
 import { AdminUsersManager } from "@/components/admin-users-manager";
 
-export default async function AdminUsuariosPage() {
+interface PageProps {
+  searchParams: Promise<{ proyectoId?: string }>;
+}
+
+export default async function AdminUsuariosPage({ searchParams }: PageProps) {
+  const { proyectoId } = await searchParams;
   const session = await getSession();
 
   if (!session || session.rol !== "ADMIN") {
@@ -87,9 +92,10 @@ export default async function AdminUsuariosPage() {
           </p>
         </div>
 
-        <AdminUsersManager 
-          initialUsers={serializableUsuarios} 
+        <AdminUsersManager
+          initialUsers={serializableUsuarios}
           proyectos={proyectos}
+          defaultProyectoId={proyectoId}
         />
       </main>
     </div>
