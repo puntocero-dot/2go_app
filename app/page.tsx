@@ -518,6 +518,8 @@ export default function Home() {
             <div className="flex items-center gap-6 text-xs">
               <Link href="/login" className="hover:text-white transition-colors">Iniciar Sesión</Link>
               <Link href="/orden/seguimiento" className="hover:text-white transition-colors">Seguir Pedido</Link>
+              <Link href="/terminos" className="hover:text-white transition-colors">Términos</Link>
+              <Link href="/privacidad" className="hover:text-white transition-colors">Privacidad</Link>
             </div>
           </div>
         </div>

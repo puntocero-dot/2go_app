@@ -30,6 +30,8 @@ export async function middleware(request: NextRequest) {
     "/",
     "/login",
     "/orden/seguimiento",
+    "/terminos",
+    "/privacidad",
     "/manifest.json",
     "/sw.js",
     "/icon-192.png",

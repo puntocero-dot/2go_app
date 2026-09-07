@@ -151,11 +151,17 @@ export default function LoginPage() {
             </div>
           </form>
 
-          <div className="mt-8 pt-4 text-center border-t border-white/10">
-             <span className="text-white/70 text-sm font-medium">¿Nuevo por aquí o necesitas ayuda? </span>
-             <Link href="/" className="text-[#1da1f2] hover:text-[#71c9f8] hover:underline text-sm font-bold transition-colors">
-               Volver al inicio
-             </Link>
+          <div className="mt-8 pt-4 text-center border-t border-white/10 space-y-3">
+             <div>
+               <span className="text-white/70 text-sm font-medium">¿Nuevo por aquí o necesitas ayuda? </span>
+               <Link href="/" className="text-[#1da1f2] hover:text-[#71c9f8] hover:underline text-sm font-bold transition-colors">
+                 Volver al inicio
+               </Link>
+             </div>
+             <div className="flex items-center justify-center gap-4 text-xs text-white/40">
+               <Link href="/terminos" className="hover:text-white/70 transition-colors">Términos</Link>
+               <Link href="/privacidad" className="hover:text-white/70 transition-colors">Privacidad</Link>
+             </div>
           </div>
         </div>
       </div>
