@@ -170,7 +170,9 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/orden/seguimiento">
+            {/* Oculto bajo sm (< 640px): junto al logo no cabe con "Iniciar Sesión"
+                sin causar overflow horizontal de la página. */}
+            <Link href="/orden/seguimiento" className="hidden sm:inline-flex">
               <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/[0.07] text-sm">
                 Seguir Pedido
               </Button>
@@ -357,7 +359,7 @@ export default function Home() {
       </section>
 
       {/* Portal Clientes */}
-      <section id="portal" className="py-24 bg-[#06090f] relative">
+      <section id="portal" className="py-24 bg-[#06090f] relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/[0.04] rounded-full blur-3xl" />
         <div className="container mx-auto px-4 relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">

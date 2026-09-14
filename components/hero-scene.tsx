@@ -199,9 +199,14 @@ function Scene() {
       <GpsPin position={[-2.5, 0, 2]} />
       <GpsPin position={[-1, 0, -3]} />
 
-      <FurniturePiece position={[-3.5, 1.5, -1]} color="#f59e0b" size={[0.6, 0.8, 0.4]} />
+      {/* Posiciones fuera de la franja horizontal donde cae el H1 (roughly
+          x ∈ [-3.5, 3.5]) — antes el ámbar y el esmeralda quedaban justo
+          detrás de "Tracking" y "Gestión", como bloques de color rotos
+          sobre el texto. El violeta ya caía libre en la esquina inferior
+          derecha, así que se deja igual. */}
+      <FurniturePiece position={[-5.5, 1.8, -3]} color="#f59e0b" size={[0.6, 0.8, 0.4]} />
       <FurniturePiece position={[2.5, -1, 2]} color="#8b5cf6" size={[0.8, 0.5, 0.5]} />
-      <FurniturePiece position={[0, 2, -2.5]} color="#10b981" size={[0.5, 0.7, 0.5]} />
+      <FurniturePiece position={[4.2, 2.6, -3.5]} color="#10b981" size={[0.5, 0.7, 0.5]} />
     </>
   );
 }
