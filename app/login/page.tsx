@@ -83,7 +83,7 @@ export default function LoginPage() {
       {/* Overlay oscuro para la legibilidad */}
       <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-      <div className="w-full max-w-md p-10 rounded-[20px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] relative z-10 transition-all duration-300">
+      <div className="w-full max-w-md p-10 rounded-[32px] bg-white/[0.12] backdrop-blur-3xl border border-white/15 shadow-[0_8px_40px_0_rgba(0,0,0,0.35)] relative z-10 transition-all duration-300">
         
         <div className="relative z-10 space-y-8">
           <div className="text-center space-y-2">
@@ -93,7 +93,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6 mt-8">
             {error && (
-              <div className="bg-red-500/20 border border-red-500/50 text-white px-4 py-3 rounded-lg text-sm text-center backdrop-blur-sm animate-pulse">
+              <div className="bg-red-500/20 border border-red-500/50 text-white px-4 py-3 rounded-2xl text-sm text-center backdrop-blur-sm animate-pulse">
                 {error}
               </div>
             )}
@@ -144,7 +144,7 @@ export default function LoginPage() {
               <button 
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#1da1f2] hover:bg-[#1a8cd3] text-white font-bold py-4 rounded-lg transition-all duration-300 transform active:scale-[0.98] shadow-[0_4px_14px_0_rgba(29,161,242,0.39)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.23)] text-md tracking-wider flex items-center justify-center disabled:opacity-50" 
+                className="w-full bg-[#1da1f2] hover:bg-[#1a8cd3] text-white font-bold py-4 rounded-full transition-all duration-300 transform active:scale-[0.98] shadow-[0_4px_14px_0_rgba(29,161,242,0.39)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.23)] text-md tracking-wider flex items-center justify-center disabled:opacity-50"
               >
                 {loading ? "CARGANDO..." : "SIGN IN"}
               </button>
