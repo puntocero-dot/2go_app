@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { v2 as cloudinary } from "cloudinary";
+import { getCloudinary } from "@/lib/cloudinary";
 import { withRateLimit } from "@/lib/api-helpers";
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { UploadMetadataSchema, validateImageFile } from "@/lib/schemas/upload.schemas";
 import { logAuditFromSession } from "@/lib/audit-logger";
-
-// Configurar Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // POST - Subir imagen a Cloudinary
 const uploadHandler = async (request: NextRequest) => {
@@ -57,6 +50,7 @@ const uploadHandler = async (request: NextRequest) => {
     const buffer = Buffer.from(bytes);
 
     // Subir a Cloudinary
+    const { cloudinary } = getCloudinary();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await new Promise<any>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
@@ -144,6 +138,7 @@ const deleteHandler = async (request: NextRequest) => {
     }
 
     // Eliminar de Cloudinary
+    const { cloudinary } = getCloudinary();
     const result = await cloudinary.uploader.destroy(publicId);
 
     await logAuditFromSession({
