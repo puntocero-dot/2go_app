@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
     } : false,
   },
   images: {
+    // Requerido desde Next 15.5+ para usar quality={90} en <Image> (login
+    // background) sin la calidad default (75). Sin esto es solo warning
+    // hoy, pero será error duro en Next 16.
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",

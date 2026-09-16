@@ -77,19 +77,26 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
         }
       `}} />
 
-      {/* Imagen de fondo, editable desde /admin/configuracion/login */}
+      {/* Imagen de fondo, editable desde /admin/configuracion/login.
+          sizes="100vw" evita que Next elija un candidato de srcset más
+          chico de lo necesario para un fondo a pantalla completa. */}
       <Image
         src={backgroundUrl}
         alt="Fondo"
         fill
         priority
+        sizes="100vw"
+        quality={90}
         className="object-cover z-0"
       />
 
-      {/* Overlay oscuro para la legibilidad */}
-      <div className="absolute inset-0 bg-black/40 z-0"></div>
+      {/* Overlay oscuro para la legibilidad. Como el fondo es editable desde
+          admin (puede ser cualquier foto), subimos la opacidad para que
+          objetos de bordes marcados en la imagen (mesas, tablas, etc.) no
+          se noten como siluetas rectangulares a través de la tarjeta. */}
+      <div className="absolute inset-0 bg-black/50 z-0"></div>
 
-      <div className="w-full max-w-md p-10 rounded-[32px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] overflow-hidden relative z-10 transition-all duration-300">
+      <div className="w-full max-w-md p-10 rounded-[32px] bg-white/[0.14] backdrop-blur-3xl border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] overflow-hidden relative z-10 transition-all duration-300">
 
         <div className="relative z-10 space-y-8">
           <div className="text-center space-y-2">

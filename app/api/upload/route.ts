@@ -49,6 +49,11 @@ const uploadHandler = async (request: NextRequest) => {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // 800x800 es apropiado para fotos de evidencia (thumbnails), pero deja
+    // borrosos los fondos de pantalla completa (login, etc.) al estirarlos
+    // con object-cover. Ese folder necesita resolución de escritorio.
+    const maxDimension = folder === "login-bg" ? 1920 : 800;
+
     // Subir a Cloudinary
     const { cloudinary } = getCloudinary();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +63,7 @@ const uploadHandler = async (request: NextRequest) => {
           folder: folder,
           resource_type: "image",
           transformation: [
-            { width: 800, height: 800, crop: "limit" },
+            { width: maxDimension, height: maxDimension, crop: "limit" },
             { quality: "auto" },
             { fetch_format: "auto" },
           ],
