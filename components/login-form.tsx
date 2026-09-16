@@ -89,7 +89,7 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
       {/* Overlay oscuro para la legibilidad */}
       <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-      <div className="w-full max-w-md p-10 rounded-[32px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] relative z-10 transition-all duration-300">
+      <div className="w-full max-w-md p-10 rounded-[32px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] overflow-hidden relative z-10 transition-all duration-300">
 
         <div className="relative z-10 space-y-8">
           <div className="text-center space-y-2">
