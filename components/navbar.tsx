@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, Clock, Route, Building2, Timer, Calendar } from "lucide-react";
+import { Menu, X, Home, Users, Package, FileText, Map, Settings, LogOut, User, BarChart3, Clock, Route, Building2, Timer, Calendar, Image as ImageIcon } from "lucide-react";
 
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { cn } from "@/lib/utils";
@@ -437,6 +437,12 @@ export function Navbar({ user }: NavbarProps) {
                           <span>Config. Geomaps</span>
                         </button>
                       </Link>
+                      <Link href="/admin/configuracion/login" onClick={() => setUserMenuOpen(false)}>
+                        <button className="w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>Fondo de Login</span>
+                        </button>
+                      </Link>
                     </>
                   )}
 
@@ -748,6 +754,18 @@ export function Navbar({ user }: NavbarProps) {
                       >
                         <Map className="w-4 h-4 mr-2" />
                         Config. Geomaps
+                      </EnhancedButton>
+                    </Link>
+                    <Link href="/admin/configuracion/login" className="block" onClick={() => setMobileMenuOpen(false)}>
+                      <EnhancedButton
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start text-gray-300 hover:text-white hover:bg-white/10",
+                          isActive("/admin/configuracion/login") && "text-white bg-white/10"
+                        )}
+                      >
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Fondo de Login
                       </EnhancedButton>
                     </Link>
                   </>
