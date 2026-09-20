@@ -1,10 +1,74 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, createSession } from "@/lib/auth";
 import { withRateLimitAndValidation } from "@/lib/api-helpers";
 import { RATE_LIMITS } from "@/lib/rate-limit";
 import { LoginSchema, LoginInput } from "@/lib/schemas/auth.schemas";
 import { logAudit, logAuditFromSession } from "@/lib/audit-logger";
+
+/**
+ * Inicia (o reutiliza) el turno del armador y registra el login en auditoría.
+ * Se ejecuta en `after()` (post-respuesta): nada de esto lo lee el cliente
+ * en la respuesta del login (el frontend solo usa `user.rol` para redirigir),
+ * así que no hay razón para que el usuario espere estas ~3-4 queries extra
+ * antes de ver la pantalla siguiente.
+ */
+async function finalizarLoginEnBackground(
+  usuario: { id: string; email: string; nombre: string; rol: string },
+  request: NextRequest
+) {
+  let turnoId: string | null = null;
+
+  if (usuario.rol === "ARMADOR") {
+    try {
+      const armador = await prisma.armador.findUnique({
+        where: { usuarioId: usuario.id },
+        include: {
+          turnos: {
+            where: { estado: "ACTIVO" },
+            orderBy: { inicioTurno: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      if (armador) {
+        if (armador.turnos.length > 0) {
+          turnoId = armador.turnos[0].id;
+        } else {
+          await prisma.turno.updateMany({
+            where: { armadorId: armador.id, estado: "ACTIVO" },
+            data: { estado: "FINALIZADO", finTurno: new Date() },
+          });
+
+          const nuevoTurno = await prisma.turno.create({
+            data: {
+              armadorId: armador.id,
+              estado: "ACTIVO",
+              inicioTurno: new Date(),
+            },
+          });
+          turnoId = nuevoTurno.id;
+        }
+      }
+    } catch (error) {
+      console.error("Error creando turno automático:", error);
+    }
+  }
+
+  await logAuditFromSession({
+    session: {
+      userId: usuario.id,
+      nombre: usuario.nombre,
+      rol: usuario.rol,
+    },
+    action: "LOGIN",
+    resource: "auth",
+    resourceId: usuario.id,
+    metadata: { email: usuario.email, turnoId },
+    request,
+  });
+}
 
 const loginHandler = async (data: LoginInput, request: NextRequest) => {
   try {
@@ -91,73 +155,22 @@ const loginHandler = async (data: LoginInput, request: NextRequest) => {
       rol: usuario.rol,
     });
 
-    // Cambiar estado de loggeo a ACTIVO automáticamente
-    await prisma.usuario.update({
-      where: { id: usuario.id },
-      data: { estadoLoggeo: "ACTIVO" },
-    });
+    // Cambiar estado de loggeo a ACTIVO automáticamente. No bloquea la
+    // respuesta: el cliente solo necesita el rol para redirigir.
+    const estadoLoggeoUpdate = prisma.usuario
+      .update({
+        where: { id: usuario.id },
+        data: { estadoLoggeo: "ACTIVO" },
+      })
+      .catch((error) => {
+        console.error("Error actualizando estadoLoggeo en login:", error);
+      });
 
-    // Si es ARMADOR, iniciar turno automáticamente
-    let turnoId = null;
-    if (usuario.rol === "ARMADOR") {
-      try {
-        // Buscar el registro de armador
-        const armador = await prisma.armador.findUnique({
-          where: { usuarioId: usuario.id },
-          include: {
-            turnos: {
-              where: { estado: "ACTIVO" },
-              orderBy: { inicioTurno: "desc" },
-              take: 1,
-            },
-          },
-        });
-
-        if (armador) {
-          // Si ya tiene un turno activo, reutilizarlo
-          if (armador.turnos.length > 0) {
-            turnoId = armador.turnos[0].id;
-          } else {
-            // Finalizar cualquier turno antiguo que quedó abierto
-            await prisma.turno.updateMany({
-              where: {
-                armadorId: armador.id,
-                estado: "ACTIVO",
-              },
-              data: {
-                estado: "FINALIZADO",
-                finTurno: new Date(),
-              },
-            });
-
-            // Crear nuevo turno
-            const nuevoTurno = await prisma.turno.create({
-              data: {
-                armadorId: armador.id,
-                estado: "ACTIVO",
-                inicioTurno: new Date(),
-              },
-            });
-            turnoId = nuevoTurno.id;
-          }
-        }
-      } catch (error) {
-        console.error("Error creando turno automático:", error);
-        // No fallar el login si hay error en el turno
-      }
-    }
-
-    await logAuditFromSession({
-      session: {
-        userId: usuario.id,
-        nombre: usuario.nombre,
-        rol: usuario.rol,
-      },
-      action: "LOGIN",
-      resource: "auth",
-      resourceId: usuario.id,
-      metadata: { email, turnoId },
-      request,
+    // Iniciar turno (si es ARMADOR) y registrar auditoría después de responder:
+    // ninguno de estos datos lo usa el frontend para decidir la redirección.
+    after(async () => {
+      await estadoLoggeoUpdate;
+      await finalizarLoginEnBackground(usuario, request);
     });
 
     return NextResponse.json({
@@ -168,7 +181,6 @@ const loginHandler = async (data: LoginInput, request: NextRequest) => {
         nombre: usuario.nombre,
         rol: usuario.rol,
       },
-      turnoId,
     });
   } catch (error) {
     console.error("Error en login:", error);

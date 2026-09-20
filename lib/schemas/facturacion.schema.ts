@@ -1,29 +1,33 @@
 import { z } from "zod";
 
+// Los inputs <input type="date"> de un <form method="get"> envían un string
+// vacío (no omiten el parámetro) cuando el usuario no eligió fecha. Sin este
+// preprocesamiento, "" no matchea el regex y Zod lanza un error sin manejar
+// que tumba toda la página de facturación con la pantalla de error genérica.
+const emptyToUndefined = (val: unknown) =>
+  typeof val === "string" && val.trim() === "" ? undefined : val;
+
+const optionalDateString = (message: string) =>
+  z.preprocess(
+    emptyToUndefined,
+    z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/u, message).optional()
+  );
+
 export const billingFiltersSchema = z
   .object({
-    proyectoId: z
-      .string({ required_error: "El proyecto es obligatorio" })
-      .min(1, "El proyecto es obligatorio")
-      .max(64, "ID de proyecto demasiado largo")
-      .optional()
-      .default("ALL"),
-    desde: z
-      .string({ required_error: "La fecha 'desde' es obligatoria" })
-      .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/u, "Formato de fecha 'desde' inválido (YYYY-MM-DD)")
-      .optional(),
-    hasta: z
-      .string({ required_error: "La fecha 'hasta' es obligatoria" })
-      .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/u, "Formato de fecha 'hasta' inválido (YYYY-MM-DD)")
-      .optional(),
-    startDate: z
-      .string()
-      .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/u, "Formato de fecha inválido (YYYY-MM-DD)")
-      .optional(),
-    endDate: z
-      .string()
-      .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/u, "Formato de fecha inválido (YYYY-MM-DD)")
-      .optional(),
+    proyectoId: z.preprocess(
+      emptyToUndefined,
+      z
+        .string()
+        .min(1, "El proyecto es obligatorio")
+        .max(64, "ID de proyecto demasiado largo")
+        .optional()
+        .default("ALL")
+    ),
+    desde: optionalDateString("Formato de fecha 'desde' inválido (YYYY-MM-DD)"),
+    hasta: optionalDateString("Formato de fecha 'hasta' inválido (YYYY-MM-DD)"),
+    startDate: optionalDateString("Formato de fecha inválido (YYYY-MM-DD)"),
+    endDate: optionalDateString("Formato de fecha inválido (YYYY-MM-DD)"),
   })
   .strict()
   .transform((data) => {

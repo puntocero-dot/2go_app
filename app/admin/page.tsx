@@ -187,46 +187,55 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         },
       };
 
-  const totalProyectosGlobal = await prisma.proyecto.count();
-  const totalArmadores = await prisma.armador.count();
-  const armadoresActivos = await prisma.armador.count({ where: { estado: "ACTIVO" } });
-  const proyectos = await prisma.proyecto.findMany({
-    orderBy: { nombreComercial: "asc" },
-    select: {
-      id: true,
-      nombreComercial: true,
-    },
-  });
-  const totalOrdenes = await prisma.orden.count({ where: ordenWhere });
-  const ordenesActivas = await prisma.orden.count({ where: activeWhere });
-  
-  // Calcular total facturado usando el sistema de facturación real
-  let totalFacturadoCalculado = 0;
-  
   // Si hay filtros de fecha, usar esos; si no, usar el mes actual
   const hoy = new Date();
   const primerDiaMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const ultimoDiaMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate()}`;
-  
+
   const desdeParaFacturacion = fechaInicioFilter || primerDiaMes;
   const hastaParaFacturacion = fechaFinFilter || ultimoDiaMes;
-  
-  const billingData = await getBillingDataset({
-    proyectoId: proyectoIdFilter,
-    desde: desdeParaFacturacion,
-    hasta: hastaParaFacturacion,
-  });
-  totalFacturadoCalculado = billingData?.totalsByConcept.totalFacturado ?? 0;
-  
-  const ordenesRecientes = await prisma.orden.findMany({
-    where: ordenWhere,
-    take: 10,
-    orderBy: { createdAt: "desc" },
-    include: {
-      proyecto: { select: { nombreComercial: true } },
-      armador: { include: { usuario: true } },
-    },
-  });
+
+  // Ninguna de estas queries depende del resultado de otra: se disparan en
+  // paralelo en vez de una por una (antes eran 8 round-trips secuenciales).
+  const [
+    totalProyectosGlobal,
+    totalArmadores,
+    armadoresActivos,
+    proyectos,
+    totalOrdenes,
+    ordenesActivas,
+    billingData,
+    ordenesRecientes,
+  ] = await Promise.all([
+    prisma.proyecto.count(),
+    prisma.armador.count(),
+    prisma.armador.count({ where: { estado: "ACTIVO" } }),
+    prisma.proyecto.findMany({
+      orderBy: { nombreComercial: "asc" },
+      select: {
+        id: true,
+        nombreComercial: true,
+      },
+    }),
+    prisma.orden.count({ where: ordenWhere }),
+    prisma.orden.count({ where: activeWhere }),
+    getBillingDataset({
+      proyectoId: proyectoIdFilter,
+      desde: desdeParaFacturacion,
+      hasta: hastaParaFacturacion,
+    }),
+    prisma.orden.findMany({
+      where: ordenWhere,
+      take: 10,
+      orderBy: { createdAt: "desc" },
+      include: {
+        proyecto: { select: { nombreComercial: true } },
+        armador: { include: { usuario: { select: { nombre: true } } } },
+      },
+    }),
+  ]);
+
+  const totalFacturadoCalculado = billingData?.totalsByConcept.totalFacturado ?? 0;
 
   const totalProyectos =
     proyectoIdFilter === "ALL"

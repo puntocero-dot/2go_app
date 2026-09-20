@@ -209,19 +209,19 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Configuración de Facturación</h3>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="tipoCliente">Tipo de Facturación (El Salvador) *</Label>
+            <Label htmlFor="tipoCliente" className="text-slate-700">Tipo de Facturación (El Salvador) *</Label>
             <select
               id="tipoCliente"
               name="tipoCliente"
               value={formData.tipoCliente}
               onChange={handleChange}
               required
-              className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             >
               <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
               <option value="CREDITO_FISCAL">Crédito Fiscal</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Selecciona el tipo de facturación según las leyes de El Salvador
             </p>
           </div>
@@ -229,11 +229,11 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
           {/* Campos fiscales según tipo de cliente */}
           {formData.tipoCliente === "CREDITO_FISCAL" ? (
             <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h4 className="font-semibold text-gray-900">Datos Fiscales - Crédito Fiscal</h4>
-              
+              <h4 className="font-semibold text-slate-900">Datos Fiscales - Crédito Fiscal</h4>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="nit">NIT *</Label>
+                  <Label htmlFor="nit" className="text-slate-700">NIT *</Label>
                   <input
                     type="text"
                     id="nit"
@@ -241,13 +241,13 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
                     value={formData.nit}
                     onChange={handleChange}
                     required
-                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     placeholder="0000-000000-000-0"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="nrc">NRC *</Label>
+                  <Label htmlFor="nrc" className="text-slate-700">NRC *</Label>
                   <input
                     type="text"
                     id="nrc"
@@ -255,13 +255,13 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
                     value={formData.nrc}
                     onChange={handleChange}
                     required
-                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     placeholder="000000-0"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="razonSocial">Razón Social *</Label>
+                  <Label htmlFor="razonSocial" className="text-slate-700">Razón Social *</Label>
                   <input
                     type="text"
                     id="razonSocial"
@@ -269,13 +269,13 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
                     value={formData.razonSocial}
                     onChange={handleChange}
                     required
-                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     placeholder="Nombre de la empresa S.A. de C.V."
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="giro">Giro del Negocio *</Label>
+                  <Label htmlFor="giro" className="text-slate-700">Giro del Negocio *</Label>
                   <input
                     type="text"
                     id="giro"
@@ -283,7 +283,7 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
                     value={formData.giro}
                     onChange={handleChange}
                     required
-                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     placeholder="Ej: Venta de muebles y accesorios"
                   />
                 </div>
@@ -291,76 +291,76 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
             </div>
           ) : (
             <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h4 className="font-semibold text-gray-900">Datos Fiscales - Consumidor Final</h4>
-              
+              <h4 className="font-semibold text-slate-900">Datos Fiscales - Consumidor Final</h4>
+
               <div>
-                <Label htmlFor="nombreCompleto">Nombre Completo</Label>
+                <Label htmlFor="nombreCompleto" className="text-slate-700">Nombre Completo</Label>
                 <input
                   type="text"
                   id="nombreCompleto"
                   name="nombreCompleto"
                   value={formData.nombreCompleto}
                   onChange={handleChange}
-                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   placeholder="Nombre completo del cliente"
                 />
               </div>
 
               <div>
-                <Label htmlFor="dui">DUI</Label>
+                <Label htmlFor="dui" className="text-slate-700">DUI</Label>
                 <input
                   type="text"
                   id="dui"
                   name="dui"
                   value={formData.dui}
                   onChange={handleChange}
-                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   placeholder="00000000-0"
                 />
-                <p className="text-xs text-gray-500 mt-1">Opcional para consumidor final</p>
+                <p className="text-xs text-slate-500 mt-1">Opcional para consumidor final</p>
               </div>
             </div>
           )}
 
           {/* Información de Contacto de Facturación */}
           <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
-            <h4 className="font-semibold text-gray-900">Información de Contacto para Facturación</h4>
+            <h4 className="font-semibold text-slate-900">Información de Contacto para Facturación</h4>
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <Label htmlFor="contactoNombre">Nombre de Contacto</Label>
+                <Label htmlFor="contactoNombre" className="text-slate-700">Nombre de Contacto</Label>
                 <input
                   type="text"
                   id="contactoNombre"
                   name="contactoNombre"
                   value={formData.contactoNombre}
                   onChange={handleChange}
-                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   placeholder="Nombre del contacto"
                 />
               </div>
 
               <div>
-                <Label htmlFor="contactoEmailFacturacion">Email de Contacto</Label>
+                <Label htmlFor="contactoEmailFacturacion" className="text-slate-700">Email de Contacto</Label>
                 <input
                   type="email"
                   id="contactoEmailFacturacion"
                   name="contactoEmailFacturacion"
                   value={formData.contactoEmailFacturacion}
                   onChange={handleChange}
-                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   placeholder="contacto@empresa.com"
                 />
               </div>
 
               <div>
-                <Label htmlFor="contactoTelefonoFacturacion">Teléfono de Contacto</Label>
+                <Label htmlFor="contactoTelefonoFacturacion" className="text-slate-700">Teléfono de Contacto</Label>
                 <input
                   type="tel"
                   id="contactoTelefonoFacturacion"
                   name="contactoTelefonoFacturacion"
                   value={formData.contactoTelefonoFacturacion}
                   onChange={handleChange}
-                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full mt-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   placeholder="+503 1234 5678"
                 />
               </div>
@@ -377,10 +377,10 @@ export function ProyectoEditForm({ proyecto }: ProyectoEditFormProps) {
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">
+          <h3 className="text-sm font-semibold text-slate-900 mb-1">
             Reglas de Facturación
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Las reglas de cobro (volumen, prioridad, distancia, penalizaciones, etc.) se configuran en la página de detalle del proyecto después de guardarlo.
           </p>
         </div>
