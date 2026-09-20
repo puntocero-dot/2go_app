@@ -101,9 +101,13 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
 
       {/* Halo circular detrás de la tarjeta: un resplandor genuinamente
           redondo (radial-gradient + blur), no la sombra rectangular del
-          card. */}
+          card. Centrado explícito con top/left/translate: sin esto, un
+          div absolute dentro de un contenedor flex no queda centrado por
+          el flex (los elementos con position:absolute salen del flujo),
+          así que su "posición estática" por defecto es impredecible entre
+          navegadores — eso es lo que se veía como el cuadrado feo. */}
       <div
-        className="absolute z-[1] w-[520px] h-[520px] rounded-full blur-3xl opacity-40 pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1] w-[520px] h-[520px] rounded-full blur-3xl opacity-40 pointer-events-none"
         style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
       />
 
