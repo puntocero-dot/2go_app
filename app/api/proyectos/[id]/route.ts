@@ -174,8 +174,17 @@ export async function GET(
   try {
     const session = await getSession();
 
-    if (!session) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    }
+
+    if (session.rol === "SUPERVISOR") {
+      const supervisorProyecto = await prisma.supervisorProyecto.findFirst({
+        where: { usuarioId: session.userId, proyectoId: id },
+      });
+      if (!supervisorProyecto) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
     }
 
     const proyecto = await prisma.proyecto.findUnique({

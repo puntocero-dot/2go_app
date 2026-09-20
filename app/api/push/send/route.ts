@@ -38,11 +38,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await sendPushToUser(parsed.data.userId, {
-    title: parsed.data.title,
-    body: parsed.data.body,
-    url: parsed.data.url,
-  });
+  try {
+    await sendPushToUser(parsed.data.userId, {
+      title: parsed.data.title,
+      body: parsed.data.body,
+      url: parsed.data.url,
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error enviando push notification:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
 }

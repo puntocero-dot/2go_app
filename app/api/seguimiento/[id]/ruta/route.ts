@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRouteDirections } from "@/lib/mapbox-directions";
+import { withRateLimit } from "@/lib/api-helpers";
+import { getClientIp } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -8,7 +10,12 @@ type RouteContext = { params: Promise<{ id: string }> };
 const routeCache = new Map<string, { coordinates: number[][]; timestamp: number }>();
 const CACHE_TTL_MS = 30_000; // 30 seconds
 
-export async function GET(request: NextRequest, context: RouteContext) {
+const SEGUIMIENTO_RUTA_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minuto
+  maxRequests: 30, // muy por encima del polling normal
+};
+
+async function getHandler(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
   const searchParams = request.nextUrl.searchParams;
   const token = searchParams.get("token");
@@ -92,3 +99,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
+
+export const GET = withRateLimit(
+  getHandler,
+  SEGUIMIENTO_RUTA_RATE_LIMIT,
+  (request) => `seguimiento-ruta:${getClientIp(request)}`
+);

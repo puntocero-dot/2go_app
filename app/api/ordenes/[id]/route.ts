@@ -58,6 +58,22 @@ export async function GET(
       );
     }
 
+    if (session.rol === "ARMADOR") {
+      const armador = await prisma.armador.findUnique({
+        where: { usuarioId: session.userId },
+      });
+      if (!armador || orden.armadorId !== armador.id) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
+    } else if (session.rol === "SUPERVISOR") {
+      const supervisorProyecto = await prisma.supervisorProyecto.findFirst({
+        where: { usuarioId: session.userId, proyectoId: orden.proyectoId },
+      });
+      if (!supervisorProyecto) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
+    }
+
     return NextResponse.json({ orden });
   } catch (error) {
     console.error("Error obteniendo orden:", error);
@@ -118,6 +134,19 @@ const actualizarOrdenHandler = async (
       if (armadorId !== undefined && armadorId !== ordenActual.armadorId) {
         return NextResponse.json(
           { error: "No puedes reasignar la orden a otro armador" },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Si es SUPERVISOR, debe supervisar el proyecto de la orden
+    if (session.rol === "SUPERVISOR") {
+      const supervisorProyecto = await prisma.supervisorProyecto.findFirst({
+        where: { usuarioId: session.userId, proyectoId: ordenActual.proyectoId },
+      });
+      if (!supervisorProyecto) {
+        return NextResponse.json(
+          { error: "No tienes permiso para modificar esta orden" },
           { status: 403 }
         );
       }
@@ -223,7 +252,16 @@ const actualizarOrdenHandler = async (
         usuarioFinal: true,
         armador: {
           include: {
-            usuario: true,
+            usuario: {
+              select: {
+                id: true,
+                nombre: true,
+                email: true,
+                telefono: true,
+                rol: true,
+                estadoLoggeo: true,
+              },
+            },
           },
         },
       },

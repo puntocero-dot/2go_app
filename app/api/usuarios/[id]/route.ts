@@ -44,7 +44,7 @@ const patchHandler = async (
 
     // Si hay origin, validarlo
     if (origin) {
-      const isAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed));
+      const isAllowed = allowedOrigins.some(allowed => origin === allowed);
       if (!isAllowed) {
         console.warn(JSON.stringify({
           timestamp: new Date().toISOString(),

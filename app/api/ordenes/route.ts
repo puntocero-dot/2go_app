@@ -39,6 +39,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Si es supervisor, restringir a los proyectos que supervisa
+    if (session.rol === "SUPERVISOR") {
+      const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+        where: { usuarioId: session.userId },
+        select: { proyectoId: true },
+      });
+      const proyectoIdsPermitidos = supervisorProyectos.map((sp) => sp.proyectoId);
+
+      if (proyectoId && !proyectoIdsPermitidos.includes(proyectoId)) {
+        return NextResponse.json({ error: "No autorizado para este proyecto" }, { status: 403 });
+      }
+
+      where.proyectoId = proyectoId || { in: proyectoIdsPermitidos.length > 0 ? proyectoIdsPermitidos : ["__NINGUNO__"] };
+    }
+
     const [ordenes, total] = await Promise.all([
       prisma.orden.findMany({
         where,
@@ -89,7 +104,7 @@ const crearOrdenHandler = async (
   try {
     const session = await getSession();
 
-    if (!session || !["ADMIN", "SUPERVISOR", "OBSERVADOR"].includes(session.rol)) {
+    if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
@@ -102,6 +117,15 @@ const crearOrdenHandler = async (
       autoAsignar,
       prioridad,
     } = data;
+
+    if (session.rol === "SUPERVISOR") {
+      const supervisorProyecto = await prisma.supervisorProyecto.findFirst({
+        where: { usuarioId: session.userId, proyectoId },
+      });
+      if (!supervisorProyecto) {
+        return NextResponse.json({ error: "No autorizado para este proyecto" }, { status: 403 });
+      }
+    }
 
     const prioridadValida = (prioridad || "NORMAL") as "VIP" | "URGENTE" | "MEDIA" | "NORMAL";
 
@@ -160,7 +184,16 @@ const crearOrdenHandler = async (
             usuarioFinal: true,
             armador: {
               include: {
-                usuario: true,
+                usuario: {
+                  select: {
+                    id: true,
+                    nombre: true,
+                    email: true,
+                    telefono: true,
+                    rol: true,
+                    estadoLoggeo: true,
+                  },
+                },
               },
             },
           },

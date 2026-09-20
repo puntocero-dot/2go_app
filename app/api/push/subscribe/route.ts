@@ -39,14 +39,22 @@ export async function POST(request: NextRequest) {
 
   const { endpoint, p256dh, auth } = parsed.data;
 
-  // Upsert: actualizar si ya existe el endpoint, crear si no
-  await prisma.pushSubscription.upsert({
-    where: { endpoint },
-    create: { userId: session.userId, endpoint, p256dh, auth },
-    update: { userId: session.userId, p256dh, auth },
-  });
+  try {
+    // Upsert: actualizar si ya existe el endpoint, crear si no
+    await prisma.pushSubscription.upsert({
+      where: { endpoint },
+      create: { userId: session.userId, endpoint, p256dh, auth },
+      update: { userId: session.userId, p256dh, auth },
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error registrando push subscription:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
 }
 
 /**

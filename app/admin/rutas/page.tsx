@@ -77,7 +77,6 @@ export default function RutasPage() {
       const response = await fetch(`/api/armadores/${armadorId}/turnos?limit=20`);
       if (response.ok) {
         const data = await response.json();
-        console.log("Turnos recibidos:", data);
         setTurnos(data.turnos || []);
 
         // Seleccionar el primer turno automáticamente

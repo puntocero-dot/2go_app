@@ -53,32 +53,16 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
 
     const { desde, hasta, proyectoId, estado, armadorId } = parsed.data;
 
-    const desdeDate = desde ? new Date(desde) : undefined;
-    const hastaDate = hasta ? new Date(hasta) : undefined;
+    // desde/hasta son obligatorios (validado por el schema): "YYYY-MM-DD"
+    const desdeDate = new Date(`${desde}T00:00:00.000Z`);
+    const hastaDate = new Date(`${hasta}T23:59:59.999Z`);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {
       ...(proyectoId && { proyectoId }),
       ...(estado && { estado: estado as EstadoOrden }),
       ...(armadorId && { armadorId }),
-      ...(desdeDate || hastaDate
-        ? {
-            OR: [
-              {
-                updatedAt: {
-                  ...(desdeDate && { gte: desdeDate }),
-                  ...(hastaDate && { lte: hastaDate }),
-                },
-              },
-              {
-                fechaCreacion: {
-                  ...(desdeDate && { gte: desdeDate }),
-                  ...(hastaDate && { lte: hastaDate }),
-                },
-              },
-            ],
-          }
-        : {}),
+      fechaCreacion: { gte: desdeDate, lte: hastaDate },
     };
 
     const ordenes = await prisma.orden.findMany({
@@ -190,21 +174,6 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
     );
   }
 };
-
-// Función auxiliar para formatear segundos a un string legible
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function formatSeconds(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  
-  const parts = [];
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
-  
-  return parts.join(' ');
-}
 
 export const GET = withRateLimit(
   tiemposPedidoHandler,

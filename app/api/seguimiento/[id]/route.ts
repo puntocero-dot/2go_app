@@ -4,8 +4,15 @@ import { getRouteDirections, formatDuration } from "@/lib/mapbox-directions";
 import { getEtaCache, setEtaCache } from "@/lib/eta-cache";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { aplicarCorreccionETA } from "@/lib/ai/eta-predictor";
+import { withRateLimit } from "@/lib/api-helpers";
+import { getClientIp } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+const SEGUIMIENTO_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minuto
+  maxRequests: 30, // muy por encima del polling normal (1 req/min)
+};
 
 interface EtaResponse {
   disponible: boolean;
@@ -35,7 +42,7 @@ function formatTimeAgo(date: Date): string {
 }
 
 // GET - Obtener informacion de seguimiento publico (requiere token magico)
-export async function GET(
+async function getHandler(
   request: NextRequest,
   context: RouteContext
 ) {
@@ -139,6 +146,12 @@ export async function GET(
     );
   }
 }
+
+export const GET = withRateLimit(
+  getHandler,
+  SEGUIMIENTO_RATE_LIMIT,
+  (request) => `seguimiento:${getClientIp(request)}`
+);
 
 /**
  * Calcula el ETA basado en el estado actual de la orden.

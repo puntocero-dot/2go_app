@@ -128,7 +128,7 @@ const deleteHandler = async (request: NextRequest) => {
   try {
     const session = await getSession();
 
-    if (!session) {
+    if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 

@@ -56,8 +56,6 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps) {
     }),
   ]);
 
-  console.log('Proyectos cargados en página usuarios:', proyectos.length);
-
   const serializableUsuarios = usuarios.map((usuario) => ({
     id: usuario.id,
     nombre: usuario.nombre,

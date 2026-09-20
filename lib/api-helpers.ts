@@ -151,7 +151,7 @@ export function withCsrf(
 
     const origin = request.headers.get("origin");
     if (origin) {
-      const isAllowed = ALLOWED_ORIGINS.some((allowed) => origin.startsWith(allowed));
+      const isAllowed = ALLOWED_ORIGINS.some((allowed) => origin === allowed);
       if (!isAllowed) {
         console.warn(
           JSON.stringify({

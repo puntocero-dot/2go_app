@@ -27,18 +27,31 @@ const EstadoOrdenSchema = z.enum([
   "CANCELADA",
 ]);
 
-export const ReporteTiemposPedidoFiltrosSchema = z.object({
-  desde: DateStringSchema.optional(),
-  hasta: DateStringSchema.optional(),
-  proyectoId: z
-    .string()
-    .max(100)
-    .transform(zodSanitizeText)
-    .optional(),
-  estado: EstadoOrdenSchema.optional(),
-  armadorId: z
-    .string()
-    .max(100)
-    .transform(zodSanitizeText)
-    .optional(),
-});
+export const ReporteTiemposPedidoFiltrosSchema = z
+  .object({
+    desde: DateStringSchema.optional(),
+    hasta: DateStringSchema.optional(),
+    proyectoId: z
+      .string()
+      .max(100)
+      .transform(zodSanitizeText)
+      .optional(),
+    estado: EstadoOrdenSchema.optional(),
+    armadorId: z
+      .string()
+      .max(100)
+      .transform(zodSanitizeText)
+      .optional(),
+  })
+  .refine((data) => Boolean(data.desde) && Boolean(data.hasta), {
+    message: "Debe especificar un rango de fechas (desde y hasta)",
+    path: ["desde"],
+  })
+  .refine(
+    (data) =>
+      !data.desde || !data.hasta || new Date(data.desde) <= new Date(data.hasta),
+    {
+      message: "La fecha 'desde' debe ser anterior o igual a 'hasta'",
+      path: ["hasta"],
+    }
+  );

@@ -57,7 +57,7 @@
     "jose": "^5.9.6",
     "lucide-react": "^0.468.0",
     "mapbox-gl": "^2.15.0",
-    "next": "15.5",
+    "next": "^15.5.25",
     "pdf-lib": "^1.17.1",
     "prisma": "^5.22.0",
     "react": "19.0.1",
@@ -86,5 +86,8 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.1.4"
+  },
+  "overrides": {
+    "dompurify": "^3.4.13"
   }
 }

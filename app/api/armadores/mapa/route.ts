@@ -49,14 +49,14 @@ export async function GET() {
       },
     });
 
-    const armadoresConUbicacion = await Promise.all(
-      armadores.map(async (armador) => {
-        // Puntos de ruta recientes basados en RegistroEstado con GPS
-        const registrosRuta = await prisma.registroEstado.findMany({
+    // Una sola query para todos los armadores en vez de N queries (una por armador)
+    const armadorIds = armadores.map((a) => a.id);
+    const registrosRutaTodos = armadorIds.length
+      ? await prisma.registroEstado.findMany({
           where: {
             orden: {
               is: {
-                armadorId: armador.id,
+                armadorId: { in: armadorIds },
               },
             },
             latitud: { not: null },
@@ -69,11 +69,31 @@ export async function GET() {
             latitud: true,
             longitud: true,
             timestamp: true,
+            orden: {
+              select: { armadorId: true },
+            },
           },
           orderBy: {
             timestamp: "asc",
           },
-        });
+        })
+      : [];
+
+    const registrosPorArmador = new Map<string, typeof registrosRutaTodos>();
+    for (const registro of registrosRutaTodos) {
+      const armadorId = registro.orden.armadorId;
+      if (!armadorId) continue;
+      const lista = registrosPorArmador.get(armadorId);
+      if (lista) {
+        lista.push(registro);
+      } else {
+        registrosPorArmador.set(armadorId, [registro]);
+      }
+    }
+
+    const armadoresConUbicacion = await Promise.all(
+      armadores.map(async (armador) => {
+        const registrosRuta = registrosPorArmador.get(armador.id) ?? [];
 
         const puntosRuta = registrosRuta.map((r) => ({
           latitud: r.latitud as number,

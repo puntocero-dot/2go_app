@@ -184,18 +184,18 @@ export function ArmadorGpsTracker() {
       }
 
       // Enviar al endpoint del turno
-      await retryWithBackoff(
+      const response = await retryWithBackoff(
         async () => {
           const response = await fetch(`/api/turnos/${turnoActivoRef.current}/ubicacion`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ latitud: lat, longitud: lng }),
           });
-          
+
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
-          
+
           return response;
         },
         {
@@ -207,24 +207,17 @@ export function ArmadorGpsTracker() {
           }
         }
       );
-      
+
       // Exito
       lastSentTimeRef.current = Date.now();
       lastPositionRef.current = { lat, lng };
       failedAttemptsRef.current = 0;
 
-      // Leer totalPuntosGuardados de la respuesta para actualizar indicador
+      // Leer totalPuntosGuardados de la respuesta ya recibida (sin duplicar el POST)
       let totalSaved = 0;
       try {
-        const lastRes = await fetch(`/api/turnos/${turnoActivoRef.current}/ubicacion`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ latitud: lat, longitud: lng }),
-        });
-        if (lastRes.ok) {
-          const resData = await lastRes.json();
-          totalSaved = resData.totalPuntosGuardados ?? 0;
-        }
+        const resData = await response.json();
+        totalSaved = resData.totalPuntosGuardados ?? 0;
       } catch { /* ignorar */ }
 
       setSyncState(prev => ({
