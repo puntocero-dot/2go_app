@@ -78,8 +78,12 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
       `}} />
 
       {/* Imagen de fondo, editable desde /admin/configuracion/login.
-          sizes="100vw" evita que Next elija un candidato de srcset más
-          chico de lo necesario para un fondo a pantalla completa. */}
+          Se desenfoca directamente la imagen (en vez de solo el vidrio
+          esmerilado sobre ella): así ningún objeto de bordes marcados que
+          suba el admin (mesas, tablas, estanterías) puede leerse como una
+          silueta rectangular detrás de la tarjeta — es un desenfoque real
+          de la fuente, no una ilusión óptica que depende de la foto.
+          scale-110 esconde el recorte de bordes que deja el blur. */}
       <Image
         src={backgroundUrl}
         alt="Fondo"
@@ -87,14 +91,21 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
         priority
         sizes="100vw"
         quality={90}
-        className="object-cover z-0"
+        className="object-cover z-0 scale-110 blur-2xl"
       />
 
-      {/* Overlay oscuro para la legibilidad. Como el fondo es editable desde
-          admin (puede ser cualquier foto), subimos la opacidad para que
-          objetos de bordes marcados en la imagen (mesas, tablas, etc.) no
-          se noten como siluetas rectangulares a través de la tarjeta. */}
-      <div className="absolute inset-0 bg-black/50 z-0"></div>
+      {/* Overlay cálido (en vez de negro plano) para que la foto de fondo
+          tiña de un tono tierra/ámbar acorde a la identidad de marca,
+          sin importar qué foto suba el admin. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-black/60 z-0" />
+
+      {/* Halo circular detrás de la tarjeta: un resplandor genuinamente
+          redondo (radial-gradient + blur), no la sombra rectangular del
+          card. */}
+      <div
+        className="absolute z-[1] w-[520px] h-[520px] rounded-full blur-3xl opacity-40 pointer-events-none"
+        style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+      />
 
       <div className="w-full max-w-md p-10 rounded-[32px] bg-white/[0.14] backdrop-blur-3xl border border-white/20 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] overflow-hidden relative z-10 transition-all duration-300">
 

@@ -4,65 +4,67 @@
 
 @layer base {
   :root {
-    /* Dark glass theme — unified with login */
-    --background: 222 47% 5%;
-    --foreground: 213 30% 93%;
+    /* Tema cálido "taller de madera" — carbón cálido + verde salvia (el
+       mismo tono del botón del login, #1f9d7c) en vez de la paleta fría
+       cian/navy genérica de plantilla SaaS que tenía el sistema antes. */
+    --background: 28 18% 6%;
+    --foreground: 35 25% 94%;
 
-    --card: 222 40% 8%;
-    --card-foreground: 213 30% 93%;
+    --card: 26 16% 9%;
+    --card-foreground: 35 25% 94%;
 
-    --popover: 222 40% 8%;
-    --popover-foreground: 213 30% 93%;
+    --popover: 26 16% 9%;
+    --popover-foreground: 35 25% 94%;
 
-    --primary: 203 89% 53%;
-    --primary-foreground: 222 47% 5%;
+    --primary: 164 55% 42%;
+    --primary-foreground: 35 25% 97%;
 
-    --secondary: 217 33% 15%;
-    --secondary-foreground: 213 30% 93%;
+    --secondary: 28 16% 15%;
+    --secondary-foreground: 35 25% 94%;
 
-    --muted: 217 33% 12%;
-    --muted-foreground: 215 20% 52%;
+    --muted: 28 14% 12%;
+    --muted-foreground: 30 10% 60%;
 
-    --accent: 203 89% 53%;
-    --accent-foreground: 222 47% 5%;
+    --accent: 164 55% 42%;
+    --accent-foreground: 35 25% 97%;
 
-    --destructive: 0 72% 58%;
-    --destructive-foreground: 213 30% 93%;
+    --destructive: 6 72% 58%;
+    --destructive-foreground: 35 25% 94%;
 
-    --border: 220 25% 16%;
-    --input: 220 25% 14%;
-    --ring: 203 89% 53%;
+    --border: 28 16% 17%;
+    --input: 28 16% 14%;
+    --ring: 164 55% 42%;
 
     --radius: 0.75rem;
 
-    --chart-1: 203 89% 53%;
-    --chart-2: 258 90% 66%;
-    --chart-3: 160 84% 39%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 72% 58%;
+    --chart-1: 164 55% 42%;
+    --chart-2: 38 85% 55%;
+    --chart-3: 14 65% 52%;
+    --chart-4: 45 75% 55%;
+    --chart-5: 355 55% 45%;
   }
 
-  /* Dark variant — same palette (dark-first design) */
+  /* Variante .dark — mismo diseño dark-first, apenas más oscura */
   .dark {
-    --background: 222 47% 4%;
-    --foreground: 213 30% 96%;
-    --card: 222 40% 7%;
-    --card-foreground: 213 30% 96%;
-    --popover: 222 40% 7%;
-    --popover-foreground: 213 30% 96%;
-    --primary: 203 89% 53%;
-    --primary-foreground: 222 47% 4%;
-    --secondary: 217 33% 13%;
-    --secondary-foreground: 213 30% 96%;
-    --muted: 217 33% 10%;
-    --muted-foreground: 215 20% 48%;
-    --accent: 203 89% 53%;
-    --accent-foreground: 222 47% 4%;
-    --destructive: 0 72% 58%;
-    --destructive-foreground: 213 30% 96%;
-    --border: 220 25% 14%;
-    --input: 220 25% 12%;
-    --ring: 203 89% 53%;
+    --background: 28 18% 5%;
+    --foreground: 35 25% 96%;
+    --card: 26 16% 7%;
+    --card-foreground: 35 25% 96%;
+    --popover: 26 16% 7%;
+    --popover-foreground: 35 25% 96%;
+    --primary: 164 55% 44%;
+    --primary-foreground: 35 25% 97%;
+    --secondary: 28 16% 13%;
+    --secondary-foreground: 35 25% 96%;
+    --muted: 28 14% 10%;
+    --muted-foreground: 30 10% 58%;
+    --accent: 164 55% 44%;
+    --accent-foreground: 35 25% 97%;
+    --destructive: 6 72% 58%;
+    --destructive-foreground: 35 25% 96%;
+    --border: 28 16% 15%;
+    --input: 28 16% 12%;
+    --ring: 164 55% 44%;
   }
 }
 
@@ -74,8 +76,8 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     background-image:
-      radial-gradient(ellipse at 75% 0%, rgba(29, 161, 242, 0.07) 0%, transparent 55%),
-      radial-gradient(ellipse at 20% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+      radial-gradient(ellipse at 75% 0%, rgba(45, 178, 140, 0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 100%, rgba(217, 145, 74, 0.05) 0%, transparent 50%);
     min-height: 100svh;
   }
 }
@@ -96,7 +98,7 @@
 
   .glass-input {
     @apply bg-white/[0.06] border-white/10 text-white placeholder:text-white/30
-           focus:border-[#1da1f2] focus:ring-1 focus:ring-[#1da1f2]/40
+           focus:border-primary focus:ring-1 focus:ring-primary/40
            transition-colors rounded-lg;
   }
 
@@ -186,11 +188,11 @@
 
   /* Text gradients */
   .text-gradient {
-    @apply bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-amber-300 via-primary to-emerald-400 bg-clip-text text-transparent;
   }
 
   .text-gradient-cyan {
-    background: linear-gradient(135deg, #1da1f2 0%, #7dd3fc 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #f2b774 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -202,15 +204,15 @@
   .shadow-elevation-3 { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.3); }
   .shadow-elevation-4 { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.4); }
 
-  /* Cyan accent glow */
+  /* Glow de acento (primary) */
   .glow-cyan {
-    box-shadow: 0 4px 14px rgba(29, 161, 242, 0.35);
+    box-shadow: 0 4px 14px hsl(var(--primary) / 0.35);
   }
   .glow-cyan-hover {
     @apply transition-all;
   }
   .glow-cyan-hover:hover {
-    box-shadow: 0 6px 20px rgba(29, 161, 242, 0.45);
+    box-shadow: 0 6px 20px hsl(var(--primary) / 0.45);
   }
 
   /* Autofill fix for inputs on dark backgrounds.

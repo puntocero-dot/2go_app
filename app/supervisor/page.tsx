@@ -124,7 +124,7 @@ export default async function SupervisorDashboard() {
           <Card glass hover>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/70">Órdenes Hoy</CardTitle>
-              <div className="w-9 h-9 rounded-xl bg-cyan-500/15 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
                 <span className="text-base">📅</span>
               </div>
             </CardHeader>

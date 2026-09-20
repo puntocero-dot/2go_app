@@ -13,7 +13,7 @@ import {
 const HeroScene = dynamic(() => import("@/components/hero-scene"), {
   ssr: false,
   loading: () => (
-    <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-blue-950 to-cyan-950" />
+    <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#1a130c] via-[#140f0a] to-[#0e0b08]" />
   ),
 });
 
@@ -72,9 +72,9 @@ const FEATURES = [
     icon: MapPin,
     title: "Tracking GPS en Tiempo Real",
     description: "Visualiza la ubicación exacta de tus armadores con actualizaciones cada 5 segundos. Historial completo de rutas.",
-    accent: "text-cyan-400",
-    glow: "from-cyan-500/20 to-blue-500/20",
-    border: "group-hover:border-cyan-500/40",
+    accent: "text-primary",
+    glow: "from-primary/20 to-emerald-500/20",
+    border: "group-hover:border-primary/40",
   },
   {
     icon: Route,
@@ -88,9 +88,9 @@ const FEATURES = [
     icon: Users,
     title: "Gestión de Armadores",
     description: "Administra tu equipo, turnos, disponibilidad y rendimiento desde un panel centralizado.",
-    accent: "text-violet-400",
-    glow: "from-violet-500/20 to-purple-500/20",
-    border: "group-hover:border-violet-500/40",
+    accent: "text-terracota",
+    glow: "from-terracota/20 to-orange-500/20",
+    border: "group-hover:border-terracota/40",
   },
   {
     icon: BarChart3,
@@ -104,9 +104,9 @@ const FEATURES = [
     icon: Bell,
     title: "Notificaciones Automáticas",
     description: "Alertas por WhatsApp y email para clientes y supervisores en cada cambio de estado.",
-    accent: "text-pink-400",
-    glow: "from-pink-500/20 to-rose-500/20",
-    border: "group-hover:border-pink-500/40",
+    accent: "text-amber-400",
+    glow: "from-amber-500/20 to-orange-400/20",
+    border: "group-hover:border-amber-500/40",
   },
   {
     icon: FileText,
@@ -143,7 +143,7 @@ const BENEFITS = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#06090f]">
+    <div className="min-h-screen bg-[#0e0b08]">
       <style jsx global>{`
         @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .animate-gradient { animation: gradient 4s ease infinite; }
@@ -152,10 +152,10 @@ export default function Home() {
       `}</style>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#06090f]/80 backdrop-blur-xl border-b border-white/[0.07]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0e0b08]/80 backdrop-blur-xl border-b border-white/[0.07]">
         <div className="container mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-[#1da1f2] rounded-xl flex items-center justify-center shadow-[0_0_12px_rgba(29,161,242,0.4)]">
+            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_12px_hsl(var(--primary)/0.4)]">
               <Truck className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold text-white tracking-tight">Armados 2Go</span>
@@ -178,7 +178,7 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/login">
-              <Button className="bg-[#1da1f2] hover:bg-[#1a8cd3] text-white text-sm px-5 rounded-lg shadow-[0_4px_14px_rgba(29,161,242,0.35)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.45)] transition-all">
+              <Button className="bg-primary hover:bg-primary/90 text-white text-sm px-5 rounded-lg shadow-[0_4px_14px_hsl(var(--primary)/0.35)] hover:shadow-[0_6px_20px_hsl(var(--primary)/0.45)] transition-all">
                 Iniciar Sesión
               </Button>
             </Link>
@@ -187,23 +187,29 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-28 pb-20 bg-gradient-to-br from-slate-900 via-blue-950 to-cyan-950 relative overflow-hidden min-h-[92vh] flex items-center">
+      <section className="pt-28 pb-20 bg-gradient-to-br from-[#1a130c] via-[#140f0a] to-[#0e0b08] relative overflow-hidden min-h-[92vh] flex items-center">
         <HeroScene />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-slate-900/50 via-transparent to-[#06090f]/90 pointer-events-none" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#1a130c]/50 via-transparent to-[#0e0b08]/90 pointer-events-none" />
+        {/* Scrim detrás del bloque de texto: la escena 3D anima libremente
+            (el camión orbita, el wireframe rota) y en ciertos frames cruza
+            justo por donde cae el título/párrafo. En vez de perseguir esas
+            posiciones, se garantiza legibilidad con un fondo oscuro y
+            difuso del ancho del texto, sin importar qué haga la animación. */}
+        <div className="absolute inset-x-0 top-[10%] mx-auto w-full max-w-3xl h-[440px] bg-[#0e0b08]/60 blur-3xl rounded-[50%] z-[2] pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <FadeUp>
-              <div className="inline-flex items-center gap-2 bg-white/[0.08] backdrop-blur-md px-5 py-2 rounded-full text-cyan-300 text-sm mb-8 border border-white/[0.12]">
+              <div className="inline-flex items-center gap-2 bg-white/[0.08] backdrop-blur-md px-5 py-2 rounded-full text-emerald-300 text-sm mb-8 border border-white/[0.12]">
                 <Zap className="w-3.5 h-3.5" />
                 Plataforma líder en gestión de servicios de armado
               </div>
             </FadeUp>
 
             <FadeUp delay={100}>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-[1.05] tracking-tight">
+              <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-semibold text-white mb-6 leading-[1.05] tracking-tight">
                 Tracking y Gestión
-                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-[length:200%_auto] animate-gradient drop-shadow-[0_0_30px_rgba(6,182,212,0.25)]">
+                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-emerald-400 to-teal-300 bg-[length:200%_auto] animate-gradient drop-shadow-[0_0_30px_hsl(var(--primary)/0.25)]">
                   en Tiempo Real
                 </span>
               </h1>
@@ -219,7 +225,7 @@ export default function Home() {
             <FadeUp delay={300}>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/login">
-                  <Button size="lg" className="bg-[#1da1f2] hover:bg-[#1a8cd3] text-white px-8 py-6 text-lg rounded-xl shadow-[0_6px_20px_rgba(29,161,242,0.4)] hover:shadow-[0_8px_28px_rgba(29,161,242,0.55)] transition-all hover:scale-105">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-xl shadow-[0_6px_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_8px_28px_hsl(var(--primary)/0.55)] transition-all hover:scale-105">
                     Acceder al Sistema
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
@@ -240,7 +246,7 @@ export default function Home() {
               {[
                 { value: <><CountUp target={99} suffix=".9%" /></>, label: "Uptime garantizado", color: "text-white" },
                 { value: <>{"< "}<CountUp target={5} suffix="s" /></>, label: "Actualización GPS", color: "text-white" },
-                { value: <CountUp target={24} suffix="/7" />, label: "Soporte disponible", color: "text-cyan-400" },
+                { value: <CountUp target={24} suffix="/7" />, label: "Soporte disponible", color: "text-emerald-400" },
                 { value: <CountUp target={100} suffix="%" />, label: "Datos en la nube", color: "text-white" },
               ].map((stat, i) => (
                 <div key={i} className="text-center bg-white/[0.05] backdrop-blur-sm rounded-2xl p-5 border border-white/[0.08]">
@@ -255,14 +261,14 @@ export default function Home() {
 
       {/* Features */}
       <section id="features" className="py-24 bg-[#06090f] relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(29,161,242,0.04),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,hsl(var(--primary)/0.05),transparent_70%)]" />
         <div className="container mx-auto px-4 relative">
           <FadeUp>
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4 border border-cyan-500/20">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4 border border-emerald-500/20">
                 Funcionalidades
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-4">
                 Todo lo que necesitas en una plataforma
               </h2>
               <p className="text-white/50 max-w-xl mx-auto">
@@ -291,17 +297,17 @@ export default function Home() {
       </section>
 
       {/* Tracking */}
-      <section id="tracking" className="py-24 bg-[#07090e] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/[0.04] rounded-full blur-3xl" />
+      <section id="tracking" className="py-24 bg-[#100c08] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/[0.05] rounded-full blur-3xl" />
         <div className="container mx-auto px-4 relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <FadeUp>
               <div>
-                <div className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6 border border-cyan-500/20">
+                <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6 border border-emerald-500/20">
                   <MapPin className="w-3.5 h-3.5" />
                   Sistema de Tracking
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-5">
+                <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-5">
                   Seguimiento GPS de alta precisión
                 </h2>
                 <p className="text-white/50 mb-8 leading-relaxed">
@@ -333,9 +339,9 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="h-44 bg-white/[0.03] rounded-xl flex items-center justify-center relative overflow-hidden border border-white/[0.05]">
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-amber-500/10" />
                       <div className="text-center z-10">
-                        <Globe className="w-10 h-10 text-cyan-400/60 mx-auto mb-2" />
+                        <Globe className="w-10 h-10 text-primary/70 mx-auto mb-2" />
                         <p className="text-white/30 text-xs">Mapa interactivo con Mapbox</p>
                       </div>
                     </div>
@@ -351,7 +357,7 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="absolute -bottom-8 -right-8 w-36 h-36 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl opacity-15" />
+                <div className="absolute -bottom-8 -right-8 w-36 h-36 bg-gradient-to-br from-primary to-amber-500 rounded-full blur-3xl opacity-15" />
               </div>
             </FadeUp>
           </div>
@@ -359,15 +365,15 @@ export default function Home() {
       </section>
 
       {/* Portal Clientes */}
-      <section id="portal" className="py-24 bg-[#06090f] relative overflow-hidden">
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/[0.04] rounded-full blur-3xl" />
+      <section id="portal" className="py-24 bg-[#0e0b08] relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/[0.04] rounded-full blur-3xl" />
         <div className="container mx-auto px-4 relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <FadeUp delay={150} className="order-2 lg:order-1">
               <div className="bg-white/[0.04] rounded-3xl p-7 border border-white/[0.08]">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-11 h-11 bg-[#1da1f2]/20 rounded-xl flex items-center justify-center border border-[#1da1f2]/30">
-                    <Smartphone className="w-5 h-5 text-[#1da1f2]" />
+                  <div className="w-11 h-11 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30">
+                    <Smartphone className="w-5 h-5 text-primary" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-white text-sm">Portal de Seguimiento</h4>
@@ -385,13 +391,13 @@ export default function Home() {
                     <div key={i} className="flex items-center gap-3.5 py-1">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                         step.status === "done" ? "bg-emerald-500/20 border border-emerald-500/30" :
-                        step.status === "active" ? "bg-cyan-500/20 border border-cyan-500/30" :
+                        step.status === "active" ? "bg-primary/20 border border-primary/30" :
                         "bg-white/[0.05] border border-white/10"
                       }`}>
                         {step.status === "done" ? (
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                         ) : step.status === "active" ? (
-                          <div className="w-2.5 h-2.5 bg-cyan-400 rounded-full animate-pulse" />
+                          <div className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
                         ) : (
                           <div className="w-2.5 h-2.5 bg-white/20 rounded-full" />
                         )}
@@ -410,11 +416,11 @@ export default function Home() {
 
             <FadeUp delay={0} className="order-1 lg:order-2">
               <div>
-                <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6 border border-blue-500/20">
+                <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6 border border-amber-500/20">
                   <Users className="w-3.5 h-3.5" />
                   Portal de Clientes
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-5">
+                <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-5">
                   Transparencia total para tus clientes
                 </h2>
                 <p className="text-white/50 mb-8 leading-relaxed">
@@ -424,15 +430,15 @@ export default function Home() {
                 <ul className="space-y-3.5">
                   {CHECKLIST_PORTAL.map((item, i) => (
                     <li key={i} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
                       </div>
                       <span className="text-white/70 text-sm">{item}</span>
                     </li>
                   ))}
                 </ul>
                 <Link href="/orden/seguimiento" className="inline-block mt-8">
-                  <Button className="bg-[#1da1f2] hover:bg-[#1a8cd3] text-white rounded-xl shadow-[0_4px_14px_rgba(29,161,242,0.35)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.45)] transition-all">
+                  <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl shadow-[0_4px_14px_hsl(var(--primary)/0.35)] hover:shadow-[0_6px_20px_hsl(var(--primary)/0.45)] transition-all">
                     Probar Portal de Seguimiento
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -444,14 +450,14 @@ export default function Home() {
       </section>
 
       {/* Benefits */}
-      <section id="benefits" className="py-24 bg-[#07090e]">
+      <section id="benefits" className="py-24 bg-[#100c08]">
         <div className="container mx-auto px-4">
           <FadeUp>
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-violet-500/10 text-violet-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4 border border-violet-500/20">
+              <div className="inline-flex items-center gap-2 bg-terracota/10 text-terracota px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4 border border-terracota/20">
                 Ventajas
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-4">
                 ¿Por qué elegir Armados 2Go?
               </h2>
               <p className="text-white/50 max-w-xl mx-auto">
@@ -465,7 +471,7 @@ export default function Home() {
               <FadeUp key={i} delay={i * 80}>
                 <div className="group text-center p-7 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/12 transition-all duration-300 hover:-translate-y-0.5">
                   <div className="w-14 h-14 bg-white/[0.06] rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
-                    <benefit.icon className="w-7 h-7 text-cyan-400" />
+                    <benefit.icon className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="text-base font-semibold text-white mb-2">{benefit.title}</h3>
                   <p className="text-white/45 text-sm leading-relaxed">{benefit.description}</p>
@@ -477,11 +483,11 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-to-br from-[#0a1020] via-blue-950/80 to-cyan-950/60 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(29,161,242,0.08),transparent_70%)]" />
+      <section className="py-20 bg-gradient-to-br from-[#1a130c] via-[#140f0a]/80 to-[#0e0b08]/60 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.08),transparent_70%)]" />
         <div className="container mx-auto px-4 text-center relative">
           <FadeUp>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-5">
+            <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-5">
               ¿Listo para optimizar tus operaciones?
             </h2>
             <p className="text-white/50 mb-10 max-w-xl mx-auto">
@@ -489,7 +495,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
-                <Button size="lg" className="bg-[#1da1f2] hover:bg-[#1a8cd3] text-white px-8 py-6 text-base rounded-xl shadow-[0_6px_20px_rgba(29,161,242,0.4)] hover:shadow-[0_8px_28px_rgba(29,161,242,0.55)] transition-all hover:scale-105">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-base rounded-xl shadow-[0_6px_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_8px_28px_hsl(var(--primary)/0.55)] transition-all hover:scale-105">
                   Comenzar Ahora
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
@@ -505,11 +511,11 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#04060c] border-t border-white/[0.06] text-white/40 py-10">
+      <footer className="bg-[#0a0806] border-t border-white/[0.06] text-white/40 py-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-[#1da1f2] rounded-lg flex items-center justify-center">
+              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
                 <Truck className="w-4 h-4 text-white" />
               </div>
               <span className="text-white/70 font-semibold text-sm">Armados 2Go</span>

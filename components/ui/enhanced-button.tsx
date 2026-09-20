@@ -11,7 +11,7 @@ const enhancedButtonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#1da1f2] text-white hover:bg-[#1a8cd3] shadow-[0_4px_14px_rgba(29,161,242,0.35)] hover:shadow-[0_6px_20px_rgba(29,161,242,0.45)]",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_4px_14px_hsl(var(--primary)/0.35)] hover:shadow-[0_6px_20px_hsl(var(--primary)/0.45)]",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
@@ -21,9 +21,9 @@ const enhancedButtonVariants = cva(
         ghost:
           "text-foreground hover:bg-white/[0.07] hover:text-white",
         link:
-          "text-[#1da1f2] underline-offset-4 hover:underline hover:text-[#7dd3fc]",
+          "text-primary underline-offset-4 hover:underline hover:text-primary/80",
         gradient:
-          "bg-gradient-to-r from-[#1da1f2] to-blue-500 text-white hover:opacity-90 shadow-[0_4px_14px_rgba(29,161,242,0.3)]",
+          "bg-gradient-to-r from-primary to-amber-500 text-white hover:opacity-90 shadow-[0_4px_14px_hsl(var(--primary)/0.3)]",
       },
       size: {
         default: "h-10 px-5 py-2",

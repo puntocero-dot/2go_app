@@ -142,7 +142,7 @@ export default function PrivacidadPage() {
           Para ejercer estos derechos, escríbanos a{" "}
           <a
             href="mailto:admin@armados2go.com"
-            className="text-[#1da1f2] hover:underline"
+            className="text-primary hover:underline"
           >
             admin@armados2go.com
           </a>
@@ -184,7 +184,7 @@ export default function PrivacidadPage() {
           Correo:{" "}
           <a
             href="mailto:admin@armados2go.com"
-            className="text-[#1da1f2] hover:underline"
+            className="text-primary hover:underline"
           >
             admin@armados2go.com
           </a>

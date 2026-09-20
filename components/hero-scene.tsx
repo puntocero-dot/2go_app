@@ -23,12 +23,12 @@ function DeliveryTruck() {
       {/* Truck body */}
       <mesh>
         <boxGeometry args={[2, 1, 1]} />
-        <meshStandardMaterial color="#0891b2" metalness={0.6} roughness={0.2} />
+        <meshStandardMaterial color="#2db28c" metalness={0.6} roughness={0.2} />
       </mesh>
       {/* Cabin */}
       <mesh position={[1.2, 0.1, 0]}>
         <boxGeometry args={[0.8, 0.8, 0.9]} />
-        <meshStandardMaterial color="#06b6d4" metalness={0.5} roughness={0.3} />
+        <meshStandardMaterial color="#5ad1ae" metalness={0.5} roughness={0.3} />
       </mesh>
       {/* Wheels — 2 meshes with instanced positions instead of 4 separate */}
       {[[-0.5, -0.5, 0.55], [-0.5, -0.5, -0.55], [1, -0.5, 0.55], [1, -0.5, -0.55]].map((pos, i) => (
@@ -90,17 +90,20 @@ function CentralOrb() {
     ref.current.scale.setScalar(s);
   });
 
+  // Recorrido hacia atrás (z negativo) y opacidad baja: el wireframe queda
+  // como una textura de fondo tenue en vez de competir por atención con el
+  // texto del hero que cae justo delante, en el mismo eje central.
   return (
-    <mesh ref={ref}>
+    <mesh ref={ref} position={[0, 0, -3.5]}>
       <icosahedronGeometry args={[1, 1]} />
       <meshStandardMaterial
-        color="#0891b2"
-        emissive="#0ea5e9"
+        color="#2db28c"
+        emissive="#3fc9a0"
         emissiveIntensity={0.5}
         metalness={0.8}
         roughness={0.1}
         transparent
-        opacity={0.7}
+        opacity={0.25}
         wireframe
       />
     </mesh>
@@ -115,10 +118,10 @@ function ParticleRing() {
     const count = 200;
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
-    const cyan = new THREE.Color("#06b6d4");
-    const blue = new THREE.Color("#3b82f6");
-    const purple = new THREE.Color("#8b5cf6");
-    const palette = [cyan, blue, purple];
+    const teal = new THREE.Color("#2db28c");
+    const gold = new THREE.Color("#e8b04b");
+    const terracota = new THREE.Color("#d97757");
+    const palette = [teal, gold, terracota];
 
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
@@ -146,7 +149,7 @@ function ParticleRing() {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.04} vertexColors transparent opacity={0.8} sizeAttenuation />
+      <pointsMaterial size={0.04} vertexColors transparent opacity={0.55} sizeAttenuation />
     </points>
   );
 }
@@ -176,7 +179,7 @@ function RoutePath() {
 
   return (
     <mesh ref={ref} geometry={geometry}>
-      <meshBasicMaterial color="#06b6d4" transparent opacity={0.4} />
+      <meshBasicMaterial color="#2db28c" transparent opacity={0.4} />
     </mesh>
   );
 }
@@ -186,18 +189,21 @@ function Scene() {
   return (
     <>
       <ambientLight intensity={0.3} />
-      <directionalLight position={[5, 5, 5]} intensity={0.8} color="#e0f2fe" />
-      <directionalLight position={[-5, 3, -5]} intensity={0.3} color="#8b5cf6" />
-      <pointLight position={[0, 0, 0]} intensity={1} color="#06b6d4" distance={8} />
+      <directionalLight position={[5, 5, 5]} intensity={0.8} color="#fff1e0" />
+      <directionalLight position={[-5, 3, -5]} intensity={0.3} color="#e8b04b" />
+      <pointLight position={[0, 0, 0]} intensity={1} color="#2db28c" distance={8} />
 
       <CentralOrb />
       <ParticleRing />
       <DeliveryTruck />
       <RoutePath />
 
-      <GpsPin position={[3, 0, 0]} />
-      <GpsPin position={[-2.5, 0, 2]} />
-      <GpsPin position={[-1, 0, -3]} />
+      {/* Fuera de la franja central donde cae el texto del H1/párrafo
+          (roughly x ∈ [-3.5, 3.5], y ∈ [-0.5, 2]) — antes un pin quedaba
+          justo sobre "en Tiempo Real". */}
+      <GpsPin position={[5.5, -2.5, 1]} />
+      <GpsPin position={[-5.5, -2.5, 1]} />
+      <GpsPin position={[0, -3.2, -2]} />
 
       {/* Posiciones fuera de la franja horizontal donde cae el H1 (roughly
           x ∈ [-3.5, 3.5]) — antes el ámbar y el esmeralda quedaban justo
@@ -205,7 +211,7 @@ function Scene() {
           sobre el texto. El violeta ya caía libre en la esquina inferior
           derecha, así que se deja igual. */}
       <FurniturePiece position={[-5.5, 1.8, -3]} color="#f59e0b" size={[0.6, 0.8, 0.4]} />
-      <FurniturePiece position={[2.5, -1, 2]} color="#8b5cf6" size={[0.8, 0.5, 0.5]} />
+      <FurniturePiece position={[2.5, -1, 2]} color="#d97757" size={[0.8, 0.5, 0.5]} />
       <FurniturePiece position={[4.2, 2.6, -3.5]} color="#10b981" size={[0.5, 0.7, 0.5]} />
     </>
   );
@@ -242,8 +248,8 @@ export default function HeroScene() {
   if (!webglSupported || hasError) {
     return (
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-gradient-to-br from-blue-500/15 to-cyan-500/15 blur-2xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-emerald-500/20 to-amber-500/20 blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-gradient-to-br from-amber-500/15 to-emerald-500/15 blur-2xl animate-pulse" style={{ animationDelay: "1s" }} />
       </div>
     );
   }

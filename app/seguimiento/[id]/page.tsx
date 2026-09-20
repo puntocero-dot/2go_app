@@ -309,7 +309,7 @@ export default function SeguimientoPage() {
               {/* Progress bar */}
               <div className="mt-4 w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-1000"
+                  className="h-full bg-gradient-to-r from-primary to-amber-400 rounded-full transition-all duration-1000"
                   style={{
                     width: `${Math.max(10, Math.min(90, 100 - (eta.minutosEstimados || 30)))}%`,
                   }}

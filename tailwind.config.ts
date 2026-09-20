@@ -9,26 +9,30 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+      },
       colors: {
-        // Design system dark-glass — aligned with login
-        "cyber-cyan": "#1da1f2",
-        "cyber-cyan-light": "#7dd3fc",
-        "deep-space": "#06090f",
-        "space-navy": "#0a1020",
+        // Identidad cálida "taller de madera" — alineada con el login y con
+        // los nombres originales de estos tokens (madera-natural, terracota),
+        // que un rediseño anterior había remapeado a cian/violeta genérico.
+        "cyber-cyan": "#2db28c",
+        "cyber-cyan-light": "#7ddebf",
+        "deep-space": "#120e0a",
+        "space-navy": "#171310",
 
-        // Legacy aliases (keep backward compat)
-        "negro-azabache": "#070c18",
-        "gris-pizarra": "#131d30",
-        "deep-navy": "#070c18",
-        "vibrant-cyan": "#1da1f2",
+        "negro-azabache": "#14100c",
+        "gris-pizarra": "#241d17",
+        "deep-navy": "#1a140d",
+        "vibrant-cyan": "#2db28c",
         "electric-coral": "#f87171",
 
-        // Kept for navbar/badge (now updated to dark palette)
-        "madera-natural": "#1da1f2",   // remapped to cyan
-        "beige-arena": "#1e2d45",
-        "gris-nube": "#2a3a5a",
-        "marron-tierra": "#1a2540",
-        "terracota": "#7c3aed",        // remapped to violet accent
+        "madera-natural": "#c17f45",
+        "beige-arena": "#d9c4a3",
+        "gris-nube": "#8a8177",
+        "marron-tierra": "#6b4423",
+        "terracota": "#d97757",
 
         // CSS variable tokens (Shadcn)
         background: "hsl(var(--background))",
@@ -87,8 +91,8 @@ const config: Config = {
           "50%": { backgroundPosition: "100% 50%" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 8px rgba(29, 161, 242, 0.3)" },
-          "50%": { boxShadow: "0 0 20px rgba(29, 161, 242, 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 8px rgba(45, 178, 140, 0.3)" },
+          "50%": { boxShadow: "0 0 20px rgba(45, 178, 140, 0.6)" },
         },
       },
       animation: {
@@ -98,7 +102,7 @@ const config: Config = {
       },
       backgroundImage: {
         "glass-gradient": "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)",
-        "cyan-glow": "radial-gradient(ellipse at center, rgba(29,161,242,0.15) 0%, transparent 70%)",
+        "cyan-glow": "radial-gradient(ellipse at center, rgba(45,178,140,0.15) 0%, transparent 70%)",
       },
     },
   },

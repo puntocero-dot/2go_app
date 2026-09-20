@@ -17,7 +17,7 @@ export default function TerminosPage() {
         plataforma Armados 2Go (el &quot;Servicio&quot;), operada por{" "}
         <strong>Punto Cero S.A.S. de C.V.</strong> (&quot;Punto Cero&quot;,
         &quot;nosotros&quot;), disponible en{" "}
-        <a href="https://www.armados2go.com" className="text-[#1da1f2] hover:underline">
+        <a href="https://www.armados2go.com" className="text-primary hover:underline">
           www.armados2go.com
         </a>{" "}
         y sus aplicaciones asociadas.
@@ -177,7 +177,7 @@ export default function TerminosPage() {
       <LegalSection title="12. Privacidad">
         <p>
           El tratamiento de datos personales del Usuario se rige por nuestro{" "}
-          <Link href="/privacidad" className="text-[#1da1f2] hover:underline">
+          <Link href="/privacidad" className="text-primary hover:underline">
             Aviso de Privacidad
           </Link>
           , el cual forma parte integral de estos Términos.
@@ -203,7 +203,7 @@ export default function TerminosPage() {
           Para consultas sobre estos Términos, escríbanos a{" "}
           <a
             href="mailto:admin@armados2go.com"
-            className="text-[#1da1f2] hover:underline"
+            className="text-primary hover:underline"
           >
             admin@armados2go.com
           </a>

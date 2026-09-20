@@ -189,7 +189,7 @@ export default async function ArmadorDashboard() {
           <Card glass hover>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-5 sm:pb-2">
               <CardTitle className="text-sm font-medium text-white/60">Total</CardTitle>
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/15 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center">
                 <span className="text-sm">📦</span>
               </div>
             </CardHeader>

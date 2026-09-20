@@ -73,7 +73,7 @@ function ToastItem({ toast }: { toast: Toast }) {
   };
 
   const iconStyles = {
-    default: "text-[#1da1f2]",
+    default: "text-primary",
     destructive: "text-red-400",
     success: "text-emerald-400",
   };

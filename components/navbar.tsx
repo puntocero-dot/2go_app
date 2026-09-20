@@ -141,7 +141,7 @@ export function Navbar({ user }: NavbarProps) {
           {/* Logo y Dashboard */}
           <div className="flex items-center space-x-4 md:space-x-8">
             <Link href={getDashboardLink()} className="flex items-center space-x-3 group">
-              <div className="w-8 h-8 bg-[#1da1f2] rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-[0_0_12px_rgba(29,161,242,0.5)] transition-all duration-200">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.5)] transition-all duration-200">
                 <Package className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gradient">Armados 2Go</span>
@@ -275,8 +275,8 @@ export function Navbar({ user }: NavbarProps) {
                             "w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10 flex items-center gap-3 transition-colors",
                             isActive("/admin/reportes") && !isActive("/admin/reportes/bi-dashboard") && !isActive("/admin/reportes/tiempos-pedido") && "bg-white/10 text-white"
                           )}>
-                            <div className="w-7 h-7 rounded-md bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
-                              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                            <div className="w-7 h-7 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-3.5 h-3.5 text-primary" />
                             </div>
                             <span>Reportes</span>
                           </button>
@@ -397,7 +397,7 @@ export function Navbar({ user }: NavbarProps) {
                     }}
                   />
                 ) : (
-                  <div className="w-7 h-7 bg-[#1da1f2]/80 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 bg-primary/80 rounded-full flex items-center justify-center flex-shrink-0">
                     <User className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
@@ -631,8 +631,8 @@ export function Navbar({ user }: NavbarProps) {
                               isActive("/admin/reportes") && !isActive("/admin/reportes/bi-dashboard") && !isActive("/admin/reportes/tiempos-pedido") && "text-white bg-white/10"
                             )}
                           >
-                            <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center mr-2 flex-shrink-0">
-                              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                            <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center mr-2 flex-shrink-0">
+                              <FileText className="w-3.5 h-3.5 text-primary" />
                             </div>
                             Reportes
                           </EnhancedButton>

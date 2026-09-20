@@ -64,8 +64,8 @@ function KPICard({
   color?: "primary" | "secondary" | "success" | "warning";
 }) {
   const colorClasses = {
-    primary: "text-cyan-400 bg-cyan-400/10",
-    secondary: "text-violet-400 bg-violet-400/10",
+    primary: "text-primary bg-primary/10",
+    secondary: "text-terracota bg-terracota/10",
     success: "text-emerald-400 bg-emerald-400/10",
     warning: "text-amber-400 bg-amber-400/10",
   };
@@ -506,7 +506,7 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
         <div className="text-center glass-card p-8">
           <h1 className="text-2xl font-bold text-red-400 mb-4">Error en el Dashboard</h1>
           <p className="text-white/50 mb-4">Ha ocurrido un error al cargar el dashboard.</p>
-          <a href="/login" className="text-[#1da1f2] hover:underline">
+          <a href="/login" className="text-primary hover:underline">
             Volver al login
           </a>
         </div>
