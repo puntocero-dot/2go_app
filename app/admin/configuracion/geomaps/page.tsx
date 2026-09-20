@@ -15,6 +15,7 @@ interface GeomapsConfig {
   umbralVelocidadExcesiva: number;
   radioProximidadCliente: number;
   intervaloActualizacionGPS: number;
+  radioDesvioRuta: number;
 }
 
 export default function GeomapsConfigPage() {
@@ -220,6 +221,23 @@ export default function GeomapsConfigPage() {
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Frecuencia con la que el armador envía su ubicación GPS.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="radioDesvioRuta">Radio de desvío de ruta (metros)</Label>
+                    <input
+                      id="radioDesvioRuta"
+                      type="number"
+                      min={50}
+                      max={1000}
+                      value={formData.radioDesvioRuta}
+                      onChange={(e) => handleInputChange("radioDesvioRuta", e.target.value)}
+                      className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Distancia máxima a la ruta sugerida antes de marcar al armador como desviado.
                     </p>
                   </div>
                 </div>

@@ -31,6 +31,12 @@ export const ConfiguracionGeomapsSchema = z.object({
     .min(1, "Debe ser al menos 1 minuto")
     .max(30, "No puede exceder 30 minutos")
     .default(2),
+  radioDesvioRuta: z
+    .number()
+    .int()
+    .min(50, "Debe ser al menos 50 metros")
+    .max(1000, "No puede exceder 1000 metros")
+    .default(150),
 });
 
 export type ConfiguracionGeomapsInput = z.infer<typeof ConfiguracionGeomapsSchema>;

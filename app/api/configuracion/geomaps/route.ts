@@ -8,7 +8,9 @@ export async function GET() {
   try {
     const session = await getSession();
 
-    if (!session || session.rol !== "ADMIN") {
+    // Cualquier usuario autenticado puede leer la config (el tracker del
+    // armador necesita el intervalo de GPS); solo ADMIN puede modificarla (ver PUT).
+    if (!session) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
@@ -24,6 +26,7 @@ export async function GET() {
           umbralVelocidadExcesiva: 80,
           radioProximidadCliente: 100,
           intervaloActualizacionGPS: 2,
+          radioDesvioRuta: 150,
         },
       });
     }

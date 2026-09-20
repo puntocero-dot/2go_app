@@ -24,6 +24,9 @@ export function ArmadorGpsTracker() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const backgroundIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const turnoActivoRef = useRef<string | null>(null);
+  // Intervalo base (ms) configurable desde /admin/configuracion/geomaps.
+  // Por defecto 2 min (mismo default que el schema) hasta que cargue la config real.
+  const baseIntervalMsRef = useRef<number>(2 * 60 * 1000);
 
   // Estado de sincronizacion visible al armador
   const [syncState, setSyncState] = useState<{
@@ -136,16 +139,20 @@ export function ArmadorGpsTracker() {
     isSyncingRef.current = false;
   }, [loadQueue, saveQueue, fetchTurnoActivo]);
 
-  // Configuración dinámica basada en velocidad
+  // Configuración dinámica basada en velocidad, anclada al intervalo base
+  // configurable por el admin (baseIntervalMsRef): detenido usa el intervalo
+  // configurado tal cual, y se reduce proporcionalmente a mayor velocidad
+  // para no perder precisión en tramos de manejo.
   const getIntervalBySpeed = useCallback((speed: number | null): number => {
+    const base = baseIntervalMsRef.current;
     if (!speed || speed < 0.5) {
-      return 5 * 60 * 1000; // 5 min si quieto
+      return base; // quieto: intervalo configurado por el admin
     } else if (speed < 5) {
-      return 2 * 60 * 1000; // 2 min caminando
+      return Math.round(base / 2.5); // caminando
     } else if (speed < 15) {
-      return 60 * 1000; // 1 min velocidad media
+      return Math.round(base / 5); // velocidad media
     } else {
-      return 30 * 1000; // 30s alta velocidad
+      return Math.max(30 * 1000, Math.round(base / 10)); // alta velocidad, piso de 30s
     }
   }, []);
 
@@ -377,6 +384,30 @@ export function ArmadorGpsTracker() {
       console.log('[GPS] Tracking background detenido');
     }
   }, []);
+
+  // Cargar el intervalo de GPS configurado por el admin antes de arrancar el tracking
+  useEffect(() => {
+    if (!trackingEnabled) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response = await fetch("/api/configuracion/geomaps");
+        if (response.ok) {
+          const data = await response.json();
+          if (!cancelled && typeof data.intervaloActualizacionGPS === "number") {
+            baseIntervalMsRef.current = data.intervaloActualizacionGPS * 60 * 1000;
+          }
+        }
+      } catch (error) {
+        console.warn("[GPS] No se pudo cargar el intervalo configurado, usando valor por defecto:", error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [trackingEnabled]);
 
   useEffect(() => {
     if (!trackingEnabled) return;

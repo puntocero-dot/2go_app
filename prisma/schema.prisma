@@ -553,6 +553,7 @@ model ConfiguracionGeomaps {
   umbralVelocidadExcesiva   Int      @default(80)   // km/h para alertar velocidad excesiva
   radioProximidadCliente    Int      @default(100)  // Metros para considerar que llegó al cliente
   intervaloActualizacionGPS Int      @default(2)    // Minutos entre actualizaciones GPS
+  radioDesvioRuta           Int      @default(150)  // Metros de distancia a la ruta sugerida para considerar desvío
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 

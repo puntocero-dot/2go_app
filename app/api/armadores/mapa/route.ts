@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { analizarRuta } from "@/lib/geomaps-helpers";
+import { analizarRuta, analizarDesvioRuta } from "@/lib/geomaps-helpers";
+import { getRouteDirections } from "@/lib/mapbox-directions";
 
 // GET - Obtener ubicaciones de todos los armadores activos
 export async function GET() {
@@ -49,55 +50,33 @@ export async function GET() {
       },
     });
 
-    // Una sola query para todos los armadores en vez de N queries (una por armador)
+    // Una sola query para todos los armadores en vez de N queries (una por armador).
+    // Se usa el trazo GPS continuo del turno (RutaPunto) en vez de los puntos
+    // sueltos que a veces vienen adjuntos a un cambio de estado (RegistroEstado):
+    // esos últimos son esporádicos (solo cuando el cliente manda `gps` junto
+    // con el cambio de estado) y subestiman paradas/desvíos reales.
     const armadorIds = armadores.map((a) => a.id);
-    const registrosRutaTodos = armadorIds.length
-      ? await prisma.registroEstado.findMany({
-          where: {
-            orden: {
-              is: {
-                armadorId: { in: armadorIds },
-              },
+    const turnosActivos = armadorIds.length
+      ? await prisma.turno.findMany({
+          where: { armadorId: { in: armadorIds }, estado: "ACTIVO" },
+          include: {
+            rutaPuntos: {
+              where: { timestamp: { gte: since } },
+              orderBy: { timestamp: "asc" },
             },
-            latitud: { not: null },
-            longitud: { not: null },
-            timestamp: {
-              gte: since,
-            },
-          },
-          select: {
-            latitud: true,
-            longitud: true,
-            timestamp: true,
-            orden: {
-              select: { armadorId: true },
-            },
-          },
-          orderBy: {
-            timestamp: "asc",
           },
         })
       : [];
-
-    const registrosPorArmador = new Map<string, typeof registrosRutaTodos>();
-    for (const registro of registrosRutaTodos) {
-      const armadorId = registro.orden.armadorId;
-      if (!armadorId) continue;
-      const lista = registrosPorArmador.get(armadorId);
-      if (lista) {
-        lista.push(registro);
-      } else {
-        registrosPorArmador.set(armadorId, [registro]);
-      }
-    }
+    const turnoPorArmador = new Map(turnosActivos.map((t) => [t.armadorId, t]));
 
     const armadoresConUbicacion = await Promise.all(
       armadores.map(async (armador) => {
-        const registrosRuta = registrosPorArmador.get(armador.id) ?? [];
+        const turno = turnoPorArmador.get(armador.id);
+        const rutaPuntos = turno?.rutaPuntos ?? [];
 
-        const puntosRuta = registrosRuta.map((r) => ({
-          latitud: r.latitud as number,
-          longitud: r.longitud as number,
+        const puntosRuta = rutaPuntos.map((r) => ({
+          latitud: r.latitud,
+          longitud: r.longitud,
           timestamp: r.timestamp,
         }));
 
@@ -116,11 +95,73 @@ export async function GET() {
 
         const analisis = await analizarRuta(puntosRuta, ordenesConClientes);
 
-        const ruta = registrosRuta.map((r) => ({
-          lat: r.latitud as number,
-          lng: r.longitud as number,
+        const ruta = rutaPuntos.map((r) => ({
+          lat: r.latitud,
+          lng: r.longitud,
           timestamp: r.timestamp.toISOString(),
         }));
+
+        // Desvío de ruta: solo tiene sentido para la orden que está EN_RUTA
+        // ahora mismo (las demás aún no salieron o ya se completaron).
+        let desvioRutaActual: {
+          ordenId: string;
+          seDesvio: boolean;
+          puntosFueraDeRuta: number;
+          puntosTotales: number;
+          distanciaMaximaDesvioMetros: number;
+          radioDesvioMetros: number;
+        } | null = null;
+
+        const ordenEnRuta = armador.ordenes.find((o) => o.estado === "EN_RUTA");
+        if (
+          ordenEnRuta &&
+          typeof ordenEnRuta.usuarioFinal.coordenadasLat === "number" &&
+          typeof ordenEnRuta.usuarioFinal.coordenadasLng === "number" &&
+          rutaPuntos.length > 0
+        ) {
+          const registroEnRuta = await prisma.registroEstado.findFirst({
+            where: { ordenId: ordenEnRuta.id, estadoCambiadoA: "EN_RUTA" },
+            orderBy: { timestamp: "asc" },
+          });
+
+          if (registroEnRuta) {
+            const puntosViaje = rutaPuntos.filter(
+              (p) => p.timestamp >= registroEnRuta.timestamp
+            );
+
+            if (puntosViaje.length > 0) {
+              const origen = puntosViaje[0];
+              const direcciones = await getRouteDirections(
+                { lat: origen.latitud, lng: origen.longitud },
+                {
+                  lat: ordenEnRuta.usuarioFinal.coordenadasLat,
+                  lng: ordenEnRuta.usuarioFinal.coordenadasLng,
+                },
+                "driving-traffic"
+              );
+
+              if (direcciones.route) {
+                const desvio = await analizarDesvioRuta(
+                  puntosViaje.map((p) => ({
+                    latitud: p.latitud,
+                    longitud: p.longitud,
+                    timestamp: p.timestamp,
+                  })),
+                  direcciones.route.geometry.coordinates
+                );
+
+                desvioRutaActual = {
+                  ordenId: ordenEnRuta.id,
+                  seDesvio: desvio.seDesvio,
+                  puntosFueraDeRuta: desvio.puntosFueraDeRuta,
+                  puntosTotales: desvio.puntosTotales,
+                  distanciaMaximaDesvioMetros: Math.round(desvio.distanciaMaximaMetros),
+                  radioDesvioMetros: desvio.radioUsadoMetros,
+                };
+              }
+            }
+          }
+        }
 
         return {
           id: armador.id,
@@ -141,6 +182,7 @@ export async function GET() {
           })),
           ruta,
           analisis,
+          desvioRutaActual,
         };
       })
     );

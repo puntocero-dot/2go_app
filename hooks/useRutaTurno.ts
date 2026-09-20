@@ -9,6 +9,35 @@ interface RutaPunto {
   descripcion?: string;
 }
 
+interface ParadaDetectada {
+  inicio: string;
+  fin: string;
+  duracionMinutos: number;
+  latitud: number;
+  longitud: number;
+}
+
+interface AnalisisRuta {
+  distanciaTotal: number;
+  duracionTotal: number;
+  velocidadMaxima: number;
+  velocidadPromedio: number;
+  paradas: ParadaDetectada[];
+}
+
+interface OrdenAnalizada {
+  ordenId: string;
+  codigo: string;
+  cliente: string;
+  inicioViaje: string;
+  finViaje: string;
+  seDesvio: boolean;
+  puntosFueraDeRuta: number;
+  puntosTotales: number;
+  distanciaMaximaDesvioMetros: number;
+  radioDesvioMetros: number;
+}
+
 interface Turno {
   id: string;
   inicioTurno: string;
@@ -21,6 +50,8 @@ interface Turno {
       email: string;
     };
   };
+  analisis?: AnalisisRuta;
+  ordenesAnalizadas?: OrdenAnalizada[];
 }
 
 interface UseRutaTurnoReturn {

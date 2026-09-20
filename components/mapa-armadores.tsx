@@ -41,18 +41,25 @@ type RutaPoint = {
 };
 
 type RutaAnalisis = {
-  totalDistanciaKm: number;
-  maxSpeedKmh: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  paradasLargas: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  eventosVelocidad: any[];
-  estuvoEnCliente: boolean;
+  distanciaTotal: number; // metros
+  velocidadMaxima: number; // km/h
+  paradas: { duracionMinutos: number }[];
+  proximidadesClientes: { dentroDelRadio: boolean }[];
+};
+
+type DesvioRutaActual = {
+  ordenId: string;
+  seDesvio: boolean;
+  puntosFueraDeRuta: number;
+  puntosTotales: number;
+  distanciaMaximaDesvioMetros: number;
+  radioDesvioMetros: number;
 };
 
 type RutaInfo = {
   ruta: RutaPoint[];
   analisis?: RutaAnalisis;
+  desvioRutaActual?: DesvioRutaActual | null;
 };
 
 export default function MapaArmadores({ armadores, ordenes }: Props) {
@@ -83,6 +90,7 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
           map[a.id] = {
             ruta: Array.isArray(a.ruta) ? a.ruta : [],
             analisis: a.analisis,
+            desvioRutaActual: a.desvioRutaActual ?? null,
           };
         }
         setRutaByArmador(map);
@@ -245,20 +253,35 @@ export default function MapaArmadores({ armadores, ordenes }: Props) {
                   <div className="mt-2 space-y-1 text-xs text-gray-700">
                     <div>
                       Distancia total:{' '}
-                      {rutaByArmador[popupInfo.data.id].analisis?.totalDistanciaKm?.toFixed(1) ?? '0.0'} km
+                      {((rutaByArmador[popupInfo.data.id].analisis?.distanciaTotal ?? 0) / 1000).toFixed(1)} km
                     </div>
                     <div>
                       Velocidad máx:{' '}
-                      {rutaByArmador[popupInfo.data.id].analisis?.maxSpeedKmh?.toFixed(0) ?? '0'} km/h
+                      {rutaByArmador[popupInfo.data.id].analisis?.velocidadMaxima?.toFixed(0) ?? '0'} km/h
                     </div>
                     <div>
                       Paradas largas:{' '}
-                      {rutaByArmador[popupInfo.data.id].analisis?.paradasLargas?.length ?? 0}
+                      {rutaByArmador[popupInfo.data.id].analisis?.paradas?.length ?? 0}
                     </div>
                     <div>
                       En ubicación de cliente:{' '}
-                      {rutaByArmador[popupInfo.data.id].analisis?.estuvoEnCliente ? 'Sí' : 'No'}
+                      {rutaByArmador[popupInfo.data.id].analisis?.proximidadesClientes?.some((p) => p.dentroDelRadio)
+                        ? 'Sí'
+                        : 'No'}
                     </div>
+                    {rutaByArmador[popupInfo.data.id].desvioRutaActual && (
+                      <div
+                        className={
+                          rutaByArmador[popupInfo.data.id].desvioRutaActual!.seDesvio
+                            ? 'text-amber-600 font-medium'
+                            : 'text-emerald-600 font-medium'
+                        }
+                      >
+                        {rutaByArmador[popupInfo.data.id].desvioRutaActual!.seDesvio
+                          ? `⚠ Desviado de la ruta sugerida (máx. ${rutaByArmador[popupInfo.data.id].desvioRutaActual!.distanciaMaximaDesvioMetros} m)`
+                          : '✓ Siguiendo la ruta sugerida'}
+                      </div>
+                    )}
                     {rutaByArmador[popupInfo.data.id].ruta.length > 1 && (
                       <button
                         className="mt-1 px-2 py-1 rounded bg-blue-600 text-white text-[11px]"

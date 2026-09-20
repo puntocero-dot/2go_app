@@ -7,7 +7,7 @@ import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Label } from "@/components/ui/label";
 import { useRutaTurno } from "@/hooks/useRutaTurno";
 import { calcularDistanciaTotal, formatearDistancia, calcularDuracion } from "@/lib/geolocation";
-import { Loader2, MapPin, Clock, Route, User as UserIcon } from "lucide-react";
+import { Loader2, MapPin, Clock, Route, User as UserIcon, PauseCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 const MapaRutaArmador = dynamic(() => import("@/components/MapaRutaArmador").then(mod => ({ default: mod.MapaRutaArmador })), {
   loading: () => <div className="flex items-center justify-center h-full bg-slate-900/50"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>,
@@ -231,6 +231,73 @@ export default function RutasPage() {
                 </div>
               )}
             </div>
+
+            {/* Análisis de paradas y desvíos de ruta */}
+            {turno && (turno.analisis || turno.ordenesAnalizadas) && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-muted/20 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <PauseCircle className="w-4 h-4" />
+                    Paradas detectadas
+                  </h3>
+                  {turno.analisis && turno.analisis.paradas.length > 0 ? (
+                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                      {turno.analisis.paradas.map((parada, idx) => (
+                        <div key={idx} className="text-sm bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <div className="font-medium text-amber-900">
+                            Detenido {Math.round(parada.duracionMinutos)} min
+                          </div>
+                          <div className="text-amber-700 text-xs">
+                            {new Date(parada.inicio).toLocaleTimeString()} - {new Date(parada.fin).toLocaleTimeString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No se detectaron paradas prolongadas en este turno.</p>
+                  )}
+                </div>
+
+                <div className="bg-muted/20 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Route className="w-4 h-4" />
+                    Cumplimiento de ruta por orden
+                  </h3>
+                  {turno.ordenesAnalizadas && turno.ordenesAnalizadas.length > 0 ? (
+                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                      {turno.ordenesAnalizadas.map((orden) => (
+                        <div
+                          key={orden.ordenId}
+                          className={`text-sm rounded-lg p-3 border ${
+                            orden.seDesvio
+                              ? "bg-amber-50 border-amber-200"
+                              : "bg-emerald-50 border-emerald-200"
+                          }`}
+                        >
+                          <div className={`font-medium flex items-center gap-1 ${
+                            orden.seDesvio ? "text-amber-900" : "text-emerald-900"
+                          }`}>
+                            {orden.seDesvio ? (
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                            ) : (
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            )}
+                            #{orden.codigo} - {orden.cliente}
+                          </div>
+                          <div className={orden.seDesvio ? "text-amber-700 text-xs" : "text-emerald-700 text-xs"}>
+                            {orden.seDesvio
+                              ? `Se desvió: ${orden.puntosFueraDeRuta}/${orden.puntosTotales} puntos GPS a más de ${orden.radioDesvioMetros} m de la ruta sugerida (máx. ${orden.distanciaMaximaDesvioMetros} m)`
+                              : `Siguió la ruta sugerida (desvío máximo ${orden.distanciaMaximaDesvioMetros} m)`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No hay órdenes con ruta analizada en este turno.</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Lista de puntos */}
             {turno && turno.rutaPuntos.length > 0 && (

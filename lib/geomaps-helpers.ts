@@ -85,6 +85,123 @@ export interface AnalisisRuta {
   proximidadesClientes: ProximidadCliente[];
 }
 
+export interface DesvioRutaResultado {
+  puntosTotales: number;
+  puntosFueraDeRuta: number;
+  porcentajeFueraDeRuta: number;
+  distanciaMaximaMetros: number;
+  radioUsadoMetros: number;
+  seDesvio: boolean;
+}
+
+/**
+ * Distancia mínima (metros) de un punto a un segmento de recta, proyectando
+ * a un plano local en metros (equirrectangular). Suficientemente preciso
+ * para segmentos cortos de rutas viales dentro de una ciudad.
+ */
+function distanciaPuntoASegmento(
+  lat: number,
+  lng: number,
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const latRef = (lat1 * Math.PI) / 180;
+  const metrosPorGradoLat = 111320;
+  const metrosPorGradoLng = 111320 * Math.cos(latRef);
+
+  const toXY = (la: number, lo: number) => ({
+    x: (lo - lng1) * metrosPorGradoLng,
+    y: (la - lat1) * metrosPorGradoLat,
+  });
+
+  const p = toXY(lat, lng);
+  const b = toXY(lat2, lng2);
+
+  const lengthSq = b.x * b.x + b.y * b.y;
+  let t = lengthSq === 0 ? 0 : (p.x * b.x + p.y * b.y) / lengthSq;
+  t = Math.max(0, Math.min(1, t));
+
+  const dx = p.x - t * b.x;
+  const dy = p.y - t * b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Distancia mínima (metros) de un punto a una polilínea completa.
+ * `coordenadas` usa la convención GeoJSON de Mapbox: [lng, lat][].
+ */
+export function distanciaPuntoAPolilinea(
+  lat: number,
+  lng: number,
+  coordenadas: [number, number][]
+): number {
+  if (coordenadas.length === 0) return Infinity;
+  if (coordenadas.length === 1) {
+    return calcularDistancia(lat, lng, coordenadas[0][1], coordenadas[0][0]);
+  }
+
+  let minDistancia = Infinity;
+  for (let i = 0; i < coordenadas.length - 1; i++) {
+    const [lng1, lat1] = coordenadas[i];
+    const [lng2, lat2] = coordenadas[i + 1];
+    const d = distanciaPuntoASegmento(lat, lng, lat1, lng1, lat2, lng2);
+    if (d < minDistancia) minDistancia = d;
+  }
+  return minDistancia;
+}
+
+/**
+ * Compara el trazo GPS real contra la ruta sugerida (polilínea de Mapbox)
+ * punto por punto, en vez de solo comparar distancias totales agregadas
+ * (eso permitiría que un armador que fue a un lugar completamente distinto,
+ * pero recorrió una distancia similar, pasara desapercibido).
+ */
+export async function analizarDesvioRuta(
+  puntos: PuntoRuta[],
+  rutaSugeridaCoordenadas: [number, number][]
+): Promise<DesvioRutaResultado> {
+  const config = await obtenerConfiguracion();
+
+  if (puntos.length === 0 || rutaSugeridaCoordenadas.length < 2) {
+    return {
+      puntosTotales: puntos.length,
+      puntosFueraDeRuta: 0,
+      porcentajeFueraDeRuta: 0,
+      distanciaMaximaMetros: 0,
+      radioUsadoMetros: config.radioDesvioRuta,
+      seDesvio: false,
+    };
+  }
+
+  let fueraDeRuta = 0;
+  let distanciaMaxima = 0;
+
+  for (const punto of puntos) {
+    const distancia = distanciaPuntoAPolilinea(
+      punto.latitud,
+      punto.longitud,
+      rutaSugeridaCoordenadas
+    );
+    if (distancia > distanciaMaxima) distanciaMaxima = distancia;
+    if (distancia > config.radioDesvioRuta) fueraDeRuta++;
+  }
+
+  const porcentajeFueraDeRuta = (fueraDeRuta / puntos.length) * 100;
+
+  return {
+    puntosTotales: puntos.length,
+    puntosFueraDeRuta: fueraDeRuta,
+    porcentajeFueraDeRuta,
+    distanciaMaximaMetros: distanciaMaxima,
+    radioUsadoMetros: config.radioDesvioRuta,
+    // Más del 20% de los puntos GPS fuera del radio configurado = desvío real,
+    // no solo ruido de precisión del GPS en un par de lecturas puntuales.
+    seDesvio: porcentajeFueraDeRuta > 20,
+  };
+}
+
 /**
  * Obtiene la configuración de Geomaps (o valores por defecto)
  */
@@ -100,6 +217,7 @@ async function obtenerConfiguracion() {
         umbralVelocidadExcesiva: 80,
         radioProximidadCliente: 100,
         intervaloActualizacionGPS: 2,
+        radioDesvioRuta: 150,
       },
     });
   }
