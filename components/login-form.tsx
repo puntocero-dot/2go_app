@@ -136,7 +136,7 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
-                className="w-full bg-transparent border-none outline-none pl-12 pr-4 py-3.5 text-white placeholder:text-white/60 focus:ring-0 shadow-none appearance-none"
+                className="w-full rounded-full bg-transparent border-none outline-none pl-12 pr-4 py-3.5 text-white placeholder:text-white/60 focus:ring-0 shadow-none appearance-none"
                 autoComplete="email"
               />
             </div>
@@ -151,7 +151,7 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
-                className="w-full bg-transparent border-none outline-none pl-12 pr-12 py-3.5 text-white placeholder:text-white/60 focus:ring-0 shadow-none appearance-none"
+                className="w-full rounded-full bg-transparent border-none outline-none pl-12 pr-12 py-3.5 text-white placeholder:text-white/60 focus:ring-0 shadow-none appearance-none"
                 autoComplete="current-password"
               />
               <button
