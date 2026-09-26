@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; case \"$f\" in *.ts|*.tsx) ESLINT_USE_FLAT_CONFIG=false npx eslint --fix \"$f\" 2>&1 | grep -v 'ESLintRCWarning\\|trace-warnings' || true;; esac; } 2>/dev/null || true",
+            "timeout": 60,
+            "statusMessage": "Running ESLint --fix..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; case \"$f\" in *app/api/auth/*|*app/api/facturacion/*|*app/api/ordenes/\\[id\\]*) echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"ask\",\"permissionDecisionReason\":\"Zona de seguridad sensible: en app/api/auth, app/api/facturacion y app/api/ordenes/[id] esta sesion encontro y corrigio bugs de IDOR, fuga de password hash y bypass de CSRF. Confirma manualmente este cambio antes de aplicarlo.\"}}';; esac; }"
+          }
+        ]
+      }
+    ]
+  }
+}
