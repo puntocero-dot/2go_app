@@ -22,10 +22,28 @@ const displayFont = Fraunces({
   axes: ["opsz", "SOFT", "WONK"],
 });
 
+const SITE_URL = "https://www.armados2go.com";
+const SITE_TITLE = "Armados 2Go — Armado de muebles RTA y melamina para retailers en El Salvador";
+const SITE_DESCRIPTION =
+  "Servicio profesional de armado (ensamble) de muebles RTA y de melamina para tiendas y retailers en El Salvador. Tracking GPS en tiempo real, portal de seguimiento para clientes finales y gestión completa de armadores.";
+
 export const metadata: Metadata = {
-  title: "Armados 2Go",
-  description:
-    "Sistema de gestión de armado de muebles para empresas retail",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: "%s | Armados 2Go",
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "armado de muebles El Salvador",
+    "ensamble de muebles RTA",
+    "armado de muebles de melamina",
+    "servicio de armado para retailers",
+    "instalación de mobiliario RTA",
+    "armadores de muebles El Salvador",
+    "tracking GPS armado de muebles",
+    "outsourcing de ensamblaje de muebles",
+  ],
   manifest: "/manifest.json",
   applicationName: "Armados 2Go",
   appleWebApp: {
@@ -33,12 +51,39 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "2Go",
   },
+  alternates: {
+    canonical: SITE_URL,
+  },
   openGraph: {
     type: "website",
+    locale: "es_SV",
+    url: SITE_URL,
     siteName: "Armados 2Go",
-    title: "Armados 2Go - Sistema de Gestión de Armado de Muebles",
-    description:
-      "Plataforma integral para la gestión de servicios de armado de muebles para empresas retail",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Armados 2Go",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/icon-512.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+    },
   },
   icons: {
     icon: "/favicon.ico",

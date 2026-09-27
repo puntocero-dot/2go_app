@@ -1,0 +1,38 @@
+# Armados 2Go
+
+> Servicio profesional de armado (ensamble) de muebles RTA y de melamina para
+> retailers y tiendas en El Salvador.
+
+Armados 2Go conecta empresas retail que venden muebles RTA (Ready To Assemble)
+y de melamina con una red de armadores profesionales para el ensamble e
+instalación en casa del cliente final, en todo El Salvador.
+
+## Qué ofrecemos
+
+- Armado y ensamble de muebles RTA y de melamina en el domicilio del cliente final.
+- Gestión de armadores: asignación, turnos y disponibilidad.
+- Tracking GPS en tiempo real del servicio de armado, con comparación de
+  ruta real vs. ruta óptima.
+- Portal público de seguimiento para el cliente final, sin necesidad de
+  registro (solo con el código de pedido).
+- Facturación automática por proyecto según reglas de cobro configurables.
+
+## A quién servimos
+
+Retailers y tiendas de muebles en El Salvador que necesitan tercerizar el
+armado e instalación de los muebles RTA/melamina que venden a sus clientes,
+en San Salvador, Santa Ana, San Miguel, Soyapango, La Libertad, Sonsonate y
+el resto del país.
+
+## Contacto
+
+- Sitio web: https://www.armados2go.com
+- Email: admin@armados2go.com
+- Portal de seguimiento de pedidos (público): https://www.armados2go.com/orden/seguimiento
+
+## Páginas
+
+- [Sitio principal](https://www.armados2go.com): presentación del servicio.
+- [Seguimiento de pedido](https://www.armados2go.com/orden/seguimiento): portal
+  público donde un cliente final consulta el estado de su pedido con su
+  código de referencia.

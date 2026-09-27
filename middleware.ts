@@ -37,6 +37,7 @@ export async function middleware(request: NextRequest) {
     "/icon-192.png",
     "/icon-512.png",
     "/bg-login.jpg",
+    "/llms.txt",
   ];
   const isPublicRoute =
     publicRoutes.includes(pathname) || pathname.startsWith("/seguimiento/");
@@ -108,5 +109,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // robots.txt y sitemap.xml quedan excluidos aquí (no solo agregados a
+  // publicRoutes): sin esto, un crawler sin sesión los recibía como
+  // redirect 307 a /login en vez del contenido real, invisibles para
+  // buscadores y agentes de IA.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

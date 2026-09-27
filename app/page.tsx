@@ -4,9 +4,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { GeoSchema } from "@/components/geo-schema";
 import {
   MapPin, Truck, BarChart3, Shield, Clock, Users,
-  Smartphone, CheckCircle2, ArrowRight, Zap, Globe,
+  Smartphone, CheckCircle2, ArrowRight, Globe,
   FileText, Bell, Route
 } from "lucide-react";
 
@@ -144,6 +145,7 @@ const BENEFITS = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0e0b08]">
+      <GeoSchema />
       <style jsx global>{`
         @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .animate-gradient { animation: gradient 4s ease infinite; }
@@ -200,10 +202,9 @@ export default function Home() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <FadeUp>
-              <div className="inline-flex items-center gap-2 bg-white/[0.08] backdrop-blur-md px-5 py-2 rounded-full text-emerald-300 text-sm mb-8 border border-white/[0.12]">
-                <Zap className="w-3.5 h-3.5" />
-                Plataforma líder en gestión de servicios de armado
-              </div>
+              <p className="text-emerald-400/90 text-sm font-semibold tracking-[0.15em] uppercase mb-6">
+                Armado profesional de muebles RTA y melamina · El Salvador
+              </p>
             </FadeUp>
 
             <FadeUp delay={100}>
@@ -217,8 +218,9 @@ export default function Home() {
 
             <FadeUp delay={200}>
               <p className="text-xl md:text-2xl text-white/60 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Optimiza tus operaciones de armado de muebles con seguimiento GPS,
-                asignación inteligente y un portal completo para tus clientes.
+                Tercerizamos el armado de muebles RTA y de melamina para retailers
+                en El Salvador, con seguimiento GPS, asignación inteligente de
+                armadores y un portal de seguimiento para tus clientes.
               </p>
             </FadeUp>
 
@@ -265,9 +267,9 @@ export default function Home() {
         <div className="container mx-auto px-4 relative">
           <FadeUp>
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4 border border-emerald-500/20">
+              <p className="text-emerald-400 text-xs font-semibold tracking-[0.2em] uppercase mb-4">
                 Funcionalidades
-              </div>
+              </p>
               <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-4">
                 Todo lo que necesitas en una plataforma
               </h2>
@@ -303,10 +305,9 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <FadeUp>
               <div>
-                <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6 border border-emerald-500/20">
-                  <MapPin className="w-3.5 h-3.5" />
+                <p className="text-emerald-400 text-xs font-semibold tracking-[0.2em] uppercase mb-6">
                   Sistema de Tracking
-                </div>
+                </p>
                 <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-5">
                   Seguimiento GPS de alta precisión
                 </h2>
@@ -416,10 +417,9 @@ export default function Home() {
 
             <FadeUp delay={0} className="order-1 lg:order-2">
               <div>
-                <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6 border border-amber-500/20">
-                  <Users className="w-3.5 h-3.5" />
+                <p className="text-amber-400 text-xs font-semibold tracking-[0.2em] uppercase mb-6">
                   Portal de Clientes
-                </div>
+                </p>
                 <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-5">
                   Transparencia total para tus clientes
                 </h2>
@@ -454,14 +454,15 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <FadeUp>
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-terracota/10 text-terracota px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4 border border-terracota/20">
+              <p className="text-terracota text-xs font-semibold tracking-[0.2em] uppercase mb-4">
                 Ventajas
-              </div>
+              </p>
               <h2 className="font-display text-3xl md:text-4xl font-semibold text-white mb-4">
                 ¿Por qué elegir Armados 2Go?
               </h2>
               <p className="text-white/50 max-w-xl mx-auto">
-                La plataforma más completa para empresas de armado de muebles
+                La plataforma más completa para retailers de muebles RTA y
+                melamina que operan en El Salvador
               </p>
             </div>
           </FadeUp>
@@ -491,7 +492,8 @@ export default function Home() {
               ¿Listo para optimizar tus operaciones?
             </h2>
             <p className="text-white/50 mb-10 max-w-xl mx-auto">
-              Únete a las empresas que ya confían en Armados 2Go para gestionar sus servicios de armado.
+              Únete a los retailers en El Salvador que ya confían en Armados 2Go
+              para el armado de sus muebles RTA y de melamina.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
