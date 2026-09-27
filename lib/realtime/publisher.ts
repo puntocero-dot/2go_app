@@ -12,11 +12,15 @@
 
 import { Redis } from "@upstash/redis";
 
+// retry: false — sin esto, un Upstash inalcanzable (DNS roto, host
+// eliminado) hace que el SDK reintente 5 veces con backoff exponencial
+// (hasta ~4s) antes de fallar, en cada publicación de evento.
 const redis =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        retry: false,
       })
     : null;
 

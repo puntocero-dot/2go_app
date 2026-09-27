@@ -17,8 +17,14 @@ export type RedisRateLimitResult = {
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
+// retry: false — el SDK reintenta 5 veces con backoff exponencial por
+// defecto (hasta ~4s solo en esperas entre intentos). Si Upstash está
+// inalcanzable (DNS roto, host eliminado), eso convertía el fail-open de
+// abajo en un fail-open de varios segundos después, no inmediato — la
+// causa real de la lentitud reportada en el login (confirmado vía logs
+// de producción: "getaddrinfo ENOTFOUND" en cada intento del pipeline).
 const redis = redisUrl && redisToken
-  ? new Redis({ url: redisUrl, token: redisToken })
+  ? new Redis({ url: redisUrl, token: redisToken, retry: false })
   : null;
 
 export async function checkRateLimitRedis(

@@ -9,10 +9,14 @@ import { Redis } from "@upstash/redis";
 import { prisma } from "./prisma";
 
 // Inicializar Redis si las variables están configuradas
+// retry: false — sin esto, un Upstash inalcanzable (DNS roto, host
+// eliminado) hace que el SDK reintente 5 veces con backoff exponencial
+// (hasta ~4s) antes de caer al fallback, en cada operación de caché.
 const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   ? new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      retry: false,
     })
   : null;
 
