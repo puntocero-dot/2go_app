@@ -78,12 +78,12 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
       `}} />
 
       {/* Imagen de fondo, editable desde /admin/configuracion/login.
-          Se desenfoca directamente la imagen (en vez de solo el vidrio
-          esmerilado sobre ella): así ningún objeto de bordes marcados que
-          suba el admin (mesas, tablas, estanterías) puede leerse como una
-          silueta rectangular detrás de la tarjeta — es un desenfoque real
-          de la fuente, no una ilusión óptica que depende de la foto.
-          scale-110 esconde el recorte de bordes que deja el blur. */}
+          Un desenfoque leve (no blur-2xl) evita que el fondo compita con
+          la tarjeta de login sin volver irreconocible la foto que sube el
+          admin — con blur-2xl + overlay al 50% cualquier foto, incluida
+          la de referencia de moodboard de madera, se veía como una mancha
+          sin forma. scale-110 esconde el recorte de bordes que deja el
+          blur. */}
       <Image
         src={backgroundUrl}
         alt="Fondo"
@@ -91,13 +91,14 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
         priority
         sizes="100vw"
         quality={90}
-        className="object-cover z-0 scale-110 blur-2xl"
+        className="object-cover z-0 scale-110 blur-sm"
       />
 
       {/* Overlay cálido (en vez de negro plano) para que la foto de fondo
-          tiña de un tono tierra/ámbar acorde a la identidad de marca,
-          sin importar qué foto suba el admin. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-black/60 z-0" />
+          tiña de un tono tierra/ámbar acorde a la identidad de marca, sin
+          importar qué foto suba el admin. Más leve que antes para que la
+          foto siga siendo reconocible detrás de la tarjeta. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/35 z-0" />
 
       {/* Halo circular detrás de la tarjeta: un resplandor genuinamente
           redondo (radial-gradient + blur), no la sombra rectangular del
