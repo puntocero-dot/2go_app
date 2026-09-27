@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -103,6 +103,46 @@ function KPICard({
   );
 }
 
+async function TotalFacturadoKPI({
+  proyectoId,
+  desde,
+  hasta,
+  filtroActivo,
+}: {
+  proyectoId: string;
+  desde: string;
+  hasta: string;
+  filtroActivo: boolean;
+}) {
+  const billingData = await getBillingDataset({ proyectoId, desde, hasta });
+  const totalFacturado = billingData?.totalsByConcept.totalFacturado ?? 0;
+
+  return (
+    <KPICard
+      title="Total Facturado"
+      value={formatCurrency(totalFacturado)}
+      description={filtroActivo ? "Basado en órdenes filtradas" : "Mes actual"}
+      icon={DollarSign}
+      color="success"
+    />
+  );
+}
+
+function TotalFacturadoKPISkeleton() {
+  return (
+    <EnhancedCard hover className="relative overflow-hidden p-6 glass-card-hover">
+      <div className="relative z-10 animate-pulse">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 rounded-lg bg-emerald-400/10 w-12 h-12" />
+        </div>
+        <div className="h-8 w-24 bg-muted-foreground/20 rounded mb-2" />
+        <p className="text-sm text-muted-foreground mb-2">Total Facturado</p>
+        <p className="text-xs text-muted-foreground">Calculando…</p>
+      </div>
+    </EnhancedCard>
+  );
+}
+
 export default async function AdminDashboard({ searchParams }: PageProps) {
   try {
     const session = await getSession();
@@ -197,6 +237,14 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
 
   // Ninguna de estas queries depende del resultado de otra: se disparan en
   // paralelo en vez de una por una (antes eran 8 round-trips secuenciales).
+  // getBillingDataset queda FUERA de este Promise.all a propósito: recalcula
+  // conceptos de cobro para todas las órdenes completadas del mes en todos
+  // los proyectos (dos queries con includes profundos + cálculo por orden),
+  // muy por encima del costo del resto del dashboard. Bloquear todo el
+  // render en esa consulta solo para mostrar un número en una tarjeta KPI
+  // es un candidato claro para la lentitud al entrar al dashboard; ahora
+  // se resuelve en su propio Suspense boundary (streaming SSR, verificado
+  // localmente) para que el resto de la página no espere por ella.
   const [
     totalProyectosGlobal,
     totalArmadores,
@@ -204,7 +252,6 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     proyectos,
     totalOrdenes,
     ordenesActivas,
-    billingData,
     ordenesRecientes,
   ] = await Promise.all([
     prisma.proyecto.count(),
@@ -219,11 +266,6 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     }),
     prisma.orden.count({ where: ordenWhere }),
     prisma.orden.count({ where: activeWhere }),
-    getBillingDataset({
-      proyectoId: proyectoIdFilter,
-      desde: desdeParaFacturacion,
-      hasta: hastaParaFacturacion,
-    }),
     prisma.orden.findMany({
       where: ordenWhere,
       take: 10,
@@ -235,16 +277,12 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     }),
   ]);
 
-  const totalFacturadoCalculado = billingData?.totalsByConcept.totalFacturado ?? 0;
-
   const totalProyectos =
     proyectoIdFilter === "ALL"
       ? totalProyectosGlobal
       : proyectos.some((proyecto) => proyecto.id === proyectoIdFilter)
       ? 1
       : 0;
-
-  const totalFacturado = totalFacturadoCalculado;
 
   const getEstadoBadge = (estado: string) => {
     const estadoConfig = ESTADOS_ORDEN.find(e => e.value === estado);
@@ -411,13 +449,14 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
             icon={Users}
             color="success"
           />
-          <KPICard
-            title="Total Facturado"
-            value={formatCurrency(totalFacturado)}
-            description={fechaInicioFilter || fechaFinFilter ? "Basado en órdenes filtradas" : "Mes actual"}
-            icon={DollarSign}
-            color="success"
-          />
+          <Suspense fallback={<TotalFacturadoKPISkeleton />}>
+            <TotalFacturadoKPI
+              proyectoId={proyectoIdFilter}
+              desde={desdeParaFacturacion}
+              hasta={hastaParaFacturacion}
+              filtroActivo={Boolean(fechaInicioFilter || fechaFinFilter)}
+            />
+          </Suspense>
         </section>
 
         {/* Tabla de Órdenes Recientes */}
