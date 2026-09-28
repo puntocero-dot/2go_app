@@ -131,7 +131,7 @@ export async function getBillingDataset(input: {
   // Caso especial: todos los proyectos
   if (input.proyectoId === "ALL") {
     const proyectos = await prisma.proyecto.findMany({
-      where: { activo: true },
+      where: { activo: true, esLead: false },
       include: {
         reglaCobro: {
           include: {
@@ -322,7 +322,7 @@ export async function getBillingDataset(input: {
   }
 
   const proyecto = await prisma.proyecto.findFirst({
-    where: { id: input.proyectoId, activo: true },
+    where: { id: input.proyectoId, activo: true, esLead: false },
     include: {
       reglaCobro: {
         include: {

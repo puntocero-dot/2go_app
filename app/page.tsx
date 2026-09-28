@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GeoSchema } from "@/components/geo-schema";
+import { TwoGoBotWidget } from "@/components/twogobot-widget";
 import {
   MapPin, Truck, BarChart3, Shield, Clock, Users,
   Smartphone, CheckCircle2, ArrowRight, Globe,
@@ -534,6 +535,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <TwoGoBotWidget />
     </div>
   );
 }

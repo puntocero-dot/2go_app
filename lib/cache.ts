@@ -131,6 +131,7 @@ export async function getProyectos() {
 
 async function fetchProyectos() {
   return prisma.proyecto.findMany({
+    where: { esLead: false },
     orderBy: { nombreComercial: "asc" },
     include: {
       _count: {
@@ -157,7 +158,7 @@ export async function getProyectosActivos() {
 
 async function fetchProyectosActivos() {
   return prisma.proyecto.findMany({
-    where: { activo: true },
+    where: { activo: true, esLead: false },
     orderBy: { nombreComercial: "asc" },
     select: {
       id: true,

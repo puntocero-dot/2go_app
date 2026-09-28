@@ -42,7 +42,7 @@ async function getMapData(userId: string, rol: string) {
 
   // Proyectos disponibles para filtros (filtrados por rol)
   const proyectos = await prisma.proyecto.findMany({
-    where: proyectoIds ? { id: { in: proyectoIds } } : undefined,
+    where: proyectoIds ? { id: { in: proyectoIds }, esLead: false } : { esLead: false },
     select: {
       id: true,
       nombreComercial: true

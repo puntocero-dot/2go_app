@@ -250,7 +250,9 @@ export default async function OrdenesPage({ searchParams }: PageProps) {
     totalCount,
   ] = await Promise.all([
     prisma.proyecto.findMany({
-      where: proyectoIdsPermitidos ? { id: { in: proyectoIdsPermitidos } } : undefined,
+      where: proyectoIdsPermitidos
+        ? { id: { in: proyectoIdsPermitidos }, esLead: false }
+        : { esLead: false },
       orderBy: { nombreComercial: "asc" },
       select: { id: true, nombreComercial: true },
     }),

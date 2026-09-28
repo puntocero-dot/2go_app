@@ -50,7 +50,7 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps) {
       },
     }),
     prisma.proyecto.findMany({
-      where: { activo: true },
+      where: { activo: true, esLead: false },
       select: { id: true, nombreComercial: true },
       orderBy: { nombreComercial: 'asc' },
     }),

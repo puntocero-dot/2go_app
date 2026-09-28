@@ -254,10 +254,11 @@ export default async function AdminDashboard({ searchParams }: PageProps) {
     ordenesActivas,
     ordenesRecientes,
   ] = await Promise.all([
-    prisma.proyecto.count(),
+    prisma.proyecto.count({ where: { esLead: false } }),
     prisma.armador.count(),
     prisma.armador.count({ where: { estado: "ACTIVO" } }),
     prisma.proyecto.findMany({
+      where: { esLead: false },
       orderBy: { nombreComercial: "asc" },
       select: {
         id: true,

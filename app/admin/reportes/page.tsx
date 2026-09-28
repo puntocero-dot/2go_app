@@ -23,7 +23,7 @@ export default async function ReportesPage() {
 
   // Obtener lista de proyectos para filtros
   const proyectos = await prisma.proyecto.findMany({
-    where: { activo: true },
+    where: { activo: true, esLead: false },
     select: { id: true, nombreComercial: true },
     orderBy: { nombreComercial: "asc" },
   });

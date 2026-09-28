@@ -66,6 +66,7 @@ async function getBIDashboardData(filters: Record<string, string>) {
       take: 1000
     }),
     prisma.proyecto.findMany({
+      where: { esLead: false },
       select: { id: true, nombreComercial: true }
     }),
     prisma.armador.findMany({

@@ -87,6 +87,7 @@ export default async function ProyectosPage() {
   }
 
   const proyectos = await prisma.proyecto.findMany({
+    where: { esLead: false },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {

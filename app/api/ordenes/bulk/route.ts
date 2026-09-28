@@ -360,6 +360,7 @@ async function processRow(data: BulkRow, _userId: string) {
         equals: data.proyecto,
         mode: "insensitive",
       },
+      esLead: false,
     },
   });
 

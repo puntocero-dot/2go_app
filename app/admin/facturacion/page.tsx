@@ -165,7 +165,7 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
 
     // Get proyectos activos
     const proyectos = await prisma.proyecto.findMany({
-      where: { activo: true },
+      where: { activo: true, esLead: false },
       select: { id: true, nombreComercial: true },
       orderBy: { nombreComercial: 'asc' }
     });

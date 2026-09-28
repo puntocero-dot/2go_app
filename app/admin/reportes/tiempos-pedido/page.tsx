@@ -180,6 +180,7 @@ export default async function TiemposPedidoPage({ searchParams }: PageProps) {
 
   // Get proyectos for filter even without dates
   const proyectos = await prisma.proyecto.findMany({
+    where: { esLead: false },
     orderBy: { nombreComercial: "asc" },
     select: { id: true, nombreComercial: true },
   });

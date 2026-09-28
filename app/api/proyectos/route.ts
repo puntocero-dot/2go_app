@@ -21,8 +21,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const pagination = getPaginationParams(searchParams);
 
+    // Los leads capturados por 2GoBot (esLead=true) no son clientes reales
+    // todavía: se gestionan en /admin/leads, no en el listado de proyectos.
     const [proyectos, total] = await Promise.all([
       prisma.proyecto.findMany({
+        where: { esLead: false },
         orderBy: { createdAt: "desc" },
         include: {
           _count: { select: { ordenes: true, muebles: true } },
@@ -30,7 +33,7 @@ export async function GET(request: NextRequest) {
         take: pagination.limit,
         skip: pagination.skip,
       }),
-      prisma.proyecto.count(),
+      prisma.proyecto.count({ where: { esLead: false } }),
     ]);
 
     return NextResponse.json(buildPaginatedResponse(proyectos, total, pagination));

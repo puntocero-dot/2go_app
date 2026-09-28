@@ -81,20 +81,30 @@ enum TipoTurno {
 }
 
 model Proyecto {
-  id               String               @id @default(uuid())
-  nombreComercial  String
-  activo           Boolean              @default(true)
-  tipoCliente      TipoCliente
-  datosFacturacion Json
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  muebles          Mueble[]
-  ordenes          Orden[]
-  reglaCobro       ReglaCobro?
-  supervisores     SupervisorProyecto[]
-  usuariosFinales  UsuarioFinal[]
+  id                    String               @id @default(uuid())
+  nombreComercial       String
+  activo                Boolean              @default(true)
+  tipoCliente           TipoCliente
+  datosFacturacion      Json
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  // Captura de leads (2GoBot): un lead entra como Proyecto con esLead=true
+  // y activo=false, y queda excluido de listados/KPIs de clientes reales
+  // hasta que un admin lo revisa y lo convierte (ver /admin/leads).
+  esLead                Boolean              @default(false)
+  estadoLead            EstadoLead?
+  notasLead             String?
+  contactoLead          Json?
+  citaProgramadaEn      DateTime?
+  googleCalendarEventId String?
+  muebles               Mueble[]
+  ordenes               Orden[]
+  reglaCobro            ReglaCobro?
+  supervisores          SupervisorProyecto[]
+  usuariosFinales       UsuarioFinal[]
 
   @@index([activo])
+  @@index([esLead])
   @@map("proyectos")
 }
 
@@ -350,6 +360,14 @@ enum EstadoArmador {
 enum TipoCliente {
   CREDITO_FISCAL
   CONSUMIDOR_FINAL
+}
+
+enum EstadoLead {
+  NUEVO
+  CONTACTADO
+  CALIFICADO
+  CONVERTIDO
+  DESCARTADO
 }
 
 enum EstadoOrden {

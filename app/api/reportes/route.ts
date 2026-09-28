@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
 
       case "proyectos": {
         const proyectos = await prisma.proyecto.findMany({
-          where: { activo: true },
+          where: { activo: true, esLead: false },
           include: {
             _count: {
               select: { ordenes: true },
@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
 
         // Obtener todos los proyectos activos
         const proyectos = await prisma.proyecto.findMany({
-          where: { activo: true },
+          where: { activo: true, esLead: false },
           select: { id: true, nombreComercial: true },
         });
 

@@ -30,6 +30,9 @@ export type AuditAction =
   | "CREATE_PROJECT"
   | "UPDATE_PROJECT"
   | "DELETE_PROJECT"
+  // Leads (2GoBot)
+  | "UPDATE_LEAD_ESTADO"
+  | "CONVERT_LEAD_TO_PROYECTO"
   // Muebles
   | "CREATE_FURNITURE"
   | "UPDATE_FURNITURE"

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/navbar";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
-import { Users, Package, DollarSign } from "lucide-react";
+import { Users, Package, DollarSign, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminAdministracionPage() {
@@ -21,6 +21,10 @@ export default async function AdminAdministracionPage() {
   if (!usuario) {
     redirect("/login");
   }
+
+  const leadsNuevos = await prisma.proyecto.count({
+    where: { esLead: true, estadoLead: "NUEVO" },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -88,6 +92,32 @@ export default async function AdminAdministracionPage() {
             <Link href="/admin/facturacion">
               <EnhancedButton className="w-full" variant="default">
                 Ir a Facturación
+              </EnhancedButton>
+            </Link>
+          </EnhancedCard>
+
+          <EnhancedCard hover className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-purple-50 text-purple-700">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  Leads
+                  {leadsNuevos > 0 && (
+                    <span className="text-xs font-semibold bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">
+                      {leadsNuevos} nuevo{leadsNuevos === 1 ? "" : "s"}
+                    </span>
+                  )}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Prospectos capturados por 2GoBot en la landing, listos para revisar.
+                </p>
+              </div>
+            </div>
+            <Link href="/admin/leads">
+              <EnhancedButton className="w-full" variant="default">
+                Ir a Leads
               </EnhancedButton>
             </Link>
           </EnhancedCard>
