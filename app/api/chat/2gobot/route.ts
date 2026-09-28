@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI, Content, FunctionCall } from "@google/genai";
 import { prisma } from "@/lib/prisma";
 import { withRateLimitAndValidation } from "@/lib/api-helpers";
 import { getClientIp } from "@/lib/rate-limit";
@@ -14,10 +14,16 @@ import {
 // negocio (armado de muebles RTA/melamina para retailers en El Salvador),
 // nunca temas generales. Puede agendar una cita real en Google Calendar y,
 // al hacerlo, crea el lead como Proyecto (esLead=true) — ver /admin/leads.
+//
+// Usa Gemini 2.5 Flash-Lite (no Claude/Anthropic) por costo: para el volumen
+// de un chat de landing, la capa gratuita de Gemini cubre prácticamente todo
+// el uso real, decisión explícita del negocio sobre precio.
 const CHAT_RATE_LIMIT = {
   windowMs: 10 * 60 * 1000, // 10 minutos
   maxRequests: 20,
 };
+
+const MODEL = "gemini-2.5-flash-lite";
 
 const SYSTEM_PROMPT = `Eres 2GoBot, el asistente virtual de Armados 2Go, una empresa que ofrece
 servicio profesional de armado (ensamble) de muebles RTA (Ready To Assemble) y
@@ -41,38 +47,42 @@ Reglas estrictas:
   el nombre de su tienda/negocio y un teléfono de contacto antes de agendar.
 - Sé breve, cordial y profesional. Responde en español salvadoreño neutro.`;
 
-const TOOLS: Anthropic.Tool[] = [
+const TOOLS = [
   {
-    name: "consultar_disponibilidad",
-    description:
-      "Consulta horarios disponibles en el calendario del equipo comercial para agendar una visita/llamada. Úsalo antes de ofrecer horarios al usuario.",
-    input_schema: {
-      type: "object",
-      properties: {
-        duracion_minutos: {
-          type: "number",
-          description: "Duración deseada de la cita en minutos (usualmente 30).",
+    functionDeclarations: [
+      {
+        name: "consultar_disponibilidad",
+        description:
+          "Consulta horarios disponibles en el calendario del equipo comercial para agendar una visita/llamada. Úsalo antes de ofrecer horarios al usuario.",
+        parametersJsonSchema: {
+          type: "object",
+          properties: {
+            duracion_minutos: {
+              type: "number",
+              description: "Duración deseada de la cita en minutos (usualmente 30).",
+            },
+          },
+          required: ["duracion_minutos"],
         },
       },
-      required: ["duracion_minutos"],
-    },
-  },
-  {
-    name: "agendar_cita",
-    description:
-      "Agenda una cita comercial real en el calendario del equipo, usando un horario previamente ofrecido por consultar_disponibilidad, y registra el lead en el sistema.",
-    input_schema: {
-      type: "object",
-      properties: {
-        inicio: { type: "string", description: "Fecha/hora ISO 8601 de inicio, tal como la devolvió consultar_disponibilidad." },
-        fin: { type: "string", description: "Fecha/hora ISO 8601 de fin, tal como la devolvió consultar_disponibilidad." },
-        nombre_contacto: { type: "string", description: "Nombre de la persona de contacto." },
-        telefono_contacto: { type: "string", description: "Teléfono de contacto." },
-        nombre_comercial: { type: "string", description: "Nombre de la tienda/retailer interesado." },
-        notas: { type: "string", description: "Resumen de lo que el cliente necesita." },
+      {
+        name: "agendar_cita",
+        description:
+          "Agenda una cita comercial real en el calendario del equipo, usando un horario previamente ofrecido por consultar_disponibilidad, y registra el lead en el sistema.",
+        parametersJsonSchema: {
+          type: "object",
+          properties: {
+            inicio: { type: "string", description: "Fecha/hora ISO 8601 de inicio, tal como la devolvió consultar_disponibilidad." },
+            fin: { type: "string", description: "Fecha/hora ISO 8601 de fin, tal como la devolvió consultar_disponibilidad." },
+            nombre_contacto: { type: "string", description: "Nombre de la persona de contacto." },
+            telefono_contacto: { type: "string", description: "Teléfono de contacto." },
+            nombre_comercial: { type: "string", description: "Nombre de la tienda/retailer interesado." },
+            notas: { type: "string", description: "Resumen de lo que el cliente necesita." },
+          },
+          required: ["inicio", "fin", "nombre_contacto", "telefono_contacto", "nombre_comercial", "notas"],
+        },
       },
-      required: ["inicio", "fin", "nombre_contacto", "telefono_contacto", "nombre_comercial", "notas"],
-    },
+    ],
   },
 ];
 
@@ -164,64 +174,56 @@ async function ejecutarHerramienta(nombre: string, input: unknown) {
 }
 
 const chatHandler = async (data: Chat2GoBotInput) => {
-  const client = new Anthropic();
+  const ai = new GoogleGenAI({});
 
-  const messages: Anthropic.MessageParam[] = [
-    ...(data.historial ?? []).map((m): Anthropic.MessageParam => ({
-      role: m.rol === "usuario" ? "user" : "assistant",
-      content: m.texto,
+  const contents: Content[] = [
+    ...(data.historial ?? []).map((m): Content => ({
+      role: m.rol === "usuario" ? "user" : "model",
+      parts: [{ text: m.texto }],
     })),
-    { role: "user", content: data.mensaje },
+    { role: "user", parts: [{ text: data.mensaje }] },
   ];
 
   const MAX_ITERATIONS = 4;
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
-      const response = await client.messages.create({
-        model: "claude-opus-5",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        thinking: { type: "disabled" },
-        output_config: { effort: "low" },
-        tools: TOOLS,
-        messages,
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          tools: TOOLS,
+        },
       });
 
-      const toolUseBlocks = response.content.filter(
-        (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
-      );
+      const functionCalls: FunctionCall[] = response.functionCalls ?? [];
 
-      if (toolUseBlocks.length === 0) {
-        const textBlock = response.content.find(
-          (b): b is Anthropic.TextBlock => b.type === "text"
-        );
-        return NextResponse.json({ respuesta: textBlock?.text ?? "" });
+      if (functionCalls.length === 0) {
+        return NextResponse.json({ respuesta: response.text ?? "" });
       }
 
-      messages.push({ role: "assistant", content: response.content });
+      const modelContent = response.candidates?.[0]?.content;
+      contents.push(modelContent ?? { role: "model", parts: [] });
 
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const tool of toolUseBlocks) {
-        const result = await ejecutarHerramienta(tool.name, tool.input);
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: tool.id,
-          content: JSON.stringify(result),
+      const responseParts = [];
+      for (const call of functionCalls) {
+        const resultado = await ejecutarHerramienta(call.name ?? "", call.args ?? {});
+        responseParts.push({
+          functionResponse: {
+            name: call.name,
+            response: resultado as Record<string, unknown>,
+          },
         });
       }
-      messages.push({ role: "user", content: toolResults });
+      contents.push({ role: "user", parts: responseParts });
     }
 
     return NextResponse.json({
       respuesta: "Dame un momento, tengo demasiada información que procesar. ¿Podrías repetir tu última pregunta?",
     });
   } catch (error) {
-    if (error instanceof Anthropic.APIError) {
-      console.error("Error de Anthropic API en 2GoBot:", error.status, error.message);
-    } else {
-      console.error("Error inesperado en 2GoBot:", error);
-    }
+    console.error("Error inesperado en 2GoBot:", error);
     return NextResponse.json(
       { error: "No pudimos procesar tu mensaje. Intenta de nuevo en unos momentos." },
       { status: 500 }
