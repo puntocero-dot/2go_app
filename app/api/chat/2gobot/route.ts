@@ -15,15 +15,18 @@ import {
 // nunca temas generales. Puede agendar una cita real en Google Calendar y,
 // al hacerlo, crea el lead como Proyecto (esLead=true) — ver /admin/leads.
 //
-// Usa Gemini 2.5 Flash-Lite (no Claude/Anthropic) por costo: para el volumen
-// de un chat de landing, la capa gratuita de Gemini cubre prácticamente todo
-// el uso real, decisión explícita del negocio sobre precio.
+// Usa Gemini (no Claude/Anthropic) por costo — decisión explícita del
+// negocio. gemini-2.5-flash-lite devuelve 404 en API keys nuevas (Google lo
+// restringió a cuentas que ya lo usaban antes de su discontinuación el
+// 16-oct-2026); gemini-3.5-flash-lite es el reemplazo que Google recomienda
+// para proyectos nuevos. Sigue siendo muy barato para el volumen de un chat
+// de landing como este.
 const CHAT_RATE_LIMIT = {
   windowMs: 10 * 60 * 1000, // 10 minutos
   maxRequests: 20,
 };
 
-const MODEL = "gemini-2.5-flash-lite";
+const MODEL = "gemini-3.5-flash-lite";
 
 const SYSTEM_PROMPT = `Eres 2GoBot, el asistente virtual de Armados 2Go, una empresa que ofrece
 servicio profesional de armado (ensamble) de muebles RTA (Ready To Assemble) y
