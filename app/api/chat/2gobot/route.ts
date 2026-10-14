@@ -188,6 +188,10 @@ const chatHandler = async (data: Chat2GoBotInput) => {
   ];
 
   const MAX_ITERATIONS = 4;
+  // Señal explícita para que el widget registre la conversión real (evento
+  // de analítica), en vez de adivinarla a partir del texto de la respuesta.
+  let leadRegistrado = false;
+  let citaAgendada = false;
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
@@ -203,7 +207,7 @@ const chatHandler = async (data: Chat2GoBotInput) => {
       const functionCalls: FunctionCall[] = response.functionCalls ?? [];
 
       if (functionCalls.length === 0) {
-        return NextResponse.json({ respuesta: response.text ?? "" });
+        return NextResponse.json({ respuesta: response.text ?? "", leadRegistrado, citaAgendada });
       }
 
       const modelContent = response.candidates?.[0]?.content;
@@ -212,6 +216,10 @@ const chatHandler = async (data: Chat2GoBotInput) => {
       const responseParts = [];
       for (const call of functionCalls) {
         const resultado = await ejecutarHerramienta(call.name ?? "", call.args ?? {});
+        if (call.name === "agendar_cita" && (resultado as { confirmado?: boolean }).confirmado) {
+          leadRegistrado = true;
+          citaAgendada = Boolean((resultado as { citaAgendada?: boolean }).citaAgendada);
+        }
         responseParts.push({
           functionResponse: {
             name: call.name,

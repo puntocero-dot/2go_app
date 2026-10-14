@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { RegisterServiceWorker } from "./register-sw";
 import { OnlineStatusIndicator } from "@/components/online-status-indicator";
+import { Analytics } from "@vercel/analytics/next";
 
 // Plus Jakarta Sans reemplaza a Inter como tipografía de interfaz: métricas
 // similares (no rompe densidad de tablas/formularios admin) pero con más
@@ -111,6 +112,7 @@ export default function RootLayout({
         {children}
         <Toaster />
         <OnlineStatusIndicator />
+        <Analytics />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { track } from "@vercel/analytics";
 import { cn } from "@/lib/utils";
 
 interface Mensaje {
@@ -34,6 +35,7 @@ export function TwoGoBotWidget() {
     setMensajes((prev) => [...prev, { rol: "usuario", texto }]);
     setEntrada("");
     setCargando(true);
+    track("2gobot_mensaje_enviado");
 
     try {
       const res = await fetch("/api/chat/2gobot", {
@@ -47,6 +49,12 @@ export function TwoGoBotWidget() {
       }
 
       const data = await res.json();
+      if (data.leadRegistrado) {
+        track("2gobot_lead_registrado");
+      }
+      if (data.citaAgendada) {
+        track("2gobot_cita_agendada");
+      }
       setMensajes((prev) => [
         ...prev,
         { rol: "bot", texto: data.respuesta || "No pude procesar tu mensaje, intenta de nuevo." },

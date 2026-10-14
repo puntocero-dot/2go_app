@@ -47,6 +47,7 @@
     "@react-three/fiber": "^9.6.0",
     "@types/web-push": "^3.6.4",
     "@upstash/redis": "^1.35.7",
+    "@vercel/analytics": "^2.0.1",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
