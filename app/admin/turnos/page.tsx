@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Loader2, Clock, MapPin, Users, AlertCircle, Calendar, Activity } from "lucide-react";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox-legacy";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { TurnosCalendario } from "@/components/turnos-calendario";
 

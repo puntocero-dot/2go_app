@@ -1,10 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Map from 'react-map-gl';
-import Marker from 'react-map-gl/dist/esm/components/marker';
-import { Source, Layer } from 'react-map-gl';
-import NavigationControl from 'react-map-gl/dist/esm/components/navigation-control';
+import Map, { Marker, Source, Layer, NavigationControl } from 'react-map-gl/mapbox-legacy';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Navigation, Clock, Route, AlertTriangle, CheckCircle2 } from 'lucide-react';

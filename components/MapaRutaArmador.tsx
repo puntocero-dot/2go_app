@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import Map, { Marker, Source, Layer, NavigationControl, Popup } from "react-map-gl";
-import type { LayerProps, MapRef } from "react-map-gl";
+import Map, { Marker, Source, Layer, NavigationControl, Popup } from "react-map-gl/mapbox-legacy";
+import type { LayerProps, MapRef } from "react-map-gl/mapbox-legacy";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Loader2, Play, Pause, SkipBack, Clock, MapPin, Navigation, Route, Waypoints } from "lucide-react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";

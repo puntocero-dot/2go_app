@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Map, { Source, Layer } from 'react-map-gl';
-import Marker from 'react-map-gl/dist/esm/components/marker';
-import Popup from 'react-map-gl/dist/esm/components/popup';
-import NavigationControl from 'react-map-gl/dist/esm/components/navigation-control';
-import FullscreenControl from 'react-map-gl/dist/esm/components/fullscreen-control';
+import Map, { Source, Layer, Marker, Popup, NavigationControl, FullscreenControl } from 'react-map-gl/mapbox-legacy';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Badge } from '@/components/ui/badge';
 
