@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { PrioridadUsuario, Prisma, TamanoMueble } from "@prisma/client";
@@ -160,19 +160,21 @@ const bulkHandler = async (request: NextRequest): Promise<Response> => {
     const successCount = results.filter((r) => r.status === "success").length;
     const errorCount = results.length - successCount;
 
-    await logAuditFromSession({
-      session,
-      action: "BULK_OPERATION",
-      resource: "orden",
-      changes: {
-        after: {
-          processed: results.length,
-          success: successCount,
-          errors: errorCount,
+    after(() =>
+      logAuditFromSession({
+        session,
+        action: "BULK_OPERATION",
+        resource: "orden",
+        changes: {
+          after: {
+            processed: results.length,
+            success: successCount,
+            errors: errorCount,
+          },
         },
-      },
-      request,
-    });
+        request,
+      })
+    );
 
     return NextResponse.json({
       summary: {

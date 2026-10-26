@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
@@ -280,6 +280,13 @@ const actualizarOrdenHandler = async (
     });
 
     const asyncTasks: Promise<unknown>[] = [];
+    // Notificación/SSE/push/auditoría no son necesarios para la respuesta
+    // (orden ya está calculado arriba) — se juntan aquí para diferirse en
+    // un solo after() en vez de bloquear la respuesta al cliente que
+    // cambió el estado. Las escrituras de historial (registroEstado,
+    // computeAndStoreAccumulatedTimes) sí se mantienen en asyncTasks
+    // (bloqueantes), misma categoría que en /api/ordenes/[id]/tomar.
+    const deferredTasks: Array<() => Promise<unknown>> = [];
 
     // Registrar cambio de estado si hubo cambio
     if (estado && estado !== ordenActual.estado) {
@@ -344,10 +351,10 @@ const actualizarOrdenHandler = async (
       asyncTasks.push(computeAndStoreAccumulatedTimes(id));
 
       // ENVIAR NOTIFICACIONES (email/WhatsApp al cliente)
-      asyncTasks.push(notificarCambioEstadoOrden(id));
+      deferredTasks.push(() => notificarCambioEstadoOrden(id));
 
       // SSE: publicar nuevo estado en Redis para clientes en tiempo real
-      asyncTasks.push(publishOrderUpdate(id, estado));
+      deferredTasks.push(() => publishOrderUpdate(id, estado));
 
       // PUSH NOTIFICATIONS: notificar al armador o admin según el estado
       if (isFeatureEnabled("PUSH_NOTIFICATIONS")) {
@@ -369,7 +376,7 @@ const actualizarOrdenHandler = async (
             .findUnique({ where: { id: orden.armadorId }, select: { usuarioId: true } })
             .then((a) => a?.usuarioId);
           if (armadorUsuarioId) {
-            asyncTasks.push(
+            deferredTasks.push(() =>
               sendPushToUser(armadorUsuarioId, {
                 title: titulo,
                 body: `Orden ${codigoRef} ha sido asignada a ti`,
@@ -386,7 +393,7 @@ const actualizarOrdenHandler = async (
             .findUnique({ where: { id: ordenActual.armadorId }, select: { usuarioId: true } })
             .then((a) => a?.usuarioId);
           if (armadorUsuarioId) {
-            asyncTasks.push(
+            deferredTasks.push(() =>
               sendPushToUser(armadorUsuarioId, {
                 title: titulo,
                 body: `La orden ${codigoRef} fue cancelada`,
@@ -399,7 +406,7 @@ const actualizarOrdenHandler = async (
 
         // Notificar al usuario que cambió el estado (confirmación) si no es el armador
         if (session.rol !== "ARMADOR" && estado === "ARMADO_COMPLETADO") {
-          asyncTasks.push(
+          deferredTasks.push(() =>
             sendPushToUser(session.userId, {
               title: titulo,
               body: `Orden ${codigoRef} completada exitosamente`,
@@ -412,7 +419,7 @@ const actualizarOrdenHandler = async (
     }
 
     if (autoAssignMeta) {
-      asyncTasks.push(
+      deferredTasks.push(() =>
         prisma.logActividad.create({
           data: {
             usuarioId: session.userId,
@@ -429,23 +436,28 @@ const actualizarOrdenHandler = async (
       await Promise.all(asyncTasks);
     }
 
-    await logAuditFromSession({
-      session,
-      action: "UPDATE_ORDER",
-      resource: "orden",
-      resourceId: id,
-      changes: {
-        before: {
-          estado: ordenActual.estado,
-          armadorId: ordenActual.armadorId,
+    after(async () => {
+      if (deferredTasks.length > 0) {
+        await Promise.all(deferredTasks.map((task) => task()));
+      }
+      await logAuditFromSession({
+        session,
+        action: "UPDATE_ORDER",
+        resource: "orden",
+        resourceId: id,
+        changes: {
+          before: {
+            estado: ordenActual.estado,
+            armadorId: ordenActual.armadorId,
+          },
+          after: {
+            estado: orden.estado,
+            armadorId: orden.armadorId,
+          },
         },
-        after: {
-          estado: orden.estado,
-          armadorId: orden.armadorId,
-        },
-      },
-      metadata: autoAssignMeta ? { autoAssignMeta } : undefined,
-      request,
+        metadata: autoAssignMeta ? { autoAssignMeta } : undefined,
+        request,
+      });
     });
 
     return NextResponse.json({ orden });

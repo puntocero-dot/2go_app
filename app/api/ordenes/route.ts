@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
@@ -149,23 +149,27 @@ const crearOrdenHandler = async (
       },
     });
 
-    // Auditar creación de orden
-    await logAuditFromSession({
-      session,
-      action: "CREATE_ORDER",
-      resource: "orden",
-      resourceId: orden.id,
-      changes: {
-        after: {
-          codigoReferenciaRetail,
-          muebleId,
-          usuarioFinalId,
-          proyectoId,
-          prioridad: prioridadValida,
+    // Auditar creación de orden — diferido con after(): no bloquea la
+    // respuesta por una escritura que ni el cliente ni el resto de este
+    // handler necesitan esperar.
+    after(() =>
+      logAuditFromSession({
+        session,
+        action: "CREATE_ORDER",
+        resource: "orden",
+        resourceId: orden.id,
+        changes: {
+          after: {
+            codigoReferenciaRetail,
+            muebleId,
+            usuarioFinalId,
+            proyectoId,
+            prioridad: prioridadValida,
+          },
         },
-      },
-      request,
-    });
+        request,
+      })
+    );
 
     // Si se solicita auto-asignación, buscar armador disponible
     if (autoAsignar) {

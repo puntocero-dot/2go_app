@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notificarCambioEstadoOrden } from "@/lib/notificaciones";
@@ -111,30 +111,36 @@ export async function POST(request: NextRequest, context: RouteContext) {
       },
     });
 
-    // Actualizar tiempos acumulados por estado
+    // Actualizar tiempos acumulados por estado (se mantiene bloqueante:
+    // es historial de estado, misma categoría que el registroEstado.create
+    // de arriba).
     await computeAndStoreAccumulatedTimes(orden.id);
 
-    await notificarCambioEstadoOrden(orden.id);
-
-    // SSE: publicar cambio de estado en Redis para clientes en tiempo real
-    await publishOrderUpdate(orden.id, "ASIGNADO");
-
-    await logAuditFromSession({
-      session,
-      action: "ASSIGN_ORDER",
-      resource: "orden",
-      resourceId: orden.id,
-      changes: {
-        before: {
-          estado: ordenActual.estado,
-          armadorId: ordenActual.armadorId,
+    // Nada de lo que sigue es necesario para la respuesta (orden y
+    // rutaSugerida ya están calculados) — notificación, SSE y auditoría
+    // se difieren con after() en vez de bloquear al armador que tomó la
+    // orden. Mismo patrón que el bug de login ya corregido antes (~10s
+    // de latencia por escrituras no críticas).
+    after(async () => {
+      await notificarCambioEstadoOrden(orden.id);
+      await publishOrderUpdate(orden.id, "ASIGNADO");
+      await logAuditFromSession({
+        session,
+        action: "ASSIGN_ORDER",
+        resource: "orden",
+        resourceId: orden.id,
+        changes: {
+          before: {
+            estado: ordenActual.estado,
+            armadorId: ordenActual.armadorId,
+          },
+          after: {
+            estado: orden.estado,
+            armadorId: orden.armadorId,
+          },
         },
-        after: {
-          estado: orden.estado,
-          armadorId: orden.armadorId,
-        },
-      },
-      request,
+        request,
+      });
     });
 
     return NextResponse.json({ orden, rutaSugerida });

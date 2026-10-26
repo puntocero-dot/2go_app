@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/api-helpers';
@@ -82,6 +82,11 @@ const biExportHandler = async (req: NextRequest) => {
       ];
     }
 
+    // Tope de seguridad: sin esto, pedir proyectoId=ALL sin rango de
+    // fechas exporta la tabla de órdenes completa con includes profundos
+    // en una sola respuesta. No es paginación real, solo evita que una
+    // combinación de filtros amplia tumbe la función.
+    const EXPORT_MAX_ROWS = 10_000;
     const ordenes = await prisma.orden.findMany({
       where,
       include: {
@@ -89,24 +94,30 @@ const biExportHandler = async (req: NextRequest) => {
         armador: { include: { usuario: { select: { nombre: true } } } },
         usuarioFinal: { select: { nombre: true, municipio: true } }
       },
-      orderBy: { fechaCreacion: 'desc' }
+      orderBy: { fechaCreacion: 'desc' },
+      take: EXPORT_MAX_ROWS,
     });
 
-    await logAuditFromSession({
-      session,
-      action: 'EXPORT_DATA',
-      resource: 'sistema',
-      resourceId: proyectoId && proyectoId !== 'ALL' ? proyectoId : undefined,
-      metadata: {
-        tipo: 'BI_EXPORT',
-        format,
-        proyectoId: proyectoId || 'ALL',
-        fechaInicio: fechaInicio || null,
-        fechaFin: fechaFin || null,
-        totalOrdenes: ordenes.length,
-      },
-      request: req,
-    });
+    // El log de auditoría no es necesario para construir la respuesta —
+    // se difiere con after() para no retrasar la descarga del reporte
+    // por una escritura que a quien exporta no le importa esperar.
+    after(() =>
+      logAuditFromSession({
+        session,
+        action: 'EXPORT_DATA',
+        resource: 'sistema',
+        resourceId: proyectoId && proyectoId !== 'ALL' ? proyectoId : undefined,
+        metadata: {
+          tipo: 'BI_EXPORT',
+          format,
+          proyectoId: proyectoId || 'ALL',
+          fechaInicio: fechaInicio || null,
+          fechaFin: fechaFin || null,
+          totalOrdenes: ordenes.length,
+        },
+        request: req,
+      })
+    );
 
     if (format === 'csv') {
       // Generar CSV

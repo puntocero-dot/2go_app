@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { asignarArmadorAutomatico } from "@/lib/auto-assign-armador";
@@ -111,21 +111,23 @@ const autoAsignarHandler = async (
       assigned += 1;
     }
 
-    await logAuditFromSession({
-      session,
-      action: "BULK_OPERATION",
-      resource: "orden",
-      changes: {
-        after: {
-          processed,
-          assigned,
-          skippedNotSinAsignar,
-          skippedNoArmador,
-          skippedNoAutorizado,
+    after(() =>
+      logAuditFromSession({
+        session,
+        action: "BULK_OPERATION",
+        resource: "orden",
+        changes: {
+          after: {
+            processed,
+            assigned,
+            skippedNotSinAsignar,
+            skippedNoArmador,
+            skippedNoAutorizado,
+          },
         },
-      },
-      request,
-    });
+        request,
+      })
+    );
 
     return NextResponse.json({
       summary: {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { EstadoOrden } from "@prisma/client";
 import { getSession } from "@/lib/auth";
@@ -65,6 +65,10 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
       fechaCreacion: { gte: desdeDate, lte: hastaDate },
     };
 
+    // Tope de seguridad: el rango de fechas es obligatorio (ver schema),
+    // pero un rango amplio con include de registrosEstado anidado por
+    // orden igual puede traer un volumen grande en una sola respuesta.
+    const TIEMPOS_MAX_ROWS = 10_000;
     const ordenes = await prisma.orden.findMany({
       where: whereClause,
       include: {
@@ -85,6 +89,7 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
         },
       },
       orderBy: { fechaCreacion: "desc" },
+      take: TIEMPOS_MAX_ROWS,
     });
 
     const resultados: ResultadoReporte[] = [];
@@ -152,18 +157,21 @@ const tiemposPedidoHandler = async (request: NextRequest) => {
       });
     }
 
-    await logAuditFromSession({
-      session,
-      action: 'EXPORT_DATA',
-      resource: 'sistema',
-      resourceId: proyectoId || undefined,
-      metadata: {
-        tipo: 'REPORTE_TIEMPOS_PEDIDO',
-        filtros: parsed.data,
-        totalOrdenes: ordenes.length,
-      },
-      request,
-    });
+    // Diferido con after(): no es necesario para la respuesta del reporte.
+    after(() =>
+      logAuditFromSession({
+        session,
+        action: 'EXPORT_DATA',
+        resource: 'sistema',
+        resourceId: proyectoId || undefined,
+        metadata: {
+          tipo: 'REPORTE_TIEMPOS_PEDIDO',
+          filtros: parsed.data,
+          totalOrdenes: ordenes.length,
+        },
+        request,
+      })
+    );
 
     return NextResponse.json(resultados);
   } catch (error) {
