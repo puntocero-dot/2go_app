@@ -13,13 +13,23 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readOrderState } from "@/lib/realtime/publisher";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { withRateLimit } from "@/lib/api-helpers";
+import { getClientIp } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_DURATION_MS = 55_000; // 55s — margen antes del timeout de Vercel
 
-export async function GET(request: NextRequest, context: RouteContext) {
+// A diferencia de sus hermanos públicos (seguimiento/[id], .../ruta), este
+// endpoint SSE no tenía ningún límite de tasa: permitía abrir conexiones
+// de hasta 55s repetidamente sin límite (DoS de bajo costo).
+const EVENTS_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minuto
+  maxRequests: 10,
+};
+
+const getHandler = async (request: NextRequest, context: RouteContext) => {
   const { id } = await context.params;
   const token = request.nextUrl.searchParams.get("token");
 
@@ -127,4 +137,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       "X-Accel-Buffering": "no",
     },
   });
-}
+};
+
+export const GET = withRateLimit(
+  getHandler,
+  EVENTS_RATE_LIMIT,
+  (request) => `events:${getClientIp(request)}`
+);

@@ -10,16 +10,34 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    // Solo se usa desde /admin/ordenes/nueva (ADMIN y SUPERVISOR); sin este
+    // chequeo, cualquier rol autenticado -incluyendo ARMADOR- podía listar
+    // el catálogo de muebles de todos los proyectos/retailers.
+    if (!session || !["ADMIN", "SUPERVISOR"].includes(session.rol)) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
     const proyectoId = searchParams.get("proyectoId");
     const pagination = getPaginationParams(searchParams);
 
-    const where: Record<string, string> = {};
+    const where: Record<string, unknown> = {};
     if (proyectoId) where.proyectoId = proyectoId;
+
+    if (session.rol === "SUPERVISOR") {
+      const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+        where: { usuarioId: session.userId },
+        select: { proyectoId: true },
+      });
+      const proyectoIdsPermitidos = supervisorProyectos.map((sp) => sp.proyectoId);
+
+      if (proyectoId && !proyectoIdsPermitidos.includes(proyectoId)) {
+        return NextResponse.json({ error: "No autorizado para este proyecto" }, { status: 403 });
+      }
+
+      where.proyectoId =
+        proyectoId || { in: proyectoIdsPermitidos.length > 0 ? proyectoIdsPermitidos : ["__NINGUNO__"] };
+    }
 
     const [muebles, total] = await Promise.all([
       prisma.mueble.findMany({

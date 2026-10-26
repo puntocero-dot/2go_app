@@ -115,6 +115,18 @@ const actualizarOrdenHandler = async (
       );
     }
 
+    // Whitelist explícita de roles que pueden mutar una orden. Sin esto,
+    // un rol futuro o uno de solo lectura (OBSERVADOR) que no cae en
+    // ninguna de las ramas ARMADOR/SUPERVISOR de abajo pasaba sin ningún
+    // gate — el bloque que aplica estado/receptor/csat no tenía chequeo
+    // propio, confiaba en que una de esas dos ramas lo hubiera rechazado.
+    if (!["ADMIN", "SUPERVISOR", "ARMADOR"].includes(session.rol)) {
+      return NextResponse.json(
+        { error: "No tienes permiso para modificar esta orden" },
+        { status: 403 }
+      );
+    }
+
     // Reglas de permisos
     const esAdminOSupervisor = ["ADMIN", "SUPERVISOR"].includes(session.rol);
 

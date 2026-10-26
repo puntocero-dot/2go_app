@@ -38,6 +38,24 @@ export async function GET(request: NextRequest) {
       where.proyectoId = proyectoId;
     }
 
+    // Sin esto, un SUPERVISOR podía omitir proyectoId y obtener ETA/GPS de
+    // órdenes de proyectos que no supervisa.
+    if (session.rol === "SUPERVISOR") {
+      const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+        where: { usuarioId: session.userId },
+        select: { proyectoId: true },
+      });
+      const proyectoIdsPermitidos = supervisorProyectos.map((sp) => sp.proyectoId);
+
+      if (proyectoId && !proyectoIdsPermitidos.includes(proyectoId)) {
+        return NextResponse.json({ error: "No autorizado para este proyecto" }, { status: 403 });
+      }
+
+      if (!proyectoId) {
+        where.proyectoId = { in: proyectoIdsPermitidos.length > 0 ? proyectoIdsPermitidos : ["__NINGUNO__"] };
+      }
+    }
+
     // Solo ordenes que ya llegaron (ARMADO_INICIADO o posterior)
     where.fechaInicioArmado = { not: null };
     where.fechaRuta = { ...where.fechaRuta, not: null };

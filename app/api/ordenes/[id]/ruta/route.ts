@@ -56,6 +56,27 @@ export async function GET(
       return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
     }
 
+    // El chequeo de arriba solo valida rol, no que esta orden pertenezca al
+    // armador/supervisor que la pide — sin esto, cualquier ARMADOR podía
+    // ver el GPS y las coordenadas del cliente de cualquier orden del
+    // sistema iterando ids. Mismo scoping que ya aplica el GET hermano en
+    // /api/ordenes/[id]/route.ts.
+    if (session.rol === "ARMADOR") {
+      const armador = await prisma.armador.findUnique({
+        where: { usuarioId: session.userId },
+      });
+      if (!armador || orden.armadorId !== armador.id) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
+    } else if (session.rol === "SUPERVISOR") {
+      const supervisorProyecto = await prisma.supervisorProyecto.findFirst({
+        where: { usuarioId: session.userId, proyectoId: orden.proyectoId },
+      });
+      if (!supervisorProyecto) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      }
+    }
+
     const destino =
       orden.usuarioFinal?.coordenadasLat != null &&
       orden.usuarioFinal?.coordenadasLng != null

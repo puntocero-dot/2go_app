@@ -46,6 +46,25 @@ const biExportHandler = async (req: NextRequest) => {
     if (proyectoId && proyectoId !== 'ALL') {
       where.proyectoId = proyectoId;
     }
+
+    // Sin esto, un SUPERVISOR podía omitir proyectoId (o pasar 'ALL') y
+    // exportar códigos de orden, clientes y GPS/ETA de TODOS los
+    // proyectos/retailers del sistema, no solo los que supervisa.
+    if (session.rol === 'SUPERVISOR') {
+      const supervisorProyectos = await prisma.supervisorProyecto.findMany({
+        where: { usuarioId: session.userId },
+        select: { proyectoId: true },
+      });
+      const proyectoIdsPermitidos = supervisorProyectos.map((sp) => sp.proyectoId);
+
+      if (proyectoId && proyectoId !== 'ALL' && !proyectoIdsPermitidos.includes(proyectoId)) {
+        return NextResponse.json({ error: 'No autorizado para este proyecto' }, { status: 403 });
+      }
+
+      if (!proyectoId || proyectoId === 'ALL') {
+        where.proyectoId = { in: proyectoIdsPermitidos.length > 0 ? proyectoIdsPermitidos : ['__NINGUNO__'] };
+      }
+    }
     if (fechaInicio || fechaFin) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rangoFechas: any = {};

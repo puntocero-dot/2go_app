@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateOrderStatusEmailHTML } from "@/lib/email-templates";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { assertSupervisorScope } from "@/lib/authz";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -37,10 +38,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
     }
 
-    // Verificar permisos - simplificado sin proyectoId/armadorId en session
-    const canAccess = session.rol === 'ADMIN' || 
-                     session.rol === 'SUPERVISOR' ||
-                     (session.rol === 'ARMADOR' && orden.armador?.usuarioId === session.userId);
+    // El comentario original decía "simplificado sin proyectoId/armadorId
+    // en session" y daba acceso incondicional a TODO SUPERVISOR sobre
+    // cualquier orden (emails de cliente y armador incluidos) sin verificar
+    // que supervise el proyecto correspondiente. orden.proyectoId sí está
+    // disponible (es un scalar de Orden), así que no hace falta esa
+    // simplificación.
+    const canAccess =
+      session.rol === "ADMIN" ||
+      (session.rol === "SUPERVISOR" && (await assertSupervisorScope(session, orden.proyectoId))) ||
+      (session.rol === "ARMADOR" && orden.armador?.usuarioId === session.userId);
 
     if (!canAccess) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

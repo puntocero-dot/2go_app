@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { assertSupervisorScope } from "@/lib/authz";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -66,6 +67,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
         { error: "Orden no encontrada" },
         { status: 404 }
       );
+    }
+
+    // El chequeo de arriba solo valida rol global; sin esto un SUPERVISOR
+    // podía pedir sugerencias de asignación (roster completo de armadores
+    // con teléfono) para órdenes de proyectos que no supervisa.
+    if (!(await assertSupervisorScope(session, orden.proyectoId))) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const armadores = await prisma.armador.findMany({
