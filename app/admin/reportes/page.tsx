@@ -21,18 +21,18 @@ export default async function ReportesPage() {
     redirect("/login");
   }
 
-  // Obtener lista de proyectos para filtros
-  const proyectos = await prisma.proyecto.findMany({
-    where: { activo: true, esLead: false },
-    select: { id: true, nombreComercial: true },
-    orderBy: { nombreComercial: "asc" },
-  });
-
-  // Obtener lista de armadores para filtros
-  const armadores = await prisma.armador.findMany({
-    include: { usuario: { select: { nombre: true } } },
-    orderBy: { usuario: { nombre: "asc" } },
-  });
+  // Proyectos y armadores son independientes entre sí — en paralelo.
+  const [proyectos, armadores] = await Promise.all([
+    prisma.proyecto.findMany({
+      where: { activo: true, esLead: false },
+      select: { id: true, nombreComercial: true },
+      orderBy: { nombreComercial: "asc" },
+    }),
+    prisma.armador.findMany({
+      include: { usuario: { select: { nombre: true } } },
+      orderBy: { usuario: { nombre: "asc" } },
+    }),
+  ]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">

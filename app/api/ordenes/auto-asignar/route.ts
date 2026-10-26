@@ -32,13 +32,43 @@ const autoAsignarHandler = async (
     let assigned = 0;
     let skippedNotSinAsignar = 0;
     let skippedNoArmador = 0;
+    let skippedNoAutorizado = 0;
+
+    // Una sola query para todas las órdenes en vez de un findUnique por id
+    // dentro del loop. La asignación de armador sí se mantiene secuencial
+    // más abajo: dos iteraciones en paralelo podrían asignar el mismo
+    // armador dos veces (depende de estado mutable entre iteraciones).
+    const ordenesPorId = new Map(
+      (await prisma.orden.findMany({ where: { id: { in: ordenIds } } })).map(
+        (orden) => [orden.id, orden]
+      )
+    );
+
+    // El chequeo de rol de arriba es global, no por orden: sin esto un
+    // SUPERVISOR podía enviar ids de órdenes de proyectos que no supervisa
+    // y el endpoint las auto-asignaba igual. Se resuelve una sola vez
+    // (no por orden dentro del loop) para no reintroducir un N+1.
+    const proyectosSupervisados =
+      session.rol === "SUPERVISOR"
+        ? new Set(
+            (
+              await prisma.supervisorProyecto.findMany({
+                where: { usuarioId: session.userId },
+                select: { proyectoId: true },
+              })
+            ).map((sp) => sp.proyectoId)
+          )
+        : null;
 
     for (const id of ordenIds) {
-      const orden = await prisma.orden.findUnique({
-        where: { id },
-      });
+      const orden = ordenesPorId.get(id);
 
       if (!orden) {
+        continue;
+      }
+
+      if (proyectosSupervisados && !proyectosSupervisados.has(orden.proyectoId)) {
+        skippedNoAutorizado += 1;
         continue;
       }
 
@@ -91,6 +121,7 @@ const autoAsignarHandler = async (
           assigned,
           skippedNotSinAsignar,
           skippedNoArmador,
+          skippedNoAutorizado,
         },
       },
       request,
@@ -102,6 +133,7 @@ const autoAsignarHandler = async (
         assigned,
         skippedNotSinAsignar,
         skippedNoArmador,
+        skippedNoAutorizado,
       },
     });
   } catch (error) {

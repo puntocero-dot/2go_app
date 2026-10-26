@@ -224,29 +224,31 @@ export async function GET(request: NextRequest) {
           select: { id: true, nombreComercial: true },
         });
 
-        const resultados: Record<string, unknown>[] = [];
+        // Una promesa por proyecto en paralelo en vez de secuencial: cada
+        // getBillingDataset es independiente de los demás (no comparten
+        // estado), así que esperarlos uno por uno solo multiplica la
+        // latencia por el número de proyectos activos sin necesidad.
+        const billingDatasets = await Promise.all(
+          proyectos.map((proyecto) =>
+            getBillingDataset({
+              proyectoId: proyecto.id,
+              desde: fechaInicio,
+              hasta: fechaFin,
+            }).then((billingData) => ({ proyecto, billingData }))
+          )
+        );
 
-        for (const proyecto of proyectos) {
-          const billingData = await getBillingDataset({
-            proyectoId: proyecto.id,
-            desde: fechaInicio,
-            hasta: fechaFin,
-          });
-
-          if (billingData && billingData.ordenes.length > 0) {
-            resultados.push({
-              proyecto: proyecto.nombreComercial,
-              periodo: billingData.periodoLabel,
-              ordenesFacturadas: billingData.ordenes.length,
-              totalArmado: billingData.totalsByConcept.armado,
-              totalDistancia: billingData.totalsByConcept.distancia,
-              totalPenalizaciones: billingData.totalsByConcept.penalizacion,
-              totalFacturado: billingData.totalsByConcept.totalFacturado,
-            });
-          }
-        }
-
-        data = resultados;
+        data = billingDatasets
+          .filter(({ billingData }) => billingData && billingData.ordenes.length > 0)
+          .map(({ proyecto, billingData }) => ({
+            proyecto: proyecto.nombreComercial,
+            periodo: billingData!.periodoLabel,
+            ordenesFacturadas: billingData!.ordenes.length,
+            totalArmado: billingData!.totalsByConcept.armado,
+            totalDistancia: billingData!.totalsByConcept.distancia,
+            totalPenalizaciones: billingData!.totalsByConcept.penalizacion,
+            totalFacturado: billingData!.totalsByConcept.totalFacturado,
+          }));
         break;
       }
 

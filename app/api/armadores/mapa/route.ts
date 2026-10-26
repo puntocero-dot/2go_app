@@ -69,6 +69,27 @@ export async function GET() {
       : [];
     const turnoPorArmador = new Map(turnosActivos.map((t) => [t.armadorId, t]));
 
+    // Mismo fix que arriba, pero para el registro de "entró a EN_RUTA" que
+    // delimita el tramo de viaje: antes se buscaba con un findFirst por
+    // armador dentro del .map() de abajo (N+1 reintroducido sobre esta
+    // misma tabla). Se batchea una sola vez para todas las órdenes EN_RUTA.
+    const ordenesEnRutaIds = armadores
+      .map((a) => a.ordenes.find((o) => o.estado === "EN_RUTA"))
+      .filter((o): o is NonNullable<typeof o> => Boolean(o))
+      .map((o) => o.id);
+    const registrosEnRuta = ordenesEnRutaIds.length
+      ? await prisma.registroEstado.findMany({
+          where: { ordenId: { in: ordenesEnRutaIds }, estadoCambiadoA: "EN_RUTA" },
+          orderBy: { timestamp: "asc" },
+        })
+      : [];
+    const primerRegistroEnRutaPorOrden = new Map<string, (typeof registrosEnRuta)[number]>();
+    for (const registro of registrosEnRuta) {
+      if (!primerRegistroEnRutaPorOrden.has(registro.ordenId)) {
+        primerRegistroEnRutaPorOrden.set(registro.ordenId, registro);
+      }
+    }
+
     const armadoresConUbicacion = await Promise.all(
       armadores.map(async (armador) => {
         const turno = turnoPorArmador.get(armador.id);
@@ -119,10 +140,7 @@ export async function GET() {
           typeof ordenEnRuta.usuarioFinal.coordenadasLng === "number" &&
           rutaPuntos.length > 0
         ) {
-          const registroEnRuta = await prisma.registroEstado.findFirst({
-            where: { ordenId: ordenEnRuta.id, estadoCambiadoA: "EN_RUTA" },
-            orderBy: { timestamp: "asc" },
-          });
+          const registroEnRuta = primerRegistroEnRutaPorOrden.get(ordenEnRuta.id) ?? null;
 
           if (registroEnRuta) {
             const puntosViaje = rutaPuntos.filter(

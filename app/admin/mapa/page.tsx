@@ -23,69 +23,69 @@ async function getMapData(userId: string, rol: string) {
     proyectoIds = supervisorProyectos.map(sp => sp.proyectoId);
   }
 
-  // Armadores con ubicación activa
-  const armadores = await prisma.armador.findMany({
-    where: {
-      ubicacionActualLat: { not: null },
-      ubicacionActualLng: { not: null },
-      estado: 'ACTIVO'
-    },
-    include: {
-      usuario: {
-        select: {
-          nombre: true,
-          email: true
-        }
-      }
-    }
-  });
-
-  // Proyectos disponibles para filtros (filtrados por rol)
-  const proyectos = await prisma.proyecto.findMany({
-    where: proyectoIds ? { id: { in: proyectoIds }, esLead: false } : { esLead: false },
-    select: {
-      id: true,
-      nombreComercial: true
-    },
-    orderBy: {
-      nombreComercial: 'asc'
-    }
-  });
-
-  // Órdenes activas con ubicación del cliente (filtradas por proyecto si es supervisor)
-  const ordenes = await prisma.orden.findMany({
-    where: {
-      estado: {
-        in: ['ASIGNADO', 'EN_RUTA', 'ARMADO_INICIADO']
+  // Las tres queries son independientes entre sí una vez conocido
+  // proyectoIds (armadores ni siquiera lo usa) — van en paralelo en vez
+  // de una tras otra.
+  const [armadores, proyectos, ordenes] = await Promise.all([
+    prisma.armador.findMany({
+      where: {
+        ubicacionActualLat: { not: null },
+        ubicacionActualLng: { not: null },
+        estado: 'ACTIVO'
       },
-      ...(proyectoIds ? { proyectoId: { in: proyectoIds } } : {})
-    },
-    include: {
-      usuarioFinal: {
-        select: {
-          nombre: true,
-          direccionCompleta: true,
-          municipio: true,
-          coordenadasLat: true,
-          coordenadasLng: true
-        }
-      },
-      armador: {
-        include: {
-          usuario: {
-            select: {
-              nombre: true
-            }
+      include: {
+        usuario: {
+          select: {
+            nombre: true,
+            email: true
           }
         }
+      }
+    }),
+    prisma.proyecto.findMany({
+      where: proyectoIds ? { id: { in: proyectoIds }, esLead: false } : { esLead: false },
+      select: {
+        id: true,
+        nombreComercial: true
       },
-      proyecto: {
-        select: {
-          nombreComercial: true
+      orderBy: {
+        nombreComercial: 'asc'
+      }
+    }),
+    prisma.orden.findMany({
+      where: {
+        estado: {
+          in: ['ASIGNADO', 'EN_RUTA', 'ARMADO_INICIADO']
+        },
+        ...(proyectoIds ? { proyectoId: { in: proyectoIds } } : {})
+      },
+      include: {
+        usuarioFinal: {
+          select: {
+            nombre: true,
+            direccionCompleta: true,
+            municipio: true,
+            coordenadasLat: true,
+            coordenadasLng: true
+          }
+        },
+        armador: {
+          include: {
+            usuario: {
+              select: {
+                nombre: true
+              }
+            }
+          }
+        },
+        proyecto: {
+          select: {
+            nombreComercial: true
+          }
         }
       }
-    }
-  });
+    }),
+  ]);
 
   return { armadores, ordenes, proyectos };
 }

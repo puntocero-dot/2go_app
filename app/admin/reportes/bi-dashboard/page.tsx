@@ -255,14 +255,14 @@ export default async function BIDashboardPage({ searchParams }: PageProps) {
     fechaFin: String(currentSearchParams?.fechaFin || "")
   };
 
-  // Obtener proyectos para filtros
-  const proyectos = await prisma.proyecto.findMany({
-    orderBy: { nombreComercial: "asc" },
-    select: { id: true, nombreComercial: true },
-  });
-
-  // Obtener datos del dashboard
-  const biData = await getBIDashboardData(filters);
+  // proyectos (para el filtro) y biData no dependen entre sí — en paralelo.
+  const [proyectos, biData] = await Promise.all([
+    prisma.proyecto.findMany({
+      orderBy: { nombreComercial: "asc" },
+      select: { id: true, nombreComercial: true },
+    }),
+    getBIDashboardData(filters),
+  ]);
   
   // Verificar si hay suficientes datos para mostrar el dashboard
   const hasInsufficientData = biData.kpis[0].value === 0; // Si no hay órdenes

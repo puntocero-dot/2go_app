@@ -151,31 +151,30 @@ export default async function FacturacionPage({ searchParams }: PageProps) {
       redirect("/login");
     }
 
-    const usuario = await prisma.usuario.findUnique({
-      where: { id: session.userId },
-    });
-
-    if (!usuario) {
-      redirect("/login");
-    }
-
     // Parse filters
     const filters = billingFiltersSchema.parse(currentSearchParams);
     const { start: startDate, end: endDate } = getDateRangeFromFilters(filters);
 
-    // Get proyectos activos
-    const proyectos = await prisma.proyecto.findMany({
-      where: { activo: true, esLead: false },
-      select: { id: true, nombreComercial: true },
-      orderBy: { nombreComercial: 'asc' }
-    });
+    // Ninguna de estas tres depende de las otras — usuario y proyectos ni
+    // siquiera dependen de los filtros de la URL — así que van en paralelo
+    // en vez de una tras otra.
+    const [usuario, proyectos, billingData] = await Promise.all([
+      prisma.usuario.findUnique({ where: { id: session.userId } }),
+      prisma.proyecto.findMany({
+        where: { activo: true, esLead: false },
+        select: { id: true, nombreComercial: true },
+        orderBy: { nombreComercial: 'asc' }
+      }),
+      getBillingDataset({
+        proyectoId: filters.proyectoId === "ALL" ? "ALL" : filters.proyectoId!,
+        desde: filters.desde || startDate.toISOString().split('T')[0],
+        hasta: filters.hasta || endDate.toISOString().split('T')[0],
+      }),
+    ]);
 
-    // Get billing data
-    const billingData = await getBillingDataset({
-      proyectoId: filters.proyectoId === "ALL" ? "ALL" : filters.proyectoId!,
-      desde: filters.desde || startDate.toISOString().split('T')[0],
-      hasta: filters.hasta || endDate.toISOString().split('T')[0],
-    });
+    if (!usuario) {
+      redirect("/login");
+    }
 
     const hasData = billingData && billingData.ordenes.length > 0;
     const summary = billingData ? billingData.totalsByConcept : {
