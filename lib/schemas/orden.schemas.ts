@@ -88,7 +88,9 @@ export const ActualizarOrdenApiSchema = z
   .passthrough();
 
 export const AutoAsignarOrdenesSchema = z.object({
-  ordenIds: z.array(z.string().min(1)).nonempty(),
+  // Límite defensivo (GHSA-mrhx-c7xc-m3w5): sin tope, un payload con
+  // decenas de miles de ids puede agotar memoria validando el array.
+  ordenIds: z.array(z.string().min(1)).nonempty().max(500),
 });
 
 export const RegistrarArchivosOrdenSchema = z.object({

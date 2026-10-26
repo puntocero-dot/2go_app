@@ -54,7 +54,7 @@ export const crearUsuarioSchema = z.object({
     .union([
       habilidadesTextoSchema,
       z.literal(""),
-      z.array(habilidadesTextoSchema),
+      z.array(habilidadesTextoSchema).max(50),
     ])
     .optional(),
 });
@@ -103,11 +103,11 @@ export const actualizarUsuarioSchema = z
       .union([
         habilidadesTextoSchema,
         z.literal(""),
-        z.array(habilidadesTextoSchema),
+        z.array(habilidadesTextoSchema).max(50),
       ])
       .optional(),
 
-    proyectosIds: z.array(z.string().min(1)).optional(),
+    proyectosIds: z.array(z.string().min(1)).max(200).optional(),
   })
   .strict();
 
