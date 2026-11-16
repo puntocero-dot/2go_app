@@ -77,13 +77,13 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
         }
       `}} />
 
-      {/* Imagen de fondo, editable desde /admin/configuracion/login.
-          Un desenfoque leve (no blur-2xl) evita que el fondo compita con
-          la tarjeta de login sin volver irreconocible la foto que sube el
-          admin — con blur-2xl + overlay al 50% cualquier foto, incluida
-          la de referencia de moodboard de madera, se veía como una mancha
-          sin forma. scale-110 esconde el recorte de bordes que deja el
-          blur. */}
+      {/* Imagen de fondo, editable desde /admin/configuracion/login, sin
+          desenfoque: cualquier blur (incluso leve) sobre una foto con
+          muchos objetos pequeños de alto contraste (moodboard de madera,
+          piñas, telas) se ve "manchado" en vez de elegante — decisión
+          explícita de mostrarla nítida. La tarjeta de abajo ya tiene su
+          propio backdrop-blur-3xl, así que sigue legible sobre una foto
+          nítida sin necesitar que el fondo también esté desenfocado. */}
       <Image
         src={backgroundUrl}
         alt="Fondo"
@@ -91,7 +91,7 @@ export function LoginForm({ backgroundUrl }: LoginFormProps) {
         priority
         sizes="100vw"
         quality={90}
-        className="object-cover z-0 scale-110 blur-sm"
+        className="object-cover z-0"
       />
 
       {/* Overlay cálido (en vez de negro plano) para que la foto de fondo
